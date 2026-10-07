@@ -28,7 +28,7 @@ section{padding:68px 0}.section-title{font-size:clamp(28px,4vw,44px);margin:0 0 
 <nav><div class="wrap nav"><a class="brand" href="#">SHANX SERVICES</a><div class="links"><a href="#services">Services</a><a href="#x13">X13</a><a href="#contact">Contact</a></div></div></nav>
 
 <header class="hero wrap">
-<div class="eyebrow">BUILD • AUTOMATE • ORCHESTRATE</div>
+<div class="eyebrow">BUILD â€¢ AUTOMATE â€¢ ORCHESTRATE</div>
 <h1>Systems that turn ideas into working tools.</h1>
 <p>ShanX Services builds practical AI workflows, custom digital tools, automation, and automotive technology with one goal: make the system actually work.</p>
 <div class="actions"><a class="btn primary" href="#x13">Open X13 Preview</a><a class="btn" href="mailto:henry.shannon@shanxservices.com">Start a Project</a></div>
@@ -45,20 +45,12 @@ section{padding:68px 0}.section-title{font-size:clamp(28px,4vw,44px);margin:0 0 
 </div></div></section>
 
 <section id="x13" class="x13"><div class="wrap">
-<div class="pill">X13 MASTER OPERATIONS</div><h2 class="section-title">The Loop Box</h2>
-<p class="section-copy">A public preview of the X13 control concept: one mission, multiple AI workers, shared state, and a central loop that keeps work moving.</p>
-<div class="loop-shell">
-<div class="loop-core"><button class="loop-button" id="loop">LOOP<br>BOX</button><div><span class="status" id="status">🟢 DEMO READY</span></div><div class="log" id="log">Tap LOOP BOX to pulse the four-worker demo.</div></div>
-<div class="workers">
-<div class="worker-grid">
-<div class="worker"><b>CHATGPT <small>READY</small></b></div>
-<div class="worker"><b>CLAUDE <small>READY</small></b></div>
-<div class="worker"><b>GEMINI <small>READY</small></b></div>
-<div class="worker"><b>GROK <small>READY</small></b></div>
+<div class="pill">X13 MASTER OPERATIONS</div><h2 class="section-title">The X13 Loop Box</h2>
+<p class="section-copy">The actual X13 Loop Box runtime interface — preserved from the verified working build, not a simulated demo.</p>
+<div style="margin-top:28px;border:1px solid var(--line);border-radius:18px;overflow:hidden;background:#101113">
+<iframe src="x13-loop-box.html" title="X13 Loop Box Runtime" style="display:block;width:100%;height:980px;border:0;background:#101113" loading="eager"></iframe>
 </div>
-<div class="taskbox"><input id="task" placeholder="Type a demo mission"><button id="assign">ASSIGN ALL</button></div>
-<div class="log" id="tasklog">Demo state stays in this browser only. No live AI connection on the public preview yet.</div>
-</div></div>
+<div class="actions" style="margin-top:18px"><a class="btn primary" href="x13-loop-box.html" target="_blank" rel="noopener">Open Full X13 Loop Box</a></div>
 </div></section>
 
 <section id="contact"><div class="wrap contact">
@@ -66,12 +58,8 @@ section{padding:68px 0}.section-title{font-size:clamp(28px,4vw,44px);margin:0 0 
 <a class="btn primary" href="mailto:henry.shannon@shanxservices.com">henry.shannon@shanxservices.com</a>
 </div></section>
 
-<footer><div class="wrap">© <span id="year"></span> ShanX Services. All rights reserved.</div></footer>
+<footer><div class="wrap">Â© <span id="year"></span> ShanX Services. All rights reserved.</div></footer>
 <script>
-const log=document.getElementById('log'),status=document.getElementById('status'),tasklog=document.getElementById('tasklog');
-let pulses=Number(localStorage.getItem('shanxPulse')||0);
-document.getElementById('loop').onclick=()=>{pulses++;localStorage.setItem('shanxPulse',pulses);status.textContent='🟢 LOOP PULSE #'+pulses;log.textContent='Four-worker checkpoint triggered locally at '+new Date().toLocaleTimeString();};
-document.getElementById('assign').onclick=()=>{const t=document.getElementById('task').value.trim();if(!t)return;localStorage.setItem('shanxDemoTask',t);tasklog.textContent='Assigned to ChatGPT • Claude • Gemini • Grok: '+t;};
 document.getElementById('year').textContent=new Date().getFullYear();
 </script>
 </body></html>
