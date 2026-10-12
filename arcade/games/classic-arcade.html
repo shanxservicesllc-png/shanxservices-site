@@ -1,0 +1,572 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#081010"><meta name="description" content="15 retro-inspired original browser games with speed controls, difficulty levels and player suggestions."><title>Micro Arcade | ShanX Arcade Lab</title><style>:root{color-scheme:dark;--gold:#ffd17a;--lime:#b9f596;--bg:#081010;--ink:#fbf9ef;--muted:#bdcdd2}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;min-height:100dvh;background:radial-gradient(ellipse at 20% 0%,#203d33 0%,transparent 52%),radial-gradient(ellipse at 94% 28%,#39321d,transparent 45%),var(--bg);font:16px/1.5 system-ui,Segoe UI,Arial,sans-serif;color:var(--ink)}
+button,select,textarea,input{font:inherit}button{cursor:pointer}button:focus-visible,select:focus-visible,textarea:focus-visible,a:focus-visible{outline:3px solid #fff;outline-offset:2px}
+a{color:var(--lime)}.container{width:min(1240px,94%);margin:auto}.top{display:flex;justify-content:space-between;align-items:center;padding:19px 0;gap:12px}.top a{text-decoration:none;font-size:13px;font-weight:900}.top span{font-size:12px;color:var(--muted)}
+header{padding:23px 0 25px}header small{font-size:12px;color:var(--lime);font-weight:1000;letter-spacing:.17em}h1{font-size:clamp(42px,7.5vw,79px);line-height:.95;letter-spacing:-.07em;margin:10px 0}h1 em{color:var(--gold);font-style:normal}header p{max-width:690px;color:var(--muted);font-size:15px}
+.game-panel{border:1px solid #b2deab69;border-radius:24px;background:#111c19;overflow:hidden;box-shadow:0 24px 65px #0008}.panel-head{display:flex;align-items:center;justify-content:space-between;gap:15px;padding:17px 20px;border-bottom:1px solid #ffffff2a;flex-wrap:wrap}
+#h2a_game_title{font-size:23px;font-weight:1000;letter-spacing:-.045em}.game-help{font-size:13px;color:var(--muted);margin-top:4px;max-width:570px}
+.game-stage{padding:14px;background:#070d13}.game-stage canvas{display:block;width:100%;max-width:960px;margin:auto;aspect-ratio:16/9;height:auto;border:1px solid #ffffff38;background:#050a11;border-radius:12px;touch-action:none}
+.status{display:flex;gap:12px;justify-content:space-between;flex-wrap:wrap;padding:9px 18px 12px;color:#cde1d5;font-size:12px}.tag{color:var(--gold);font-weight:900}
+.toolbar{display:flex;flex-wrap:wrap;gap:11px;padding:16px 18px;border-top:1px solid #ffffff26;align-items:end}
+.toolbar label{display:flex;flex-direction:column;color:#c7ddca;font-size:11px;font-weight:950;letter-spacing:.06em;gap:6px}.toolbar select{padding:11px;color:white;background:#183127;border:1px solid #c3dfae80;border-radius:9px;min-height:44px}
+.action{border:1px solid #ecdeb48c;color:#fff;background:#273f36;border-radius:11px;padding:12px 18px;font-weight:900;min-height:48px}#h2a_pong_start,.action.primary{background:var(--lime);color:#0b231b;border:1px solid #b8f8ad;border-radius:11px;padding:12px 17px;font-weight:900;min-height:48px;cursor:pointer}.action.gold{background:var(--gold);color:#2b1f0d}
+.controls{display:flex;gap:13px;justify-content:center;align-items:center;flex-wrap:wrap;padding:10px 14px 16px}.control-pad{display:grid;grid-template-columns:repeat(3,63px);grid-template-rows:repeat(2,54px);gap:5px}.control-pad button,.action-control{border:1px solid #d7e4bd66;border-radius:12px;color:#fff;background:#34554c;font-weight:1000;font-size:22px;touch-action:none;user-select:none}.control-pad .up{grid-column:2;grid-row:1}.control-pad .left{grid-column:1;grid-row:2}.control-pad .down{grid-column:2;grid-row:2}.control-pad .right{grid-column:3;grid-row:2}.action-control{width:118px;min-height:110px;background:#635123;border-color:#e5cc81;color:#ffe09a;font-size:16px;letter-spacing:.05em}
+#h2a_pac_dpad{display:none!important}.scoreboard{border-top:1px solid #ffffff25;padding:14px 19px}.scoreboard summary{cursor:pointer;font-weight:900;color:#e7ddba}
+#h2a_pong_result{padding:14px 18px;border-top:1px solid #ffffff24;background:#4d412233}
+.hidden{display:none!important}#h2a_pong_result_text{font-size:17px;color:var(--gold);font-weight:900}
+#h2a_pong_name{padding:10px;max-width:200px;background:#172e28;border:1px solid #c7e2ad66;color:#fff;border-radius:9px}
+#h2a_pong_scores{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:7px;margin-top:8px;font-size:12px}
+.h2a-score-item{padding:8px;background:#203931;border-radius:7px}.h2a-score-item strong{display:block;color:var(--gold)}
+#h2a_game_level{color:var(--gold);font-size:12px;font-weight:900}
+.catalog{padding:31px 0 16px}.catalog h2,.feedback h2{font-size:clamp(29px,4vw,40px);letter-spacing:-.05em;margin:0 0 7px}.catalog p{color:var(--muted);font-size:14px;margin:0 0 18px}
+#h2a_game_buttons{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
+.h2a-game-select{padding:16px 7px;min-height:96px;display:flex;align-items:center;justify-content:center;gap:8px;flex-direction:column;background:linear-gradient(145deg,#254039,#0f201b);border:1px solid #cce0b244;border-radius:15px;color:#f0f1ea;font-weight:900}
+.h2a-game-select span{font-size:27px}.h2a-game-select b{font-size:13px}.h2a-game-select.active{background:linear-gradient(130deg,#b8f2a2,#ebd38e);border-color:#fff;color:#1b3427;box-shadow:0 0 30px #beff9755}
+.feedback{padding:27px;margin:20px 0;border:1px solid #d7c78977;background:#203127;border-radius:20px}.feedback p{color:#b9c7bd;font-size:13px}.feedback textarea{display:block;width:100%;min-height:96px;background:#101f1a;color:#fff;border:1px solid #c5dfb48a;border-radius:12px;padding:12px;resize:vertical}
+.feedback a{display:inline-block;margin-top:13px;padding:13px 18px;background:var(--lime);border-radius:10px;color:#16321d;text-decoration:none;font-weight:950}.feedback-status{color:var(--gold);font-size:12px;min-height:20px;padding-top:9px}
+footer{text-align:center;color:#889f98;font-size:12px;padding:21px 0 37px}
+@media(max-width:850px){#h2a_game_buttons{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:520px){header{padding-top:8px}#h2a_game_title{font-size:19px}.panel-head{padding:13px}.toolbar{padding:11px;gap:8px}.toolbar label{flex:1;min-width:130px}.toolbar select{width:100%}.toolbar .action{flex:1;padding:10px}#h2a_game_buttons{grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}.h2a-game-select{padding:12px 4px;min-height:90px}.h2a-game-select span{font-size:23px}.h2a-game-select b{font-size:10px}.control-pad{grid-template-columns:repeat(3,53px);grid-template-rows:repeat(2,50px)}.action-control{min-height:104px;width:95px}.game-stage{padding:5px}.status{padding:8px;font-size:10px}.feedback{padding:18px}}</style></head><body>
+<div class="container"><nav class="top"><a href="../index.html">← SHANX ARCADE LAB</a><span>15 GAMES · NO INSTALL · TOUCH + KEYBOARD</span></nav>
+<header><small>🕹️ SHANX ARCADE LAB · CLASSIC REMIXES</small><h1>MICRO <em>ARCADE.</em></h1><p>Fifteen bite-size games, one arcade. Pick a challenge, adjust speed and difficulty, and see how far you can go. Play instantly, then tell us what to improve.</p></header>
+<section class="game-panel" aria-label="Play selected game" id="play">
+ <div class="panel-head"><div><div id="h2a_game_title">PADDLE DUEL</div><div class="game-help" id="h2a_game_help">Use touch, mouse or arrow keys to play.</div></div><span class="tag" id="h2a_game_level">LEVEL 1</span></div>
+ <div class="game-stage"><canvas id="h2a_pong_canvas" width="960" height="540" tabindex="0" aria-label="Playable arcade game screen, touch or use keyboard arrows"></canvas></div>
+ <div class="status"><span id="h2a_lock_status" role="status">Choose a game below, then press Start.</span><span>Scores saved in this browser only.</span></div>
+ <div class="toolbar">
+  <label>GAME SPEED<select id="h2a_game_speed"><option value="0.7">Slow</option><option value="1" selected>Normal</option><option value="1.3">Fast</option><option value="1.7">Turbo</option></select></label>
+  <label>DIFFICULTY<select id="h2a_game_difficulty"><option value="1">Easy</option><option value="2" selected>Normal</option><option value="3">Hard</option></select></label>
+  <button id="h2a_pong_start" class="action primary" type="button">START PADDLE DUEL</button><button id="h2a_game_restart" class="action gold" type="button">RESTART GAME</button>
+ </div>
+ <div class="controls" aria-label="Mobile game controls">
+   <div class="control-pad"><button type="button" class="up" data-arrow="ArrowUp" aria-label="Up">↑</button><button type="button" class="left" data-arrow="ArrowLeft" aria-label="Left">←</button><button type="button" class="down" data-arrow="ArrowDown" aria-label="Down">↓</button><button type="button" class="right" data-arrow="ArrowRight" aria-label="Right">→</button></div>
+   <button type="button" class="action-control" id="gameAction">● FIRE / JUMP</button>
+ </div>
+ <div id="h2a_pac_dpad" hidden><button type="button" class="h2a-pac-dir" data-pacdir="0">↑</button><button type="button" class="h2a-pac-dir" data-pacdir="1">→</button><button type="button" class="h2a-pac-dir" data-pacdir="2">↓</button><button type="button" class="h2a-pac-dir" data-pacdir="3">←</button></div>
+ <div id="h2a_pong_result" class="hidden"><div id="h2a_pong_result_text"></div><label>Nickname (optional, saved only in this browser) <input id="h2a_pong_name" maxlength="18" placeholder="Player"></label><button type="button" class="action" id="h2a_pong_save">SAVE LOCAL SCORE</button></div>
+ <details class="scoreboard"><summary>🏆 View local high scores</summary><div id="h2a_pong_scores"></div></details>
+</section>
+<section class="catalog" id="gameCatalog"><h2>Choose your challenge.</h2><p>Every game has speed and difficulty choices, plus feedback. Tap any tile to load it above.</p><div id="h2a_game_buttons"><button class="h2a-game-select" type="button" data-game="pong" aria-label="Play Paddle Duel"><span aria-hidden="true">🏓</span><b>Paddle Duel</b></button>
+<button class="h2a-game-select" type="button" data-game="blockBreaker" aria-label="Play Brick Burst"><span aria-hidden="true">🧱</span><b>Brick Burst</b></button>
+<button class="h2a-game-select" type="button" data-game="tetris" aria-label="Play Block Stacker"><span aria-hidden="true">🧩</span><b>Block Stacker</b></button>
+<button class="h2a-game-select" type="button" data-game="spaceInvaders" aria-label="Play Star Defenders"><span aria-hidden="true">👾</span><b>Star Defenders</b></button>
+<button class="h2a-game-select" type="button" data-game="pacman" aria-label="Play Maze Munch"><span aria-hidden="true">🟡</span><b>Maze Munch</b></button>
+<button class="h2a-game-select" type="button" data-game="snake" aria-label="Play Neon Snake"><span aria-hidden="true">🐍</span><b>Neon Snake</b></button>
+<button class="h2a-game-select" type="button" data-game="asteroids" aria-label="Play Meteor Drift"><span aria-hidden="true">☄️</span><b>Meteor Drift</b></button>
+<button class="h2a-game-select" type="button" data-game="frogger" aria-label="Play Crossing Quest"><span aria-hidden="true">🐸</span><b>Crossing Quest</b></button>
+<button class="h2a-game-select" type="button" data-game="roadRacer" aria-label="Play Road Dash"><span aria-hidden="true">🏎️</span><b>Road Dash</b></button>
+<button class="h2a-game-select" type="button" data-game="flappy" aria-label="Play Wing Hop"><span aria-hidden="true">🐥</span><b>Wing Hop</b></button>
+<button class="h2a-game-select" type="button" data-game="spaceShooter" aria-label="Play Galaxy Blaster"><span aria-hidden="true">🚀</span><b>Galaxy Blaster</b></button>
+<button class="h2a-game-select" type="button" data-game="helicopter" aria-label="Play Heli Escape"><span aria-hidden="true">🚁</span><b>Heli Escape</b></button>
+<button class="h2a-game-select" type="button" data-game="lunarLander" aria-label="Play Moon Landing"><span aria-hidden="true">🌙</span><b>Moon Landing</b></button>
+<button class="h2a-game-select" type="button" data-game="pinball" aria-label="Play Neon Pinball"><span aria-hidden="true">🎱</span><b>Neon Pinball</b></button>
+<button class="h2a-game-select" type="button" data-game="targetRange" aria-label="Play Quick Target"><span aria-hidden="true">🎯</span><b>Quick Target</b></button></div></section>
+<section class="feedback" id="feedback"><h2>Help build a better arcade. 💌</h2><p>Tell us what needs improvement in the current game. Email opens a draft; you still must press Send. Email reveals your address, so this is not anonymous. Please avoid sharing private information.</p><textarea id="feedbackText" maxlength="1500" aria-label="Game feedback" placeholder="Try more obstacles, improve controls, add levels or special effects..."></textarea><a id="feedbackLink" href="mailto:henry.shannon@shanxservices.com?subject=Arcade%20Feedback">✉️ EMAIL GAME FEEDBACK ↗</a><div class="feedback-status" id="feedbackStatus" role="status"></div></section>
+<footer>ShanX Arcade Lab · Independent retro-inspired prototypes · No automotive account data or login needed · <a href="../index.html">Back to Arcade</a></footer></div>
+<script>window.__classicGameNames={"pong":"PADDLE DUEL","blockBreaker":"BRICK BURST","tetris":"BLOCK STACKER","spaceInvaders":"STAR DEFENDERS","pacman":"MAZE MUNCH","snake":"NEON SNAKE","asteroids":"METEOR DRIFT","frogger":"CROSSING QUEST","roadRacer":"ROAD DASH","flappy":"WING HOP","spaceShooter":"GALAXY BLASTER","helicopter":"HELI ESCAPE","lunarLander":"MOON LANDING","pinball":"NEON PINBALL","targetRange":"QUICK TARGET"};window.__classicGameList=[{"id":"pong","title":"Paddle Duel"},{"id":"blockBreaker","title":"Brick Burst"},{"id":"tetris","title":"Block Stacker"},{"id":"spaceInvaders","title":"Star Defenders"},{"id":"pacman","title":"Maze Munch"},{"id":"snake","title":"Neon Snake"},{"id":"asteroids","title":"Meteor Drift"},{"id":"frogger","title":"Crossing Quest"},{"id":"roadRacer","title":"Road Dash"},{"id":"flappy","title":"Wing Hop"},{"id":"spaceShooter","title":"Galaxy Blaster"},{"id":"helicopter","title":"Heli Escape"},{"id":"lunarLander","title":"Moon Landing"},{"id":"pinball","title":"Neon Pinball"},{"id":"targetRange","title":"Quick Target"}];</script><script>
+(function(){
+  'use strict';
+  const STORAGE='shanx_classic_arcade_scores', WIN=7, W=960, H=540;
+  function migratePongScores(){try{const a=scores();if(!Array.isArray(a.pong)){const old=JSON.parse(localStorage.getItem('h2a_pong_high_scores')||'[]');if(Array.isArray(old)&&old.length){a.pong=old.map(x=>({name:String(x.name||'Player').slice(0,18)||'Player',score:Number(x.score)||0,at:x.at||x.date||new Date().toISOString()})).sort((u,v)=>v.score-u.score).slice(0,10);saveScores(a);}}}catch(_){} }
+  let locked=false, game='pong', running=false, paused=false, raf=0, last=0, playerY=H/2, aiY=H/2, ball={x:W/2,y:H/2,vx:6,vy:3.2}, score=0, enemyScore=0;
+  let lives=3, level=1, linesCleared=0, blocks=[], tetrisBoard=[], tetrisPiece=null, tetrisDrop=0, invaders=[], invaderDir=1, invaderShotTimer=0, invaderMoveSpeed=0.7, invaderFireInterval=55, playerX=W/2, playerShots=[], invaderShots=[];
+  let pacMap=[], pacPlayer={x:14,y:23,dir:0,nextDir:0}, pacGhosts=[], pacDots=0, pacPower=0, pacFruit=0, pacDotScore=10;
+  let retro={playerX:W/2,playerY:H-80,vx:0,vy:0,dir:1,timer:0,spawn:0,score:0,lives:3,objects:[],snake:[],snakeDir:1,snakeNext:1,food:null,target:null,bullets:[],flippers:0,shots:0};
+  let gameSpeed=1, gameDifficulty=2;
+  const challenge=()=>({1:.78,2:1,3:1.32}[gameDifficulty]||1);
+  const frogLanes=[410,350,290,230,170];
+  function frogCollision(){
+    if(game!=='frogger'||!running)return false;
+    if(retro.objects.some(o=>Math.abs(o.y-retro.playerY)<27&&Math.abs(o.x-retro.playerX)<o.w/2+15)){
+      retroEnd();return true;
+    }return false;
+  }
+  function seedFrogTraffic(){
+    const v=1.75*challenge()*(1+Math.min(1,Math.max(0,level-1)*.10));
+    retro.objects=[];
+    frogLanes.forEach((y,i)=>{
+      const sign=i%2===0?1:-1;
+      const firstX=[145,480,680,350,580][i];
+      retro.objects.push({x:firstX,y,vx:sign*v*(1+i*.13),w:100,h:36,lane:i});
+      if(gameDifficulty>=2){retro.objects.push({x:(firstX+440)%W,y,vx:sign*v*(1+i*.13),w:95,h:36,lane:i});}
+      if(gameDifficulty===3){retro.objects.push({x:(firstX+720)%W,y,vx:sign*v*(1+i*.13),w:90,h:36,lane:i});}
+    });
+    retro.playerX=W/2;retro.playerY=H-55;retro.spawn=0;
+  }
+  const scores=()=>{try{const x=JSON.parse(localStorage.getItem(STORAGE)||'{}');return x&&typeof x==='object'?x:{}}catch(_){return {}}};
+  const saveScores=x=>{try{localStorage.setItem(STORAGE,JSON.stringify(x))}catch(_){}};
+  function addScore(){const a=scores(),name=(document.getElementById('h2a_pong_name')?.value||'').trim().replace(/\s+/g,' ').slice(0,18)||'Player';const list=Array.isArray(a[game])?a[game]:[];list.push({name,score:game==='pong'?Math.max(score,enemyScore):score,at:new Date().toISOString()});list.sort((u,v)=>Number(v.score)-Number(u.score));a[game]=list.slice(0,10);saveScores(a);renderScores();document.getElementById('h2a_pong_result')?.classList.add('hidden');}
+  function renderScores(){const el=document.getElementById('h2a_pong_scores');if(!el)return;const a=scores()[game]||[];el.innerHTML=a.length?a.map((x,i)=>`<div class="h2a-score-item"><span>#${i+1} ${escapeHtml(x.name)}</span><strong>${Number(x.score)||0} points</strong></div>`).join(''):'<div class="text-center text-xs text-slate-500 col-span-2">No scores yet — be the first.</div>';}
+  function escapeHtml(v){return String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+  function setStatus(msg){const el=document.getElementById('h2a_lock_status');if(el)el.textContent=msg;const help=document.getElementById('h2a_game_help');if(help){const helpMap={spaceInvaders:'Clear waves; invaders accelerate.',blockBreaker:'Clear boards; the ball speeds up.',tetris:'Clear lines to level up.',pacman:'Swipe/tap or use the D-pad.',snake:'Eat the red dot without hitting yourself.',asteroids:'Move and survive the asteroid field.',frogger:'Cross the lanes without getting hit.',roadRacer:'Dodge traffic and survive.',flappy:'Tap/click to flap through the gaps.',spaceShooter:'Move and blast incoming targets.',helicopter:'Hold/tap to climb; avoid the walls.',lunarLander:'Use UP to brake your fall; land softly.',pinball:'Keep the ball alive and build your score.',targetRange:'Tap the target before it moves.'};help.textContent=helpMap[game]||'Pong: drag/touch the left paddle. First to 7 wins.';} const title=document.getElementById('h2a_game_title');if(title)title.textContent=(window.__classicGameNames&&window.__classicGameNames[game])||gameLabel();const lvl=document.getElementById('h2a_game_level');if(lvl)lvl.textContent='LEVEL '+level+' • '+(gameSpeed===0.7?'SLOW':gameSpeed===1?'NORMAL':gameSpeed===1.3?'FAST':'TURBO')+' • '+(gameDifficulty===1?'EASY':gameDifficulty===2?'NORMAL':'HARD');// Single primary control — never show two buttons saying the same thing
+const start=document.getElementById('h2a_pong_start');const restart=document.getElementById('h2a_game_restart');
+if(start){if(!running){start.textContent='START '+gameLabel();start.className='bg-amber-500 hover:bg-amber-400 text-slate-950 font-black rounded-lg px-4 py-2';}else if(paused){start.textContent='RESUME '+gameLabel();start.className='bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded-lg px-4 py-2';}else{start.textContent='PAUSE '+gameLabel();start.className='bg-slate-600 hover:bg-slate-500 text-white font-black rounded-lg px-4 py-2';}}
+if(restart){if(running||paused)restart.classList.remove('hidden');else restart.classList.add('hidden');}
+const dpad=document.getElementById('h2a_pac_dpad');if(dpad){if(game==='pacman')dpad.classList.remove('hidden');else dpad.classList.add('hidden');}
+}
+  function gameLabel(){const labels={blockBreaker:'BLOCK BREAKER',spaceInvaders:'SPACE INVADERS',pacman:'PAC-MAN',roadRacer:'ROAD RACER',spaceShooter:'SPACE SHOOTER',lunarLander:'LUNAR LANDER',targetRange:'TARGET RANGE'};return (window.__classicGameNames&&window.__classicGameNames[game])||labels[game]||game.toUpperCase()}
+  function resetBall(dir=1){ball={x:W/2,y:H/2,vx:6*dir,vy:(Math.random()>.5?1:-1)*(2.5+Math.random()*2)}}
+  function buildBlockLevel(){blocks=[];const rows=Math.min(10,4+level);for(let r=0;r<rows;r++)for(let c=0;c<12;c++){const stagger=(r%2?18:0);blocks.push({x:72+c*70+stagger,y:70+r*24,w:56,h:16,alive:true});}resetBall(Math.random()>.5?1:-1);const speed=1+Math.min(.8,(level-1)*.06);ball.vx*=speed;ball.vy*=speed;}
+  function buildInvaderWave(){invaders=[];const rows=Math.min(8,3+Math.floor((level+1)/2));const cols=10;const totalWidth=(cols-1)*60;const startX=(W-totalWidth)/2;for(let r=0;r<rows;r++)for(let c=0;c<cols;c++)invaders.push({x:startX+c*60,y:70+r*30,alive:true,type:r===0?'squid':r<3?'crab':'octopus'});invaderDir=1;invaderShotTimer=0;invaderMoveSpeed=(.55+gameDifficulty*.18)+Math.min(1.9,(level-1)*0.12);invaderFireInterval=Math.max(14,(gameDifficulty===1?75:gameDifficulty===2?49:32)-(level-1)*2.2);playerShots=[];invaderShots=[];}
+  function buildPacmanRound(){
+    const raw=[
+      '##############################',
+      '#............##............#',
+      '#.####.#####.##.#####.####.#',
+      '#o####.#####.##.#####.####o#',
+      '#..........................#',
+      '#.####.##.########.##.####.#',
+      '#......##....##....##......#',
+      '######.#####.##.#####.######',
+      '     #.#####....#####.#     ',
+      '     #.##..........##.#     ',
+      '######.##.###..###.##.######',
+      '     #....#....#....#     ',
+      '     #.##.######.##.#     ',
+      '######.##.######.##.######',
+      '#............##............#',
+      '#.####.#####.##.#####.####.#',
+      '#o..##................##..o#',
+      '###.##.##.########.##.##.###',
+      '#......##....##....##......#',
+      '#.#########.##.#########.#',
+      '#..........................#',
+      '##############################'
+    ];
+    const Hm=raw.length, Wm=30;
+    pacMap=raw.map(row=>row.padEnd(Wm,'#').slice(0,Wm).split(''));
+    // Open the center ghost house and the side tunnel entrances.
+    for(let y=8;y<=12;y++){ if(pacMap[y]){ pacMap[y][0]=' '; pacMap[y][Wm-1]=' '; } }
+    pacMap[10][13]=pacMap[10][14]=pacMap[10][15]=pacMap[10][16]='.';
+    pacMap[9][13]=pacMap[9][14]=pacMap[9][15]=pacMap[9][16]='.';
+    pacPlayer={x:14,y:16,dir:0,nextDir:0};pacStepAcc=0;ghostStepAcc=0;
+    const colors=['#f87171','#f472b6','#60a5fa','#fb923c'];
+    pacGhosts=[{x:14,y:10,dir:1,color:'#f87171',role:'blinky',respawn:0},{x:15,y:10,dir:3,color:'#f472b6',role:'pinky',respawn:20},{x:13,y:11,dir:0,color:'#60a5fa',role:'inky',respawn:40},{x:16,y:11,dir:2,color:'#fb923c',role:'clyde',respawn:60}];
+    pacDots=0;pacPower=0;pacFruit=level%4===0?1:0;
+    for(const row of pacMap) for(const cell of row) if(cell==='.'||cell==='o') pacDots++;
+    pacMap[16][14]=' '; pacMap[16][13]=' ';
+  }
+  function pacOpen(x,y){x=Math.round(x);y=Math.round(y);if(x<0)x=29;if(x>29)x=0;return !!(pacMap[y]&&pacMap[y][x]!==undefined&&pacMap[y][x]!=='#')}
+  function pacTryDir(px,py,d){const dx=[0,1,0,-1][d],dy=[-1,0,1,0][d];return pacOpen(px+dx,py+dy)}
+  // Grid-step movement accumulator — fixes frozen player/ghosts caused by rounding away sub-cell steps every frame.
+  let pacStepAcc=0, ghostStepAcc=0;
+  function pacMove(dt){
+    // Turn as soon as the requested direction is open from the current cell.
+    const cx0=Math.round(pacPlayer.x), cy0=Math.round(pacPlayer.y);
+    if(pacTryDir(cx0,cy0,pacPlayer.nextDir)) pacPlayer.dir=pacPlayer.nextDir;
+    // Player: accumulate time and step one cell when enough has elapsed.
+    const playerInterval=Math.max(28, 32-(level-1)*0.35); // frames-ish at 60fps scale; V31 acceptance target: >=28 frames/cell
+    pacStepAcc += dt;
+    while(pacStepAcc >= playerInterval){
+      pacStepAcc -= playerInterval;
+      const d=pacPlayer.dir;
+      if(pacTryDir(pacPlayer.x,pacPlayer.y,d)){
+        let nx=Math.round(pacPlayer.x)+[0,1,0,-1][d];
+        let ny=Math.round(pacPlayer.y)+[-1,0,1,0][d];
+        if(nx<0)nx=29; if(nx>29)nx=0;
+        pacPlayer.x=nx; pacPlayer.y=ny;
+      } else {
+        break;
+      }
+      const cx=Math.round(pacPlayer.x), cy=Math.round(pacPlayer.y);
+      const cell=pacMap[cy]?.[cx];
+      if(cell==='.'||cell==='o'){
+        if(cell==='o'){pacPower=6+Math.max(0,3-Math.floor(level/5));score+=50;}
+        else score+=pacDotScore;
+        pacMap[cy][cx]=' '; pacDots--;
+      }
+      if(pacFruit&&cx===14&&cy===10){score+=100*level;pacFruit=0;}
+    }
+    if(pacPower>0) pacPower=Math.max(0,pacPower-dt/60);
+    // Ghost AI — classic-style pathfinding with distinct roles.
+    // 0=up 1=right 2=down 3=left. Prefer not to reverse unless no other choice / frightened.
+    const ghostInterval=Math.max(12,(gameDifficulty===1?29:gameDifficulty===2?22:17)-(level-1)*0.55);
+    ghostStepAcc += dt;
+    const opp = d => (d+2)%4;
+    const stepCell = (x,y,d) => {
+      let nx=Math.round(x)+[0,1,0,-1][d], ny=Math.round(y)+[-1,0,1,0][d];
+      if(nx<0)nx=29; if(nx>29)nx=0;
+      return [nx,ny];
+    };
+    const ghostTarget = (g) => {
+      const px=Math.round(pacPlayer.x), py=Math.round(pacPlayer.y);
+      const pdx=[0,1,0,-1][pacPlayer.dir], pdy=[-1,0,1,0][pacPlayer.dir];
+      if(pacPower>0){
+        // Frightened: scatter toward corners
+        const corners={blinky:[1,1],pinky:[28,1],inky:[1,26],clyde:[28,26]};
+        return corners[g.role]||[1,1];
+      }
+      if(g.role==='blinky') return [px,py]; // direct chase
+      if(g.role==='pinky') return [px+pdx*4, py+pdy*4]; // ambush ahead
+      if(g.role==='inky'){
+        // Flank: vector from blinky through a point ahead of player
+        const blinky=pacGhosts.find(x=>x.role==='blinky')||g;
+        const ax=px+pdx*2, ay=py+pdy*2;
+        return [ax*2-Math.round(blinky.x), ay*2-Math.round(blinky.y)];
+      }
+      // Clyde: chase when far, scatter to bottom-left when close
+      const dist=Math.hypot(Math.round(g.x)-px, Math.round(g.y)-py);
+      return dist>8 ? [px,py] : [1,26];
+    };
+    while(ghostStepAcc >= ghostInterval){
+      ghostStepAcc -= ghostInterval;
+      pacGhosts.forEach(g=>{
+        if(g.respawn>0){g.respawn-=ghostInterval;return;}
+        const tx=ghostTarget(g)[0], ty=ghostTarget(g)[1];
+        let choices=[0,1,2,3].filter(d=>pacTryDir(g.x,g.y,d));
+        // Avoid reverse when multiple options (classic feel), unless only option or frightened random.
+        if(choices.length>1 && pacPower<=0) choices=choices.filter(d=>d!==opp(g.dir));
+        if(!choices.length) choices=[0,1,2,3].filter(d=>pacTryDir(g.x,g.y,d));
+        if(choices.length){
+          let best;
+          if(pacPower>0 && Math.random()<0.55){
+            best=choices[Math.floor(Math.random()*choices.length)]; // scared jitter
+          } else {
+            best=choices.slice().sort((a,b)=>{
+              const [ax,ay]=stepCell(g.x,g.y,a);
+              const [bx,by]=stepCell(g.x,g.y,b);
+              const da=Math.hypot(ax-tx,ay-ty), db=Math.hypot(bx-tx,by-ty);
+              return da-db;
+            })[0];
+          }
+          g.dir=best;
+          const [nx,ny]=stepCell(g.x,g.y,g.dir);
+          if(pacOpen(nx,ny)){g.x=nx;g.y=ny;}
+        }
+        if(Math.hypot(Math.round(g.x)-Math.round(pacPlayer.x), Math.round(g.y)-Math.round(pacPlayer.y))<1.2){
+          if(pacPower>0){score+=200;g.x=14;g.y=10;g.respawn=90;}
+          else{
+            lives--;
+            if(lives<=0){endGame();return;}
+            pacPlayer.x=14;pacPlayer.y=16;pacPlayer.dir=0;pacPlayer.nextDir=0;pacPower=0;pacStepAcc=0;
+          }
+        }
+      });
+    }
+    if(pacDots<=0) advanceLevel('round');
+  }
+  function resetRetro(){retro={playerX:W/2,playerY:H-80,vx:0,vy:0,dir:1,timer:0,spawn:0,score:0,lives:3,objects:[],snake:[],snakeDir:1,snakeNext:1,food:null,target:null,bullets:[],flippers:0,shots:0};
+    if(game==='frogger')seedFrogTraffic();
+    if(game==='roadRacer'){retro.objects=[{x:W/2-160,y:190,vy:3.2*challenge(),w:55},{x:W/2+150,y:-40,vy:3.5*challenge(),w:55}];retro.spawn=0;}
+    if(game==='asteroids'){retro.objects=Array.from({length:gameDifficulty+2},(_,i)=>({x:120+i*165,y:95+(i%3)*65,vx:(i%2?1:-1)*(1.2+challenge()),vy:(i%2?-.9:.9),r:18+4*(i%3)}));retro.spawn=0;}
+    if(game==='flappy'||game==='helicopter'){retro.objects=[{x:W*.85,gapY:game==='flappy'?150:165,gap:game==='flappy'?170:195}];}
+    if(game==='spaceShooter'){retro.objects=[{x:W/2-160,y:125,vy:1.4*challenge(),r:18},{x:W/2+170,y:45,vy:1.6*challenge(),r:18}];}
+    if(game==='snake'){retro.snake=[{x:10,y:8},{x:9,y:8},{x:8,y:8}];retro.food={x:16,y:10};retro.playerX=10;retro.playerY=8;}
+    if(game==='flappy'){retro.playerY=H/2;retro.vy=0;retro.spawn=0;}
+    if(game==='helicopter'){retro.playerY=H/2;retro.vy=0;retro.spawn=0;}
+    if(game==='lunarLander'){retro.playerX=W/2;retro.playerY=90;retro.vy=0;retro.vx=0;retro.spawn=0;}
+    if(game==='pinball'){retro.playerX=W/2;retro.playerY=160;retro.vx=4;retro.vy=2.5;}
+    if(game==='targetRange'){retro.target={x:W/2,y:H/2,r:Math.max(19,39-6*gameDifficulty)};retro.timer=(gameDifficulty===1?40:gameDifficulty===2?30:22)*60;retro.targetLifetime=0;}
+  }
+  function retroEnd(){endGame();}
+  function updateRetro(dt){
+    if(game!=='targetRange')retro.timer+=dt; retro.spawn+=dt;
+    const targetLevel=Math.min(10,1+Math.floor(Math.max(0,score)/50));
+    if(targetLevel>level && !window.__H2A_LEVEL_ADVANCING__){window.__H2A_LEVEL_ADVANCING__=true;advanceLevel('progress');window.__H2A_LEVEL_ADVANCING__=false;}
+    if(game==='snake'){
+      if(retro.timer<Math.max(2.6,(gameDifficulty===1?7:gameDifficulty===2?5:3.8)-Math.min(1.5,(level-1)*.22)))return; retro.timer=0;retro.snakeDir=retro.snakeNext;const d=[[0,-1],[1,0],[0,1],[-1,0]][retro.snakeDir];const head={x:retro.snake[0].x+d[0],y:retro.snake[0].y+d[1]};if(head.x<0||head.x>=24||head.y<0||head.y>=16||retro.snake.some(p=>p.x===head.x&&p.y===head.y)){retroEnd();return;}retro.snake.unshift(head);if(retro.food&&head.x===retro.food.x&&head.y===retro.food.y){score+=10;retro.food={x:Math.floor(Math.random()*24),y:Math.floor(Math.random()*16)};}else retro.snake.pop();}
+    else if(game==='asteroids'){retro.playerX+=retro.vx*dt;retro.playerY+=retro.vy*dt;retro.playerX=(retro.playerX+W)%W;retro.playerY=(retro.playerY+H)%H;retro.vx*=.992;retro.vy*=.992;retro.objects.forEach(o=>{o.x+=o.vx*dt;o.y+=o.vy*dt;o.x=(o.x+W)%W;o.y=(o.y+H)%H;});retro.bullets.forEach(b=>{b.x+=b.vx*dt;b.y+=b.vy*dt;b.life-=dt});retro.bullets=retro.bullets.filter(b=>b.life>0);if(retro.spawn>Math.max(14,25-(level-1)*1.2)){retro.spawn=0;retro.objects.push({x:Math.random()*W,y:Math.random()*H,vx:(Math.random()-.5)*(2.4+level*.12),vy:(Math.random()-.5)*(2.4+level*.12),r:18+Math.random()*18});}for(const b of retro.bullets){for(const o of retro.objects){if(!o.hit&&Math.hypot(o.x-b.x,o.y-b.y)<o.r+5){o.hit=true;b.life=0;score+=20;}}}retro.objects=retro.objects.filter(o=>!o.hit);retro.objects.forEach(o=>{if(Math.hypot(o.x-retro.playerX,o.y-retro.playerY)<o.r+14){retro.lives--;if(retro.lives<=0)retroEnd();else{retro.playerX=W/2;retro.playerY=H-80;}}});/* Cleared fields wait for the next meteor wave; they do not auto-win before a meteor has spawned. */}
+    else if(game==='frogger'){
+      const freq=Math.max(26,(gameDifficulty===1?90:gameDifficulty===2?65:43)-Math.min(20,(level-1)*3));
+      if(retro.spawn>freq&&retro.objects.length<22){
+        retro.spawn=0;const lane=Math.floor(Math.random()*frogLanes.length),sign=lane%2===0?1:-1;
+        retro.objects.push({x:sign>0?-110:W+110,y:frogLanes[lane],vx:sign*(1.6+lane*.18)*challenge()*(1+Math.min(1,level*.08)),w:85+Math.random()*42,h:36,lane});
+      }
+      retro.objects.forEach(o=>{o.x+=o.vx*dt;
+        if(o.vx>0&&o.x>W+o.w/2+60)o.x=-o.w/2-40;
+        if(o.vx<0&&o.x< -o.w/2-60)o.x=W+o.w/2+40;
+      });
+      if(frogCollision())return;
+      if(retro.playerY<120){score+=50;retro.playerY=H-55;retro.playerX=W/2;setStatus('CROSSING COMPLETE! Watch the traffic: round '+(1+Math.floor(score/50))); }
+    }
+    else if(game==='roadRacer'){retro.objects.forEach(o=>o.y+=o.vy*dt);retro.objects=retro.objects.filter(o=>o.y<H+80);if(retro.spawn>Math.max(10,30/challenge()-Math.min(12,(level-1)*1.4))){retro.spawn=0;retro.objects.push({x:170+Math.random()*(W-340),y:-60,vy:(3.5+Math.min(4,level*.25))*challenge(),w:48});}retro.objects.forEach(o=>{if(Math.abs(o.x-retro.playerX)<48&&Math.abs(o.y-retro.playerY)<70)retroEnd();});score+=dt;}
+    else if(game==='flappy'){retro.vy+=.34*dt;retro.playerY+=retro.vy*dt;if(retro.spawn>Math.max(34,62/challenge())){retro.spawn=0;const gap=Math.max(102,206-40*challenge()-Math.min(18,(level-1)*4));const gy=65+Math.random()*(H-gap-125);retro.objects.push({x:W+30,gapY:gy,gap});}retro.objects.forEach(o=>{o.x-=(2.9+.4*challenge()+Math.min(1,(level-1)*.12))*dt;if(!o.scored&&o.x+55<retro.playerX){o.scored=true;score+=10;}});retro.objects=retro.objects.filter(o=>o.x>-90);retro.objects.forEach(o=>{if(Math.abs(o.x-retro.playerX)<22&&(retro.playerY<o.gapY||retro.playerY>o.gapY+o.gap))retroEnd();});if(retro.playerY<0||retro.playerY>H)retroEnd();}
+    else if(game==='spaceShooter'){retro.objects.forEach(o=>{o.y+=o.vy*dt});retro.bullets.forEach(b=>{b.y-=10*dt});retro.bullets=retro.bullets.filter(b=>b.y>-20);retro.objects=retro.objects.filter(o=>o.y<H+30&&!o.hit);if(retro.spawn>Math.max(12,(32-Math.min(8,(level-1)*1.5))/challenge())){retro.spawn=0;retro.objects.push({x:40+Math.random()*(W-80),y:-30,vy:1.2+Math.random()*1.5+level*.08,r:18});}for(const b of retro.bullets){for(const o of retro.objects){if(!o.hit&&Math.hypot(o.x-b.x,o.y-b.y)<o.r+5){o.hit=true;b.y=-50;score+=10;}}}retro.objects=retro.objects.filter(o=>!o.hit);retro.objects.forEach(o=>{if(Math.abs(o.x-retro.playerX)<26&&Math.abs(o.y-retro.playerY)<28){retro.lives--;o.hit=true;if(retro.lives<=0)retroEnd();}});/* Level progression is managed once by the shared score threshold. */}
+    else if(game==='helicopter'){retro.vy+=.20*dt;retro.playerY+=retro.vy*dt;if(retro.spawn>Math.max(32,57/challenge())){retro.spawn=0;const gap=Math.max(105,220-42*challenge()-Math.min(18,(level-1)*3));const gy=65+Math.random()*(H-gap-125);retro.objects.push({x:W+30,gapY:gy,gap});}retro.objects.forEach(o=>{o.x-=(2.9+.55*challenge()+Math.min(1,(level-1)*.12))*dt;if(!o.scored&&o.x+55<retro.playerX){o.scored=true;score+=10;}});retro.objects=retro.objects.filter(o=>o.x>-100);retro.objects.forEach(o=>{if(Math.abs(o.x-retro.playerX)<24&&(retro.playerY<o.gapY||retro.playerY>o.gapY+o.gap))retroEnd();});if(retro.playerY<0||retro.playerY>H)retroEnd();}
+    else if(game==='lunarLander'){retro.vy+=.12*dt;retro.vx*=.995;retro.playerX+=retro.vx*dt;retro.playerY+=retro.vy*dt;retro.playerX=Math.max(40,Math.min(W-40,retro.playerX));if(retro.playerY>H-95){if(Math.abs(retro.vy)<2.4&&Math.abs(retro.vx)<2.2){score+=100;advanceLevel('landing');resetRetro();}else retroEnd();}}
+    else if(game==='pinball'){retro.vy+=.10*dt;retro.playerX+=retro.vx*dt;retro.playerY+=retro.vy*dt;if(retro.playerX<145||retro.playerX>W-145)retro.vx*=-1;if(retro.playerY<55)retro.vy=Math.abs(retro.vy);if(retro.playerY>H-115){if(retro.flippers){retro.vy=-Math.abs(retro.vy)*1.08;retro.vx+=(retro.playerX<W/2?-1:1)*.9;score+=10;}else if(retro.playerY>H-35){retro.lives--;retro.playerX=W/2;retro.playerY=160;retro.vy=2;if(retro.lives<=0)retroEnd();}}if(retro.spawn>18){retro.spawn=0;retro.objects.push({x:200+Math.random()*(W-400),y:120+Math.random()*230,r:18,hit:0});}retro.objects.forEach(o=>{if(Math.hypot(o.x-retro.playerX,o.y-retro.playerY)<o.r+13&&!o.hit){o.hit=1;retro.vy=-Math.abs(retro.vy)-1;score+=25;}});retro.objects.forEach(o=>o.hit*=.95);}
+    else if(game==='targetRange'){
+      retro.timer-=dt;
+      retro.targetLifetime=(retro.targetLifetime||0)+dt;
+      const lifeLimit=gameDifficulty===1?150:gameDifficulty===2?115:82;
+      if(retro.targetLifetime>lifeLimit){retro.targetLifetime=0;
+        retro.target={x:80+Math.random()*(W-160),y:90+Math.random()*(H-190),r:Math.max(17,37-gameDifficulty*5-Math.min(7,(level-1)))};
+        retro.timer=Math.max(0,retro.timer-(gameDifficulty===1?10:gameDifficulty===2?25:40));
+      }
+      if(retro.timer<=0){retro.timer=0;retroEnd();}
+    }
+  }
+  function initGame(){running=false;paused=false;last=0;cancelAnimationFrame(raf);score=0;enemyScore=0;level=1;linesCleared=0;playerY=H/2;aiY=H/2;playerX=W/2;lives=3;blocks=[];invaderShots=[];playerShots=[];tetrisBoard=Array.from({length:20},()=>Array(10).fill(0));tetrisPiece=null;tetrisDrop=0;invaders=[];invaderDir=1;invaderShotTimer=0;invaderMoveSpeed=.7;invaderFireInterval=55;resetBall(Math.random()>.5?1:-1);if(game==='blockBreaker')buildBlockLevel();if(game==='spaceInvaders')buildInvaderWave();if(game==='pacman')buildPacmanRound();if(game==='tetris')spawnTetris();if(['snake','asteroids','frogger','roadRacer','flappy','spaceShooter','helicopter','lunarLander','pinball','targetRange'].includes(game))resetRetro();document.getElementById('h2a_pong_result')?.classList.add('hidden');renderScores();draw();setStatus('System controls are locked. Choose a game, then START.');}
+  function advanceLevel(reason){level++;last=0;if(game==='blockBreaker'){buildBlockLevel();setStatus('LEVEL '+level+' — new board, faster ball.');}else if(game==='spaceInvaders'){buildInvaderWave();setStatus('WAVE '+level+' — the invasion intensifies.');}else if(game==='tetris'){tetrisDrop=0;setStatus('LEVEL '+level+' — drop speed increased.');}else if(game==='pong'){resetBall(Math.random()>.5?1:-1);setStatus('ROUND '+level+' — AI and ball speed increased.');}else if(game==='pacman'){buildPacmanRound();setStatus('ROUND '+level+' — ghosts faster, power time reduced.');}else if(['snake','asteroids','frogger','roadRacer','flappy','spaceShooter','helicopter','lunarLander','pinball','targetRange'].includes(game)){resetRetro();setStatus('LEVEL '+level+' — challenge increased.');}const lvl=document.getElementById('h2a_game_level');if(lvl)lvl.textContent='LEVEL '+level+' • '+(gameSpeed===0.7?'SLOW':gameSpeed===1?'NORMAL':gameSpeed===1.3?'FAST':'TURBO');draw();}
+  
+  function spawnTetris(){const shapes=[[[1,1,1,1]],[[1,1],[1,1]],[[0,1,0],[1,1,1]],[[1,0,0],[1,1,1]],[[0,0,1],[1,1,1]]];const sh=shapes[Math.floor(Math.random()*shapes.length)];tetrisPiece={shape:sh.map(r=>r.slice()),x:4,y:0};}
+  function collide(nx=tetrisPiece.x,ny=tetrisPiece.y,shape=tetrisPiece.shape){return shape.some((row,y)=>row.some((v,x)=>v&&(nx+x<0||nx+x>=10||ny+y>=20||(ny+y>=0&&tetrisBoard[ny+y][nx+x]))));}
+  function mergeTetris(){tetrisPiece.shape.forEach((row,y)=>row.forEach((v,x)=>{if(v&&tetrisPiece.y+y>=0)tetrisBoard[tetrisPiece.y+y][tetrisPiece.x+x]=1;}));let cleared=0;tetrisBoard=tetrisBoard.filter(r=>{if(r.every(Boolean)){cleared++;return false}return true});while(tetrisBoard.length<20)tetrisBoard.unshift(Array(10).fill(0));score+=cleared*100;linesCleared+=cleared;const newLevel=Math.max(1,Math.floor(linesCleared/5)+1);if(newLevel>level){level=newLevel;setStatus('LEVEL '+level+' — drop speed increased.');}spawnTetris();if(collide()){endGame();}}
+  function rotateTetris(){const sh=tetrisPiece.shape[0].map((_,i)=>tetrisPiece.shape.map(r=>r[i]).reverse());if(!collide(tetrisPiece.x,tetrisPiece.y,sh))tetrisPiece.shape=sh;}
+  function update(dt){if(game==='pong'){ball.x+=ball.vx*dt;ball.y+=ball.vy*dt;if(ball.y<9||ball.y>H-9){ball.vy*=-1;ball.y=Math.max(9,Math.min(H-9,ball.y));}aiY+=Math.max(-((3.0+gameDifficulty*.9+Math.min(4,(level-1)*0.35))*dt),Math.min((3.0+gameDifficulty*.9+Math.min(4,(level-1)*0.35))*dt,ball.y-aiY));if(ball.x>W-70&&ball.x<W-38&&Math.abs(ball.y-aiY)<65){ball.vx=-Math.abs(ball.vx)*1.03;ball.vy+=(ball.y-aiY)*.035;ball.x=W-70}if(ball.x<55&&Math.abs(ball.y-playerY)<65){ball.vx=Math.abs(ball.vx)*1.03;ball.vy+=(ball.y-playerY)*.035;ball.x=55}if(ball.x<-20){enemyScore++;if(enemyScore>=WIN)return endGame();if(score>=WIN-1){advanceLevel('round');}else resetBall(1)}if(ball.x>W+20){score++;if(score>=WIN){advanceLevel('round');}else resetBall(-1)}}
+    else if(game==='blockBreaker'){ball.x+=ball.vx*dt;ball.y+=ball.vy*dt;if(ball.x<9||ball.x>W-9)ball.vx*=-1;if(ball.y<9)ball.vy=Math.abs(ball.vy);if(ball.y>H+20){lives--;if(lives<=0)return endGame();resetBall(-1)}const paddleX=playerX-(gameDifficulty===1?80:gameDifficulty===2?65:53);if(ball.y>H-70&&ball.y<H-45&&ball.x>playerX-(gameDifficulty===1?80:gameDifficulty===2?65:53)&&ball.x<playerX+(gameDifficulty===1?80:gameDifficulty===2?65:53))ball.vy=-Math.abs(ball.vy);for(const b of blocks)if(b.alive&&ball.x>b.x&&ball.x<b.x+b.w&&ball.y>b.y&&ball.y<b.y+b.h){b.alive=false;score+=10;ball.vy*=-1;break;}if(blocks.every(b=>!b.alive))advanceLevel('board');}
+    else if(game==='tetris'){tetrisDrop+=dt;const dropInterval=Math.max(7,((gameDifficulty===1?40:gameDifficulty===2?31:23)-(level-1)*2));if(tetrisDrop>dropInterval){tetrisDrop=0;if(!collide(tetrisPiece.x,tetrisPiece.y+1))tetrisPiece.y++;else mergeTetris();}}
+    else if(game==='spaceInvaders'){let minX=999,maxX=-1;invaders.forEach(i=>{if(i.alive){minX=Math.min(minX,i.x);maxX=Math.max(maxX,i.x)}});if(minX>0&&maxX>0){if(maxX>W-100||minX<70){invaderDir*=-1;invaders.forEach(i=>i.y+=Math.min(28,14+level))}invaders.forEach(i=>i.x+=invaderDir*dt*invaderMoveSpeed)}playerShots=playerShots.filter(p=>{p.y-=9*dt;let hit=false;invaders.forEach(i=>{if(i.alive&&Math.abs(p.x-i.x)<22&&Math.abs(p.y-i.y)<14){i.alive=false;score+=10;hit=true;}});return !hit&&p.y>-10});invaderShots=invaderShots.filter(p=>{p.y+=4*dt;if(p.y>H+10)return false;if(Math.abs(p.x-playerX)<28&&p.y>H-55){lives--;if(lives<=0){endGame();return false;}return false;}return true});invaderShotTimer+=dt;if(invaderShotTimer>invaderFireInterval){invaderShotTimer=0;const live=invaders.filter(i=>i.alive);if(live.length){const shooter=live[Math.floor(Math.random()*live.length)];invaderShots.push({x:shooter.x,y:shooter.y+12});}}if(invaders.every(i=>!i.alive))advanceLevel('wave');}    else if(game==='pacman'){pacMove(dt);}else if(['snake','asteroids','frogger','roadRacer','flappy','spaceShooter','helicopter','lunarLander','pinball','targetRange'].includes(game)){updateRetro(dt);}
+  }
+  function drawArcadeFrame(x){
+    // Shared retro cabinet frame — one look for every game (Game Boy / NES era polish)
+    const g=x.createLinearGradient(0,0,0,H);
+    g.addColorStop(0,'#0b1220'); g.addColorStop(1,'#020617');
+    x.fillStyle=g; x.fillRect(0,0,W,H);
+    x.strokeStyle='rgba(251,191,36,0.22)'; x.lineWidth=4; x.strokeRect(10,10,W-20,H-20);
+    x.strokeStyle='rgba(148,163,184,0.12)'; x.lineWidth=1; x.strokeRect(18,18,W-36,H-36);
+  }
+  function drawArcadeHud(x,line){
+    x.fillStyle='#fbbf24'; x.font='900 26px ui-sans-serif,system-ui,sans-serif'; x.textAlign='center';
+    x.fillText(line, W/2, 40);
+  }
+  function draw(){const c=document.getElementById('h2a_pong_canvas');if(!c)return;const x=c.getContext('2d');x.clearRect(0,0,W,H);drawArcadeFrame(x);x.textAlign='center';
+    if(game==='pong'){
+      // Court
+      x.strokeStyle='rgba(148,163,184,0.35)'; x.setLineDash([8,14]); x.lineWidth=3;
+      x.beginPath(); x.moveTo(W/2,28); x.lineTo(W/2,H-28); x.stroke(); x.setLineDash([]);
+      // Player paddle
+      const pGrad=x.createLinearGradient(30,0,46,0); pGrad.addColorStop(0,'#fde68a'); pGrad.addColorStop(1,'#f59e0b');
+      x.fillStyle=pGrad; x.fillRect(28,playerY-58,18,116); x.fillStyle='rgba(255,255,255,0.25)'; x.fillRect(30,playerY-56,6,112);
+      // AI paddle
+      const aGrad=x.createLinearGradient(W-46,0,W-30,0); aGrad.addColorStop(0,'#64748b'); aGrad.addColorStop(1,'#94a3b8');
+      x.fillStyle=aGrad; x.fillRect(W-46,aiY-58,18,116);
+      // Ball with soft glow
+      x.fillStyle='rgba(255,255,255,0.2)'; x.beginPath(); x.arc(ball.x,ball.y,14,0,Math.PI*2); x.fill();
+      x.fillStyle='#fff'; x.beginPath(); x.arc(ball.x,ball.y,9,0,Math.PI*2); x.fill();
+      x.fillStyle='rgba(251,191,36,0.5)'; x.beginPath(); x.arc(ball.x-2,ball.y-2,3,0,Math.PI*2); x.fill();
+      drawArcadeHud(x, 'ROUND '+level+'    '+score+'  —  '+enemyScore);
+    }
+    else if(game==='blockBreaker'){
+      // Brick rows with color bands
+      const palette=['#ef4444','#f97316','#eab308','#22c55e','#06b6d4','#3b82f6','#a855f7','#ec4899'];
+      blocks.forEach((b,i)=>{
+        if(!b.alive) return;
+        const col=palette[Math.floor((b.y-70)/24)%palette.length];
+        x.fillStyle=col; x.fillRect(b.x,b.y,b.w,b.h);
+        x.fillStyle='rgba(255,255,255,0.22)'; x.fillRect(b.x+2,b.y+2,b.w-4,4);
+        x.fillStyle='rgba(0,0,0,0.18)'; x.fillRect(b.x+2,b.y+b.h-4,b.w-4,3);
+      });
+      // Paddle
+      const pg=x.createLinearGradient(0,H-55,0,H-40); pg.addColorStop(0,'#fbbf24'); pg.addColorStop(1,'#d97706');
+      x.fillStyle=pg; x.fillRect(playerX-(gameDifficulty===1?85:gameDifficulty===2?70:55),H-52,(gameDifficulty===1?170:gameDifficulty===2?140:110),16); x.fillStyle='rgba(255,255,255,0.3)'; x.fillRect(playerX-66,H-50,132,5);
+      // Ball
+      x.fillStyle='rgba(255,255,255,0.2)'; x.beginPath(); x.arc(ball.x,ball.y,13,0,Math.PI*2); x.fill();
+      x.fillStyle='#fff'; x.beginPath(); x.arc(ball.x,ball.y,8,0,Math.PI*2); x.fill();
+      drawArcadeHud(x, 'LEVEL '+level+'  •  SCORE '+score+'  •  LIVES '+lives);
+    }
+    else if(game==='tetris'){
+      const cs=26, bw=10, bh=20;
+      const ox=Math.floor((W-bw*cs)/2), oy=Math.floor((H-bh*cs)/2)+8;
+      // Well
+      x.fillStyle='#0f172a'; x.fillRect(ox-6,oy-6,bw*cs+12,bh*cs+12);
+      x.strokeStyle='#334155'; x.lineWidth=3; x.strokeRect(ox-4,oy-4,bw*cs+8,bh*cs+8);
+      // Grid
+      x.strokeStyle='rgba(51,65,85,0.45)'; x.lineWidth=1;
+      for(let r=0;r<=bh;r++){x.beginPath();x.moveTo(ox,oy+r*cs);x.lineTo(ox+bw*cs,oy+r*cs);x.stroke()}
+      for(let c2=0;c2<=bw;c2++){x.beginPath();x.moveTo(ox+c2*cs,oy);x.lineTo(ox+c2*cs,oy+bh*cs);x.stroke()}
+      const paintCell=(c3,r,color)=>{
+        x.fillStyle=color; x.fillRect(ox+c3*cs+1,oy+r*cs+1,cs-2,cs-2);
+        x.fillStyle='rgba(255,255,255,0.22)'; x.fillRect(ox+c3*cs+2,oy+r*cs+2,cs-6,4);
+        x.fillStyle='rgba(0,0,0,0.2)'; x.fillRect(ox+c3*cs+2,oy+r*cs+cs-6,cs-6,3);
+      };
+      const locked='#38bdf8', active='#fbbf24';
+      tetrisBoard.forEach((row,r)=>row.forEach((v,c3)=>{if(v)paintCell(c3,r,locked)}));
+      if(tetrisPiece)tetrisPiece.shape.forEach((row,r)=>row.forEach((v,c3)=>{if(v)paintCell(tetrisPiece.x+c3,tetrisPiece.y+r,active)}));
+      drawArcadeHud(x, 'LEVEL '+level+'  •  SCORE '+score+'  •  LINES '+linesCleared);
+    }
+    else if(game==='pacman'){
+      // Polished Pac-Man render — centered maze, rounded walls, animated mouth, detailed ghosts
+      const rows=pacMap.length, cols=30;
+      const cs=Math.floor(Math.min((W-40)/cols,(H-80)/rows));
+      const ox=Math.floor((W-cols*cs)/2), oy=Math.floor(50+(H-80-rows*cs)/2);
+      // Board background
+      x.fillStyle='#020617'; x.fillRect(ox-6,oy-6,cols*cs+12,rows*cs+12);
+      x.strokeStyle='#1e3a8a'; x.lineWidth=3; x.strokeRect(ox-4,oy-4,cols*cs+8,rows*cs+8);
+      // Maze cells
+      for(let r=0;r<rows;r++){
+        const row=pacMap[r]; if(!row) continue;
+        for(let c3=0;c3<cols;c3++){
+          const cell=row[c3];
+          const cx=ox+c3*cs, cy=oy+r*cs;
+          if(cell==='#'){
+            x.fillStyle='#1d4ed8';
+            x.fillRect(cx+1,cy+1,cs-2,cs-2);
+            x.fillStyle='#3b82f6';
+            x.fillRect(cx+3,cy+3,cs-6,Math.max(1,cs/3));
+          } else if(cell==='.'){
+            x.fillStyle='#fde68a';
+            x.beginPath(); x.arc(cx+cs/2,cy+cs/2,Math.max(1.5,cs*0.12),0,Math.PI*2); x.fill();
+          } else if(cell==='o'){
+            // Power pellet pulse
+            const pulse=1+0.25*Math.sin(Date.now()/180);
+            x.fillStyle='#fff';
+            x.beginPath(); x.arc(cx+cs/2,cy+cs/2,Math.max(3,cs*0.28)*pulse,0,Math.PI*2); x.fill();
+            x.fillStyle='rgba(251,191,36,0.35)';
+            x.beginPath(); x.arc(cx+cs/2,cy+cs/2,Math.max(4,cs*0.38)*pulse,0,Math.PI*2); x.fill();
+          }
+        }
+      }
+      // Fruit
+      if(pacFruit){
+        const fx=ox+14*cs+cs/2, fy=oy+10*cs+cs/2;
+        x.fillStyle='#ef4444'; x.beginPath(); x.arc(fx,fy,cs*0.35,0,Math.PI*2); x.fill();
+        x.fillStyle='#22c55e'; x.fillRect(fx-1,fy-cs*0.45,2,cs*0.25);
+      }
+      // Ghosts with eyes
+      pacGhosts.forEach(g=>{
+        const gx=ox+Math.round(g.x)*cs+cs/2, gy=oy+Math.round(g.y)*cs+cs/2;
+        const gr=cs*0.42;
+        const body=pacPower>0?'#60a5fa':g.color;
+        x.fillStyle=body;
+        x.beginPath();
+        x.arc(gx,gy-1,gr,Math.PI,0);
+        x.lineTo(gx+gr,gy+gr);
+        // scalloped bottom
+        for(let i=3;i>=0;i--){
+          const sx=gx+gr*(i/3*2-1), sy=gy+gr*(i%2===0?0.55:1);
+          x.lineTo(sx,sy);
+        }
+        x.closePath(); x.fill();
+        // Eyes
+        if(pacPower<=0){
+          const edx=[0,1,0,-1][g.dir]*cs*0.12, edy=[-1,0,1,0][g.dir]*cs*0.12;
+          x.fillStyle='#fff';
+          x.beginPath(); x.arc(gx-gr*0.35,gy-gr*0.25,gr*0.28,0,Math.PI*2); x.fill();
+          x.beginPath(); x.arc(gx+gr*0.35,gy-gr*0.25,gr*0.28,0,Math.PI*2); x.fill();
+          x.fillStyle='#1e3a8a';
+          x.beginPath(); x.arc(gx-gr*0.35+edx,gy-gr*0.25+edy,gr*0.14,0,Math.PI*2); x.fill();
+          x.beginPath(); x.arc(gx+gr*0.35+edx,gy-gr*0.25+edy,gr*0.14,0,Math.PI*2); x.fill();
+        } else {
+          // Scared face
+          x.fillStyle='#1e3a8a';
+          x.beginPath(); x.arc(gx-gr*0.3,gy-gr*0.15,gr*0.12,0,Math.PI*2); x.fill();
+          x.beginPath(); x.arc(gx+gr*0.3,gy-gr*0.15,gr*0.12,0,Math.PI*2); x.fill();
+          x.strokeStyle='#1e3a8a'; x.lineWidth=2;
+          x.beginPath(); x.arc(gx,gy+gr*0.15,gr*0.25,0.2,Math.PI-0.2); x.stroke();
+        }
+      });
+      // Pac-Man with animated mouth facing direction
+      {
+        const px=ox+Math.round(pacPlayer.x)*cs+cs/2, py=oy+Math.round(pacPlayer.y)*cs+cs/2;
+        const pr=cs*0.42;
+        const mouth=0.18+0.22*Math.abs(Math.sin(Date.now()/120));
+        const rot=[ -Math.PI/2, 0, Math.PI/2, Math.PI ][pacPlayer.dir]||0;
+        x.fillStyle='#facc15';
+        x.beginPath();
+        x.moveTo(px,py);
+        x.arc(px,py,pr, rot+mouth, rot+Math.PI*2-mouth);
+        x.closePath(); x.fill();
+        // Eye
+        const ex=px+Math.cos(rot-0.9)*pr*0.35, ey=py+Math.sin(rot-0.9)*pr*0.35;
+        x.fillStyle='#0f172a';
+        x.beginPath(); x.arc(ex,ey,pr*0.12,0,Math.PI*2); x.fill();
+      }
+      // HUD
+      x.fillStyle='#fbbf24'; x.font='900 28px sans-serif'; x.textAlign='center';
+      x.fillText('Round '+level+'  •  Score '+score+'  •  Lives '+lives, W/2, 36);
+      // Mini life icons
+      for(let i=0;i<lives;i++){
+        x.fillStyle='#facc15';
+        x.beginPath(); x.moveTo(24+i*22,H-18); x.arc(24+i*22,H-18,8,0.4,Math.PI*2-0.4); x.closePath(); x.fill();
+      }
+    }
+    else if(game==='spaceInvaders'){
+      // Space Invaders — distinct invader silhouettes + cleaner ship
+      invaders.forEach(i=>{
+        if(!i.alive) return;
+        const col=i.type==='squid'?'#c084fc':(i.type==='crab'?'#38bdf8':'#4ade80');
+        x.fillStyle=col;
+        x.fillRect(i.x-16,i.y-6,32,12);
+        x.fillRect(i.x-10,i.y-12,20,6);
+        x.fillRect(i.x-20,i.y+4,8,6); x.fillRect(i.x+12,i.y+4,8,6);
+        x.fillStyle='#0f172a';
+        x.fillRect(i.x-8,i.y-2,5,4); x.fillRect(i.x+3,i.y-2,5,4);
+      });
+      // Player ship
+      x.fillStyle='#fbbf24';
+      x.beginPath(); x.moveTo(playerX,H-48); x.lineTo(playerX-28,H-28); x.lineTo(playerX+28,H-28); x.closePath(); x.fill();
+      x.fillStyle='#fde68a'; x.fillRect(playerX-6,H-44,12,10);
+      // Shots
+      x.fillStyle='#fff'; playerShots.forEach(p=>{x.fillRect(p.x-2,p.y-12,4,12);});
+      x.fillStyle='#f87171'; invaderShots.forEach(p=>{x.fillRect(p.x-2,p.y,4,12);});
+      drawArcadeHud(x, 'WAVE '+level+'  •  SCORE '+score+'  •  LIVES '+lives);
+    }
+    else if(['snake','asteroids','frogger','roadRacer','flappy','spaceShooter','helicopter','lunarLander','pinball','targetRange'].includes(game)){
+      if(game==='snake'){const ox=120,oy=65,cs=28;x.fillStyle='rgba(148,163,184,.12)';x.fillRect(ox,oy,24*cs,16*cs);x.fillStyle='#22c55e';retro.snake.forEach(p=>x.fillRect(ox+p.x*cs+2,oy+p.y*cs+2,cs-4,cs-4));if(retro.food){x.fillStyle='#ef4444';x.beginPath();x.arc(ox+retro.food.x*cs+cs/2,oy+retro.food.y*cs+cs/2,9,0,Math.PI*2);x.fill();}drawArcadeHud(x,'SNAKE • SCORE '+score);}
+      else if(game==='asteroids'){x.strokeStyle='#94a3b8';x.lineWidth=3;retro.objects.forEach(o=>{x.beginPath();x.arc(o.x,o.y,o.r,0,Math.PI*2);x.stroke();});x.fillStyle='#f8fafc';retro.bullets.forEach(b=>x.fillRect(b.x-2,b.y-7,4,14));x.fillStyle='#fbbf24';x.beginPath();x.moveTo(retro.playerX,retro.playerY-18);x.lineTo(retro.playerX-13,retro.playerY+12);x.lineTo(retro.playerX+13,retro.playerY+12);x.closePath();x.fill();drawArcadeHud(x,'ASTEROIDS • SCORE '+score);}
+      else if(game==='frogger'){x.fillStyle='rgba(34,197,94,.16)';x.fillRect(0,H-80,W,80);x.fillStyle='#38bdf8';x.fillRect(0,110,W,30);retro.objects.forEach(o=>{x.fillStyle='#ef4444';x.fillRect(o.x,o.y-o.w/2,o.w,o.w*.55)});x.fillStyle='#22c55e';x.beginPath();x.arc(retro.playerX,retro.playerY,16,0,Math.PI*2);x.fill();drawArcadeHud(x,'FROGGER • SCORE '+score);}
+      else if(game==='roadRacer'){x.fillStyle='#1f2937';x.fillRect(150,0,W-300,H);x.strokeStyle='rgba(255,255,255,.35)';x.setLineDash([24,20]);x.lineWidth=5;x.beginPath();x.moveTo(W/2,0);x.lineTo(W/2,H);x.stroke();x.setLineDash([]);retro.objects.forEach(o=>{x.fillStyle='#ef4444';x.fillRect(o.x-o.w/2,o.y-38,o.w,76)});x.fillStyle='#fbbf24';x.fillRect(retro.playerX-24,retro.playerY-45,48,90);drawArcadeHud(x,'ROAD RACER • SCORE '+Math.floor(score));}
+      else if(game==='flappy'){retro.objects.forEach(o=>{x.fillStyle='#22c55e';x.fillRect(o.x,0,55,o.gapY);x.fillRect(o.x,o.gapY+o.gap,55,H);});x.fillStyle='#fbbf24';x.beginPath();x.arc(retro.playerX,retro.playerY,15,0,Math.PI*2);x.fill();drawArcadeHud(x,'FLAPPY • SCORE '+score);}
+      else if(game==='spaceShooter'){retro.objects.forEach(o=>{x.fillStyle='#ef4444';x.fillRect(o.x-14,o.y-12,28,24);x.fillStyle='#fca5a5';x.fillRect(o.x-5,o.y-18,10,5);});x.fillStyle='#f8fafc';retro.bullets.forEach(b=>x.fillRect(b.x-2,b.y-8,4,16));x.fillStyle='#38bdf8';x.beginPath();x.moveTo(retro.playerX,retro.playerY-22);x.lineTo(retro.playerX-16,retro.playerY+15);x.lineTo(retro.playerX+16,retro.playerY+15);x.closePath();x.fill();drawArcadeHud(x,'SPACE SHOOTER • SCORE '+score);}
+      else if(game==='helicopter'){retro.objects.forEach(o=>{x.fillStyle='#22c55e';x.fillRect(o.x,0,55,o.gapY);x.fillRect(o.x,o.gapY+o.gap,55,H);});x.fillStyle='#fbbf24';x.fillRect(retro.playerX-22,retro.playerY-10,44,20);drawArcadeHud(x,'HELICOPTER • SCORE '+Math.floor(retro.timer));}
+      else if(game==='lunarLander'){x.fillStyle='#334155';x.fillRect(0,H-60,W,60);x.fillStyle='#f8fafc';x.fillRect(retro.playerX-16,retro.playerY-12,32,24);x.fillStyle='#f97316';x.fillRect(retro.playerX-7,retro.playerY+12,14,14);drawArcadeHud(x,'LUNAR LANDER • SCORE '+score);}
+      else if(game==='pinball'){x.strokeStyle='#64748b';x.lineWidth=4;x.strokeRect(120,25,W-240,H-45);x.fillStyle='#38bdf8';retro.objects.forEach(o=>{x.beginPath();x.arc(o.x,o.y,o.r,0,Math.PI*2);x.fill();});x.fillStyle='#fbbf24';x.beginPath();x.arc(retro.playerX,retro.playerY,14,0,Math.PI*2);x.fill();x.fillStyle='#ef4444';x.save();x.translate(W/2-55,H-72);x.rotate(retro.flippers?-0.18:0.08);x.fillRect(-45,-5,90,10);x.restore();x.save();x.translate(W/2+55,H-72);x.rotate(retro.flippers?0.18:-0.08);x.fillRect(-45,-5,90,10);x.restore();drawArcadeHud(x,'PINBALL • SCORE '+score+' • BALLS '+retro.lives);}
+      else if(game==='targetRange'){if(retro.target){x.strokeStyle='#ef4444';x.lineWidth=6;x.beginPath();x.arc(retro.target.x,retro.target.y,retro.target.r,0,Math.PI*2);x.stroke();x.beginPath();x.arc(retro.target.x,retro.target.y,8,0,Math.PI*2);x.fill();}drawArcadeHud(x,'TARGET RANGE • HITS '+score+' • TIME '+Math.max(0,Math.ceil(retro.timer/60)));}
+    }
+  }
+  function endGame(){running=false;paused=false;cancelAnimationFrame(raf);const res=document.getElementById('h2a_pong_result');const txt=document.getElementById('h2a_pong_result_text');if(res)res.classList.remove('hidden');if(txt)txt.textContent=game==='pong'?(score>enemyScore?'PLAYER WINS '+score+'–'+enemyScore:'AI WINS '+enemyScore+'–'+score):'Final score: '+score;setStatus('GAME OVER — save the score or restart.');draw();}
+  function loop(ts){if(!running||paused)return;if(!last)last=ts;let dt=Math.min(2,(ts-last)/16.67);last=ts;dt=Math.min(3,dt*gameSpeed*(0.9+gameDifficulty*0.05));update(dt);draw();if(running)raf=requestAnimationFrame(loop)}
+  function start(){if(running){if(paused){paused=false;last=0;raf=requestAnimationFrame(loop);setStatus('');}return;}if(!['pong','blockBreaker','tetris','spaceInvaders','pacman','snake','asteroids','frogger','roadRacer','flappy','spaceShooter','helicopter','lunarLander','pinball','targetRange'].includes(game))return;initGame();running=true;paused=false;last=0;pacStepAcc=0;ghostStepAcc=0;setStatus('');raf=requestAnimationFrame(loop);}
+  function pause(){if(!running)return;paused=!paused;last=0;if(!paused)raf=requestAnimationFrame(loop);setStatus('');draw();}
+
+
+  document.addEventListener('DOMContentLoaded',()=>{
+    locked=true;
+
+    document.querySelectorAll('.h2a-game-select').forEach(btn=>btn.addEventListener('click',()=>{game=btn.dataset.game||'pong';document.querySelectorAll('.h2a-game-select').forEach(b=>{b.classList.remove('bg-amber-500','text-slate-950');b.classList.add('bg-slate-700','text-white');});btn.classList.remove('bg-slate-700','text-white');btn.classList.add('bg-amber-500','text-slate-950');running=false;paused=false;cancelAnimationFrame(raf);initGame();setStatus('Selected '+gameLabel()+'. Tap START to play.');}));
+    document.getElementById('h2a_pong_start')?.addEventListener('click',()=>{if(!running)start();else pause();});document.getElementById('h2a_game_speed')?.addEventListener('change',e=>{gameSpeed=Math.max(.7,Math.min(1.7,Number(e.target.value)||1));setStatus('Speed set to '+e.target.options[e.target.selectedIndex].text+'.');renderScores();});document.getElementById('h2a_game_difficulty')?.addEventListener('change',e=>{gameDifficulty=Math.max(1,Math.min(3,Number(e.target.value)||2));setStatus('Difficulty set to '+e.target.options[e.target.selectedIndex].text+'. Restart the game to apply from a clean start.');});
+    document.querySelectorAll('.h2a-pac-dir').forEach(btn=>btn.addEventListener('pointerdown',e=>{e.preventDefault();if(game!=='pacman')return;const d=Number(btn.dataset.pacdir);if([0,1,2,3].includes(d)){pacPlayer.nextDir=d;}}));document.getElementById('h2a_game_restart')?.addEventListener('click',()=>{initGame();start();});
+document.getElementById('h2a_pong_save')?.addEventListener('click',addScore);
+
+    const c=document.getElementById('h2a_pong_canvas');if(c){c.addEventListener('pointerdown',e=>{c.setPointerCapture?.(e.pointerId);if(game==='tetris'){const r=c.getBoundingClientRect(),xx=(e.clientX-r.left)/r.width*W,yy=(e.clientY-r.top)/r.height*H;if(xx<W/3&&!collide(tetrisPiece.x-1,tetrisPiece.y))tetrisPiece.x--;else if(xx>W*2/3&&!collide(tetrisPiece.x+1,tetrisPiece.y))tetrisPiece.x++;else if(yy<H/3)rotateTetris();else if(!collide(tetrisPiece.x,tetrisPiece.y+1))tetrisPiece.y++;draw();}else{if(game==='pacman'){const r=c.getBoundingClientRect(),xx=(e.clientX-r.left)/r.width*W,yy=(e.clientY-r.top)/r.height*H,px=20+pacPlayer.x*15+7.5,py=50+pacPlayer.y*15+7.5;const dx=xx-px,dy=yy-py;if(Math.abs(dx)>Math.abs(dy))pacPlayer.nextDir=dx>0?1:3;else pacPlayer.nextDir=dy>0?2:0;}else{movePlayer(e);if(game==='spaceInvaders'&&running&&!paused)playerShots.push({x:playerX,y:H-45});if(['roadRacer','spaceShooter','asteroids','targetRange'].includes(game))retro.playerX=Math.max(35,Math.min(W-35,(e.clientX-c.getBoundingClientRect().left)/c.getBoundingClientRect().width*W));if(game==='frogger'){const r=c.getBoundingClientRect(),xx=(e.clientX-r.left)/r.width*W,yy=(e.clientY-r.top)/r.height*H;const dx=xx-retro.playerX,dy=yy-retro.playerY;if(Math.abs(dx)>Math.abs(dy))retro.playerX=Math.max(40,Math.min(W-40,retro.playerX+Math.sign(dx)*35));else retro.playerY=Math.max(70,Math.min(H-55,retro.playerY+Math.sign(dy)*35));frogCollision();}if(['flappy','helicopter'].includes(game))retro.vy=-4.2;if(game==='lunarLander')retro.vy=-2.2;if(game==='asteroids')retro.bullets.push({x:retro.playerX,y:retro.playerY-18,vx:0,vy:-10,life:55});if(game==='spaceShooter')retro.bullets.push({x:retro.playerX,y:retro.playerY-22,vx:0,vy:-10,life:55});if(game==='pinball')retro.flippers=1;if(game==='targetRange'&&retro.target){const r=c.getBoundingClientRect(),xx=(e.clientX-r.left)/r.width*W,yy=(e.clientY-r.top)/r.height*H;if(Math.hypot(xx-retro.target.x,yy-retro.target.y)<retro.target.r){score+=10;retro.targetLifetime=0;retro.target={x:80+Math.random()*(W-160),y:90+Math.random()*(H-190),r:Math.max(17,37-gameDifficulty*5-Math.min(7,level-1))};}}}}});c.addEventListener('pointermove',e=>{if(e.buttons)movePlayer(e)});c.addEventListener('pointerup',()=>{retro.flippers=0;});}
+    function movePlayer(e){const r=c.getBoundingClientRect();const y=(e.clientY-r.top)/r.height*H;const xx=(e.clientX-r.left)/r.width*W;playerY=Math.max(55,Math.min(H-55,y));playerX=Math.max(70,Math.min(W-70,xx));}
+    window.addEventListener('keydown',e=>{if(!locked||!running||paused)return;if(game==='tetris'){if(e.key==='ArrowLeft'&&!collide(tetrisPiece.x-1,tetrisPiece.y))tetrisPiece.x--;if(e.key==='ArrowRight'&&!collide(tetrisPiece.x+1,tetrisPiece.y))tetrisPiece.x++;if(e.key==='ArrowUp'||e.key===' ')rotateTetris();if(e.key==='ArrowDown'&&!collide(tetrisPiece.x,tetrisPiece.y+1))tetrisPiece.y++;draw();}else if(game==='pong'){if(e.key==='ArrowUp')playerY=Math.max(55,playerY-18);if(e.key==='ArrowDown')playerY=Math.min(H-55,playerY+18);draw();}else if(game==='blockBreaker'){if(e.key==='ArrowLeft')playerX=Math.max(70,playerX-25);if(e.key==='ArrowRight')playerX=Math.min(W-70,playerX+25);draw();}else if(game==='pacman'){if(e.key==='ArrowUp')pacPlayer.nextDir=0;if(e.key==='ArrowRight')pacPlayer.nextDir=1;if(e.key==='ArrowDown')pacPlayer.nextDir=2;if(e.key==='ArrowLeft')pacPlayer.nextDir=3;draw();}else if(game==='spaceInvaders'){if(e.key==='ArrowLeft')playerX=Math.max(70,playerX-25);if(e.key==='ArrowRight')playerX=Math.min(W-70,playerX+25);if(e.key===' '||e.key==='ArrowUp')playerShots.push({x:playerX,y:H-45});draw();}else if(['roadRacer','frogger'].includes(game)){if(e.key==='ArrowLeft')retro.playerX=Math.max(40,retro.playerX-35);if(e.key==='ArrowRight')retro.playerX=Math.min(W-40,retro.playerX+35);if(e.key==='ArrowUp')retro.playerY=Math.max(50,retro.playerY-35);if(e.key==='ArrowDown')retro.playerY=Math.min(H-50,retro.playerY+35);if(game==='frogger'&&frogCollision())return;draw();}else if(game==='snake'){if(e.key==='ArrowUp'&&retro.snakeDir!==2)retro.snakeNext=0;if(e.key==='ArrowRight'&&retro.snakeDir!==3)retro.snakeNext=1;if(e.key==='ArrowDown'&&retro.snakeDir!==0)retro.snakeNext=2;if(e.key==='ArrowLeft'&&retro.snakeDir!==1)retro.snakeNext=3;draw();}else if(['flappy','helicopter','lunarLander'].includes(game)){if(e.key==='ArrowUp'||e.key===' ')retro.vy=game==='lunarLander'?-2.2:-4.2;if(e.key==='ArrowLeft')retro.vx-=.8;if(e.key==='ArrowRight')retro.vx+=.8;draw();}else if(game==='asteroids'){if(e.key==='ArrowLeft')retro.vx-=.7;if(e.key==='ArrowRight')retro.vx+=.7;if(e.key==='ArrowUp')retro.vy-=.7;if(e.key==='ArrowDown')retro.vy+=.7;draw();}});renderScores();initGame();setStatus('Choose a game, select speed and difficulty, then press Start.');
+
+    window.__arcadeEngineQA=()=>({game,running,paused,locked,score,level,lives,gameSpeed,gameDifficulty,traffic:retro.objects.length,playerX:retro.playerX,playerY:retro.playerY,obstacles:retro.objects.map(o=>({...o})),countdown:retro.timer,targetLifetime:retro.targetLifetime||0,canvasWidth:document.getElementById('h2a_pong_canvas').width});
+
+
+  });
+})();
+</script><script>
+(()=>{
+const names=window.__classicGameNames||{},all=window.__classicGameList||[];
+const buttons=[...document.querySelectorAll('.h2a-game-select')],canvas=document.getElementById('h2a_pong_canvas'),feedback=document.getElementById('feedbackText'),feedbackLink=document.getElementById('feedbackLink'),feedbackStatus=document.getElementById('feedbackStatus');
+let chosen='pong';
+function switchTo(g){
+ const item=all.find(x=>x.id===g);if(!item)return;
+ chosen=g;buttons.forEach(b=>{const active=b.dataset.game===g;b.classList.toggle('active',active);b.setAttribute('aria-pressed',String(active))});
+ history.replaceState(null,'',location.pathname+'?game='+encodeURIComponent(g));
+ updateMail();
+}
+function updateMail(){
+ const subject='ShanX Micro Arcade: '+(names[chosen]||chosen)+' feedback';
+ const body='Game: '+(names[chosen]||chosen)+'\nSpeed: '+document.getElementById('h2a_game_speed').selectedOptions[0].text+'\nDifficulty: '+document.getElementById('h2a_game_difficulty').selectedOptions[0].text+'\n\nSuggestion:\n'+feedback.value.trim();
+ feedbackLink.href='mailto:henry.shannon@shanxservices.com?subject='+encodeURIComponent(subject)+'&body='+encodeURIComponent(body);
+}
+buttons.forEach(btn=>btn.addEventListener('click',e=>{switchTo(btn.dataset.game);if(e.isTrusted)document.getElementById('play').scrollIntoView({behavior:'smooth',block:'start'});}));
+feedback.addEventListener('input',()=>{feedbackStatus.textContent='';updateMail()});
+for(const id of ['h2a_game_speed','h2a_game_difficulty'])document.getElementById(id).addEventListener('change',updateMail);
+feedbackLink.addEventListener('click',e=>{if(!feedback.value.trim()){e.preventDefault();feedback.focus();feedbackStatus.textContent='Please write a suggestion first.';}else{feedbackStatus.textContent='Your email draft should open. Press Send in the email app to deliver it.'}});
+const pressed=new Map();
+function key(e,key){window.dispatchEvent(new KeyboardEvent(e,{key,bubbles:true,cancelable:true}))}
+function actionForGame(){
+ const fire=new PointerEvent('pointerdown',{bubbles:true,cancelable:true,pointerId:82,pointerType:'touch',clientX:canvas.getBoundingClientRect().left+canvas.getBoundingClientRect().width/2,clientY:canvas.getBoundingClientRect().top+canvas.getBoundingClientRect().height/2});
+ if(['spaceShooter','spaceInvaders','asteroids','targetRange','pinball'].includes(chosen))canvas.dispatchEvent(fire);
+ key('keydown',' ');
+}
+for(const b of document.querySelectorAll('[data-arrow]')){
+ const k=b.dataset.arrow;function start(e){e.preventDefault();if(pressed.has(k))return;try{b.setPointerCapture(e.pointerId)}catch(_){}key('keydown',k);if(chosen==='pacman'){const d={ArrowUp:'0',ArrowRight:'1',ArrowDown:'2',ArrowLeft:'3'}[k];document.querySelector('[data-pacdir="'+d+'"]').dispatchEvent(new PointerEvent('pointerdown',{bubbles:true}));}const timer=setInterval(()=>key('keydown',k),110);pressed.set(k,timer)}
+ function stop(e){e?.preventDefault();if(pressed.has(k)){clearInterval(pressed.get(k));pressed.delete(k)}key('keyup',k)}
+ b.addEventListener('pointerdown',start);['pointerup','pointercancel','lostpointercapture'].forEach(e=>b.addEventListener(e,stop));b.addEventListener('blur',()=>stop());
+}
+const action=document.getElementById('gameAction');let activeAction=null;
+action.addEventListener('pointerdown',e=>{e.preventDefault();try{action.setPointerCapture(e.pointerId)}catch(_){}actionForGame();activeAction=setInterval(actionForGame,240)});
+function endAction(){if(activeAction){clearInterval(activeAction);activeAction=null}key('keyup',' ')}
+for(const e of ['pointerup','pointercancel','lostpointercapture'])action.addEventListener(e,endAction);
+window.addEventListener('blur',()=>{for(const [k,t] of pressed){clearInterval(t);key('keyup',k)}pressed.clear();endAction()});
+const desired=new URLSearchParams(location.search).get('game')||'pong';
+const btn=buttons.find(x=>x.dataset.game===desired)||buttons[0];btn.click();
+window.__microArcadeQA=()=>({chosen,gameCount:buttons.length,feedbackUrl:feedbackLink.href,engine:window.__arcadeEngineQA?.()});
+})();
+</script></body></html>

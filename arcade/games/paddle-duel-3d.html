@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#080e17">
+<meta name="description" content="Paddle Duel 3D, a free playable 3D arcade game with touch controls, five difficulty levels, and player feedback.">
+<title>Paddle Duel 3D | ShanX Arcade Lab</title>
+<style>
+:root{color-scheme:dark;--bg:#060c15;--lime:#b9ff81;--gold:#ffe09c;--muted:#c5d4dd}*{box-sizing:border-box}
+html{min-height:100%;background:var(--bg)}body{margin:0;font:16px/1.5 system-ui,'Segoe UI',Arial,sans-serif;background:radial-gradient(ellipse at 90% 0%,#30524588,transparent 54%),var(--bg);color:#fffef7}
+a{color:var(--lime)}button,select,textarea{font:inherit}button{cursor:pointer}button:focus-visible,select:focus-visible,textarea:focus-visible,a:focus-visible{outline:3px solid white;outline-offset:3px}
+.container{max-width:1040px;width:95%;margin:auto}nav{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:18px 4px}nav a{font-size:12px;font-weight:950;text-decoration:none}nav span{color:var(--muted);font-size:12px}
+header{padding:14px 7px 20px}.eyebrow{font-size:11px;letter-spacing:.18em;color:var(--lime);font-weight:1000}h1{font-size:clamp(43px,8vw,84px);letter-spacing:-.075em;line-height:.94;margin:10px 0 14px}h1 em{font-style:normal;color:var(--gold)}header p{font-size:15px;color:var(--muted);max-width:700px;margin:0}
+.cabinet{border:1px solid #a4e9b879;background:linear-gradient(#152321,#0b1320);border-radius:24px;overflow:hidden;box-shadow:0 20px 80px #0009}
+.score{display:flex;justify-content:center;gap:clamp(35px,8vw,135px);align-items:center;background:#0c161b;padding:15px 12px;border-bottom:1px solid #b9ff8140}
+.score>div{text-align:center;min-width:80px}.score small{display:block;font-size:11px;font-weight:950;letter-spacing:.14em;color:#e1ecc5}.score strong{display:block;font-size:34px;line-height:1.2;font-weight:1000;color:var(--lime);font-variant-numeric:tabular-nums}.score>div:last-child strong{color:#ffcf85}.score .vs{font-size:13px;font-weight:1000;color:#a8bdbb}
+.stage{height:min(57vw,565px);min-height:300px;position:relative;background:#071019;touch-action:none;overflow:hidden}
+#view{display:block;width:100%;height:100%;touch-action:none;cursor:ns-resize}.loadmsg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:20px;background:#071019;color:#e1f2de;font-weight:800;pointer-events:none}.loadmsg[hidden]{display:none!important}
+.status{display:flex;justify-content:space-between;align-items:center;gap:9px;padding:11px 20px;font-size:12px;color:#d8e9db;background:#0a1719;border-top:1px solid #ffffff27;flex-wrap:wrap}
+.toolbar{padding:14px 20px;display:flex;align-items:end;flex-wrap:wrap;gap:10px;border-top:1px solid #ffffff33}
+.toolbar label{display:flex;flex-direction:column;gap:5px;font-size:11px;font-weight:900;letter-spacing:.08em;color:var(--gold)}
+.toolbar select{min-width:145px;padding:11px 10px;border-radius:10px;background:#192b2a;color:#fff;border:1px solid #b3eaa26e;min-height:48px}
+.btn{border-radius:12px;background:#324941;border:1px solid #bbe3a085;color:#fff;padding:10px 17px;min-height:49px;font-weight:950}.btn.primary{background:var(--lime);color:#102919;border-color:var(--lime)}
+.touch{display:flex;gap:10px;justify-content:center;padding:12px 15px 18px}.touch button{flex:1;max-width:280px;border:1px solid #bae1aa85;border-radius:14px;background:#324c43;color:#fff;font-weight:1000;padding:14px;touch-action:none;min-height:60px;font-size:19px;user-select:none}
+.instructions{text-align:center;color:#cadacd;font-size:13px;padding:18px 9px 4px;max-width:650px;margin:auto}
+.feedback{margin:28px 0 12px;background:linear-gradient(125deg,#1c3328,#0d1a18);border:1px solid #a5dd9e77;border-radius:18px;padding:22px}
+.feedback h2{font-size:25px;letter-spacing:-.04em;margin:0 0 4px}.feedback p{font-size:12px;color:var(--muted);margin:5px 0 16px}
+.feedback textarea{width:100%;min-height:95px;resize:vertical;padding:12px;border-radius:11px;border:1px solid #bddca97b;background:#0d201a;color:#fff;font-size:15px}
+.feedback a{display:inline-block;text-decoration:none;background:var(--lime);color:#102414;border-radius:11px;padding:13px 17px;font-weight:950;margin-top:12px;font-size:13px}
+#feedbackStatus{font-size:12px;color:var(--gold);min-height:18px;margin-top:7px}
+footer{text-align:center;padding:21px 10px 39px;color:#90a79c;font-size:12px}
+@media(max-width:520px){.stage{height:58vh;min-height:310px}.toolbar{padding:12px}.toolbar label,.toolbar select{flex:1;min-width:0}.toolbar .btn{flex:1;padding:9px 10px;font-size:13px}.score strong{font-size:28px}nav span{font-size:10px}.status{padding:10px 12px}.feedback{padding:15px}}
+</style></head><body><div class="container">
+<nav><a href="../index.html">← ARCADE LAB</a><span>3D ARCADE · PLAYABLE ALPHA</span></nav>
+<header><div class="eyebrow">SHANX / X13 · FIRST 3D ARCADE EDITION</div><h1>PADDLE <em>DUEL 3D.</em></h1><p>Real 3D paddles, glowing ball, lights and a dimensional arena. Drag to defend your goal. Move and angle your paddle to put spin on the ball and fake out the computer. First to 5 wins.</p></header>
+<main class="cabinet"><div class="score"><div><small>YOU</small><strong id="human">0</strong></div><span class="vs">FIRST TO 5</span><div><small>COMPUTER</small><strong id="cpu">0</strong></div></div>
+<div class="stage" id="stage"><canvas id="view" tabindex="0" aria-label="3D paddle game; drag your finger up and down to control the left paddle"></canvas><div class="loadmsg" id="loading" role="status">Loading the 3D court…</div></div>
+<div class="status"><span id="status" role="status" aria-live="polite">Loading…</span><span>Real 3D · Touch + Keyboard</span></div>
+<div class="toolbar"><label>DIFFICULTY<select id="difficulty"><option value="1">1 · Beginner</option><option value="2">2 · Easy</option><option value="3" selected>3 · Normal</option><option value="4">4 · Hard</option><option value="5">5 · Expert</option></select></label><button type="button" class="btn primary" id="start">START MATCH</button><button type="button" class="btn" id="reset">NEW MATCH</button></div>
+<div class="touch"><button id="up" aria-label="Move paddle up" type="button">↑ UP</button><button id="down" aria-label="Move paddle down" type="button">↓ DOWN</button></div></main>
+<p class="instructions">Drag on the game screen to move your paddle. Or hold the UP/DOWN buttons, ↑/↓ keys, or W/S. Hit near the paddle edges or move your paddle while striking to add curve and spin. Five real difficulty levels. On Beginner your paddle is largest and the computer's is smallest, slower, and less accurate. Expert keeps the old toughest AI and boosts ball speed. Spin the ball to surprise it. No account required.</p>
+<section class="feedback"><h2>How should we improve this 3D game? 💌</h2><p>Share ideas about the arena, power-ups, effects, or gameplay. This opens your email app with a draft; you choose whether to send it. Email is not anonymous.</p><textarea id="feedbackText" maxlength="1200" aria-label="Game feedback" placeholder="More arenas, ball effects, challenges..."></textarea><a id="feedbackSend" href="mailto:henry.shannon@shanxservices.com?subject=Paddle%20Duel%203D%20Feedback">✉️ EMAIL MY FEEDBACK ↗</a><div id="feedbackStatus" role="status" aria-live="polite"></div></section>
+<footer>ShanX Arcade Lab · An original 3D browser prototype · The existing 2D games remain unchanged · <a href="../index.html">Back to Arcade</a></footer>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(()=>{
+'use strict';
+const $=id=>document.getElementById(id),canvas=$('view'),stage=$('stage'),start=$('start'),reset=$('reset'),difficulty=$('difficulty');
+const status=$('status'),loading=$('loading'),human=$('human'),cpu=$('cpu');
+const body=$('feedbackText'),feedback=$('feedbackSend'),feedbackStatus=$('feedbackStatus');
+let renderer,scene,camera,ballMesh,leftPaddle,rightPaddle,trail=[],elapsed=0,raf=0,last=0;
+let running=false,paused=false,over=false,playerY=0,aiY=0,ball={x:0,y:0,vx:0,vy:0,spin:0},scoreYou=0,scoreCpu=0;
+let held={up:false,down:false},pointerDown=false;
+let lastPlayerY=0,playerVelocity=0,aiAimY=0,aiNextAimAt=0;
+const bounds={x:10.6,y:5.15},br=.34;
+const clamp=(v,min,max)=>Math.max(min,Math.min(max,v));
+const modes={
+1:{speed:6.0,ai:2.2,paddle:4.85,cpuPaddle:1.45,reaction:.8,error:1.05,commit:3.0},
+2:{speed:6.8,ai:3.1,paddle:4.3,cpuPaddle:1.8,reaction:.55,error:.7,commit:2.5},
+3:{speed:7.9,ai:4.5,paddle:3.7,cpuPaddle:2.1,reaction:.36,error:.42,commit:1.9},
+4:{speed:9.0,ai:6.0,paddle:3.1,cpuPaddle:2.3,reaction:.24,error:.16,commit:1.0},
+5:{speed:11.4,ai:8.2,paddle:2.45,cpuPaddle:2.45,reaction:.14,error:0,commit:0}
+};
+const cfg=()=>modes[Number(difficulty.value)]||modes[3];
+const setStatus=t=>{status.textContent=t};
+function feedbackUrl(){return 'mailto:henry.shannon@shanxservices.com?subject='+encodeURIComponent('Paddle Duel 3D feedback')+'&body='+encodeURIComponent('Difficulty: '+difficulty.selectedOptions[0].text+'\n\nFeedback:\n'+body.value.trim())}
+function updateMail(){feedback.href=feedbackUrl()}body.addEventListener('input',updateMail);difficulty.addEventListener('change',()=>{updateMail();resetMatch()});
+feedback.addEventListener('click',e=>{if(!body.value.trim()){e.preventDefault();feedbackStatus.textContent='Write a suggestion first.';body.focus();return;}feedbackStatus.textContent='Your email draft should open. Press Send in your email app to deliver.'});updateMail();
+function makeBox(w,h,d,color,metal=0){
+ const geo=new THREE.BoxGeometry(w,h,d),mat=new THREE.MeshStandardMaterial({color,metalness:metal,roughness:.28,emissive:color,emissiveIntensity:.10});
+ const m=new THREE.Mesh(geo,mat);scene.add(m);return m;
+}
+function makeArena(){
+ scene=new THREE.Scene();scene.background=new THREE.Color('#07111c');scene.fog=new THREE.Fog('#07111c',30,60);
+ camera=new THREE.PerspectiveCamera(45,1,.1,90);camera.position.set(0,2.5,27.3);camera.lookAt(0,0,0);
+ const amb=new THREE.AmbientLight('#a9bfd7',.75);scene.add(amb);
+ const l1=new THREE.PointLight('#a6ff9f',3.0,34);l1.position.set(-7,5,10);scene.add(l1);
+ const l2=new THREE.PointLight('#ffcc7d',2.7,35);l2.position.set(8,-3,8);scene.add(l2);
+ const stageMesh=makeBox(23,12,.35,0x122b31,.24);stageMesh.position.z=-1.9;
+ const edgeMat=new THREE.MeshBasicMaterial({color:0x9ef7b4});
+ for(const yy of [-5.65,5.65]){const rail=new THREE.Mesh(new THREE.BoxGeometry(23,.10,.22),edgeMat);rail.position.set(0,yy,-1.15);scene.add(rail)}
+ for(let y=-5;y<=5;y+=2){const mesh=new THREE.Mesh(new THREE.BoxGeometry(23,.025,.04),new THREE.MeshBasicMaterial({color:0x2a5154,transparent:true,opacity:.5}));mesh.position.set(0,y,-1.67);scene.add(mesh)}
+ for(let x=-10;x<=10;x+=2){const mesh=new THREE.Mesh(new THREE.BoxGeometry(.025,11,.04),new THREE.MeshBasicMaterial({color:0x2a5154,transparent:true,opacity:.5}));mesh.position.set(x,0,-1.67);scene.add(mesh)}
+ for(let y=-5.1;y<=5.1;y+=1.14){const marker=new THREE.Mesh(new THREE.BoxGeometry(.06,.6,.16),edgeMat);marker.position.set(0,y,-.98);scene.add(marker)}
+ leftPaddle=makeBox(.54,3,.95,0xa4ff7f,.3);leftPaddle.position.set(-bounds.x+.46,0,-.10);leftPaddle.scale.y=cfg().paddle/3;
+ rightPaddle=makeBox(.54,3,.95,0xffc16a,.32);rightPaddle.position.set(bounds.x-.46,0,-.10);rightPaddle.scale.y=cfg().cpuPaddle/3;
+ const sphere=new THREE.SphereGeometry(br,24,18);
+ ballMesh=new THREE.Mesh(sphere,new THREE.MeshStandardMaterial({color:0xffffff,metalness:.15,roughness:.2,emissive:0xffffff,emissiveIntensity:.7}));scene.add(ballMesh);ballMesh.position.set(0,0,.62);
+ const lamp=new THREE.PointLight('#b2ffdf',1.1,8);ballMesh.add(lamp);lamp.position.set(0,0,0);
+ for(let i=0;i<7;i++){const m=new THREE.Mesh(new THREE.SphereGeometry(br*(.56-i*.06),12,8),new THREE.MeshBasicMaterial({color:0xa5ffe6,transparent:true,opacity:.28-i*.027,depthWrite:false}));scene.add(m);trail.push(m)}
+ renderer=new THREE.WebGLRenderer({canvas,antialias:true,powerPreference:'default',alpha:false});
+ renderer.setClearColor(0x07111c,1);renderer.setPixelRatio(Math.min(1.5,window.devicePixelRatio||1));
+ renderer.outputEncoding=THREE.sRGBEncoding;
+ resize();loading.hidden=true;setStatus('Court ready. Select a difficulty and press Start.');
+ draw();
+}
+function resize(){if(!renderer)return;const w=Math.max(200,stage.clientWidth),h=Math.max(220,stage.clientHeight);renderer.setSize(w,h,false);camera.aspect=w/h;camera.position.z=Math.max(27.3,12.5/(Math.tan(THREE.Math.degToRad(22.5))*camera.aspect));camera.lookAt(0,0,0);camera.updateProjectionMatrix();}
+function draw(){if(!renderer)return;leftPaddle.position.y=playerY;rightPaddle.position.y=aiY;ballMesh.position.set(ball.x,ball.y,.62);ballMesh.rotation.z+=ball.spin*.012;renderer.render(scene,camera)}
+function serve(sign){ball.x=0;ball.y=0;ball.spin=0;aiNextAimAt=0;ball.vx=sign*cfg().speed;ball.vy=(Math.random()*.85+.26)*(Math.random()<.5?-1:1)*cfg().speed*.55;trail.forEach(t=>t.visible=false)}
+function resetMatch(){scoreYou=0;scoreCpu=0;human.textContent='0';cpu.textContent='0';running=false;paused=false;over=false;playerY=0;aiY=0;ball={x:0,y:0,vx:0,vy:0,spin:0};lastPlayerY=0;playerVelocity=0;aiAimY=0;aiNextAimAt=0;held.up=held.down=false;if(leftPaddle&&rightPaddle){leftPaddle.scale.y=cfg().paddle/3;rightPaddle.scale.y=cfg().cpuPaddle/3;}
+ start.textContent='START MATCH';setStatus('New match. First to 5 wins.');draw();}
+function point(winner){if(winner==='human'){scoreYou++;human.textContent=String(scoreYou)}else{scoreCpu++;cpu.textContent=String(scoreCpu)}
+ if(scoreYou>=5||scoreCpu>=5){running=false;over=true;start.textContent='PLAY AGAIN';setStatus(scoreYou>=5?'YOU WIN! Beautiful rally! 🌟':'COMPUTER WINS. Give it another go!');return}
+ serve(winner==='human'?1:-1);setStatus((winner==='human'?'Your point! ':'Computer scores. ')+'Keep the rally going.');}
+function advance(dt){const c=cfg(),half=c.paddle/2,cpuHalf=c.cpuPaddle/2;
+ if(held.up)playerY+=11.5*dt;if(held.down)playerY-=11.5*dt;playerY=clamp(playerY,-bounds.y+half,bounds.y-half);
+ playerVelocity=clamp((playerY-lastPlayerY)/Math.max(dt,.008),-13,13);lastPlayerY=playerY;
+ // Human-beatable AI: lower levels sample less often and commit to imperfect aim.
+ const approaching=ball.vx>0;
+ const committed=approaching&&c.commit>0&&ball.x>bounds.x-c.commit;
+ if(elapsed>=aiNextAimAt&&!committed){
+    const jitter=(Math.random()*2-1)*c.error;
+    aiAimY=approaching?ball.y+jitter:Math.sin(elapsed*1.1)*1.6;
+    aiNextAimAt=elapsed+c.reaction;
+ }
+ const target=aiAimY,step=c.ai*dt;
+ aiY=clamp(aiY+clamp(target-aiY,-step,step),-bounds.y+cpuHalf,bounds.y-cpuHalf);
+ const px=ball.x,py=ball.y;
+ ball.x+=ball.vx*dt;ball.y+=ball.vy*dt;
+ if(ball.y>=bounds.y-br){ball.y=bounds.y-br;ball.vy=-Math.abs(ball.vy)}
+ if(ball.y<=-bounds.y+br){ball.y=-bounds.y+br;ball.vy=Math.abs(ball.vy)}
+ if(ball.vx<0&&ball.x<=-bounds.x+1.08&&ball.x>=-bounds.x+.3&&Math.abs(ball.y-playerY)<=half+br){
+   const offset=clamp((ball.y-playerY)/half,-1,1),motion=clamp(playerVelocity/12,-1,1);
+   ball.x=-bounds.x+1.08;ball.vx=Math.abs(ball.vx)*1.045;ball.vy+=offset*3.25+motion*2.4;
+   ball.spin=clamp(offset*3.2+motion*4.2,-5.1,5.1);
+ }
+ if(ball.vx>0&&ball.x>=bounds.x-1.08&&ball.x<=bounds.x-.3&&Math.abs(ball.y-aiY)<=cpuHalf+br){
+   const offset=clamp((ball.y-aiY)/cpuHalf,-1,1);
+   ball.x=bounds.x-1.08;ball.vx=-Math.abs(ball.vx)*1.045;ball.vy+=offset*2.5;ball.spin=clamp(offset*1.8,-2,2);
+ }
+ // Magnus-inspired sideways curve: paddle spin bends the ball's vertical flight and gradually decays.
+ ball.vy+=ball.spin*dt*2.0;ball.spin*=Math.exp(-1.15*dt);
+ if(ball.x< -bounds.x-.6){point('cpu')}else if(ball.x>bounds.x+.6){point('human')}
+ const ballSpeed=Math.hypot(ball.vx,ball.vy),limit=c.speed*1.95;if(ballSpeed>limit){ball.vx*=limit/ballSpeed;ball.vy*=limit/ballSpeed}
+ for(let i=trail.length-1;i>0;i--){trail[i].position.copy(trail[i-1].position);trail[i].visible=true}
+ if(trail[0]){trail[0].position.set(px,py,.5);trail[0].visible=true}
+}
+function tick(now){raf=requestAnimationFrame(tick);if(!last)last=now;const dt=Math.min(.038,(now-last)/1000);last=now;elapsed+=dt;
+ if(running&&!paused)advance(dt);draw();}
+function play(){if(!renderer)return;if(over)resetMatch();if(!running){running=true;paused=false;serve(Math.random()<.5?-1:1);setStatus('Rally started! Defend the green paddle.');start.textContent='PAUSE';}
+ else{paused=!paused;start.textContent=paused?'RESUME':'PAUSE';setStatus(paused?'Paused. Tap Resume to continue.':'Play!');}}
+start.addEventListener('click',play);reset.addEventListener('click',resetMatch);
+function pointerMove(e){if(!renderer)return;const rect=canvas.getBoundingClientRect();const yy=1-2*(e.clientY-rect.top)/rect.height;
+ const ndc=new THREE.Vector2(2*(e.clientX-rect.left)/rect.width-1,yy);
+ const ray=new THREE.Raycaster();ray.setFromCamera(ndc,camera);const hit=new THREE.Vector3();
+ if(ray.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0,0,1),0),hit)){playerY=clamp(hit.y,-bounds.y+cfg().paddle/2,bounds.y-cfg().paddle/2);}
+}
+canvas.addEventListener('pointerdown',e=>{e.preventDefault();pointerDown=true;try{canvas.setPointerCapture(e.pointerId)}catch(_){}pointerMove(e)});
+canvas.addEventListener('pointermove',e=>{if(pointerDown)pointerMove(e)});
+for(const ev of ['pointerup','pointercancel','lostpointercapture'])canvas.addEventListener(ev,()=>{pointerDown=false});
+function hold(btn,key){const b=$(btn);b.addEventListener('pointerdown',e=>{e.preventDefault();held[key]=true;try{b.setPointerCapture(e.pointerId)}catch(_){}});
+for(const ev of ['pointerup','pointercancel','lostpointercapture'])b.addEventListener(ev,()=>{held[key]=false});}
+hold('up','up');hold('down','down');
+window.addEventListener('keydown',e=>{if(['ArrowUp','ArrowDown','w','W','s','S'].includes(e.key)){e.preventDefault();if(e.key==='ArrowUp'||e.key.toLowerCase()==='w')held.up=true;else held.down=true}});
+window.addEventListener('keyup',e=>{if(e.key==='ArrowUp'||e.key.toLowerCase()==='w')held.up=false;if(e.key==='ArrowDown'||e.key.toLowerCase()==='s')held.down=false});
+window.addEventListener('blur',()=>{held.up=held.down=false;if(running&&!paused){paused=true;start.textContent='RESUME';setStatus('Paused.')}});window.addEventListener('resize',resize);
+try{if(typeof THREE==='undefined')throw Error('3D engine could not load. Check your connection and try again.');makeArena();resetMatch();raf=requestAnimationFrame(tick)}
+catch(e){loading.textContent='3D graphics unavailable: '+e.message;setStatus('Could not start graphics. Try another browser or connection.');}
+if(new URLSearchParams(location.search).has('arcadeQA')){
+window.__threeDQA=()=>({hasRenderer:!!renderer,running,paused,over,scoreYou,scoreCpu,playerY,aiY,ball:{...ball},difficulty:difficulty.value,balance:{...cfg()},playerPaddleHeight:leftPaddle?leftPaddle.scale.y*3:null,cpuPaddleHeight:rightPaddle?rightPaddle.scale.y*3:null,canvasWidth:canvas.width,canvasHeight:canvas.height,feedbackUrl:feedbackUrl()});
+window.__threeDSpinQA=(offset,motion)=>{
+ const wasRunning=running,wasPaused=paused,wasPlayerY=playerY,wasLast=lastPlayerY,wasBall={...ball},wasElapsed=elapsed,wasNext=aiNextAimAt;
+ running=false;paused=true;playerY=0;lastPlayerY=-motion*.017;elapsed=0;aiNextAimAt=0;
+ ball={x:-bounds.x+1.11,y:offset*cfg().paddle/2,vx:-8.3,vy:0,spin:0};
+ advance(.017);const result={...ball};
+ playerY=wasPlayerY;lastPlayerY=wasLast;ball=wasBall;elapsed=wasElapsed;aiNextAimAt=wasNext;running=wasRunning;paused=wasPaused;return result;
+};
+}
+})();
+</script></body></html>

@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#10241b">
+<meta name="description" content="Memory Garden: a relaxed picture-matching game with large touch-friendly cards, gentle hints, and three levels.">
+<meta property="og:title" content="Memory Garden | A Friendly Matching Game">
+<meta property="og:description" content="Flip cards. Find pairs. Take your time. No rush, just fun.">
+<title>Memory Garden | ShanX Arcade Lab</title>
+<style>
+:root{color-scheme:dark;--bg:#081510;--gold:#f9d88e;--mint:#a6f2bc;--ink:#fffef6;--muted:#c5d7c8}
+*{box-sizing:border-box}html{scroll-behavior:smooth}
+body{margin:0;background:radial-gradient(ellipse at 85% 0%,#3c7a4a77,transparent 48%),radial-gradient(ellipse at 0% 70%,#69562f66,transparent 49%),var(--bg);font:16px/1.5 system-ui,Segoe UI,Arial,sans-serif;color:var(--ink)}
+button,select{font:inherit}button{cursor:pointer}button:focus-visible,select:focus-visible,a:focus-visible{outline:3px solid white;outline-offset:4px}
+main{width:min(790px,95%);margin:auto;padding:22px 0 42px}
+nav{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:4px 4px 20px}
+nav a{color:var(--gold);font-size:12px;font-weight:900;text-decoration:none;letter-spacing:.08em}
+nav span{font-size:12px;color:var(--muted)}
+header{text-align:center;padding:10px 12px 28px}
+.kicker{color:var(--mint);font-weight:900;letter-spacing:.17em;font-size:12px}
+h1{margin:8px 0 10px;letter-spacing:-.07em;line-height:1.05;font-weight:1000;font-size:clamp(45px,8vw,73px)}
+h1 em{font-style:normal;color:var(--gold)}
+header p{max-width:570px;margin:0 auto;font-size:17px;color:#e1ebdf}
+.game{background:linear-gradient(140deg,#1c3827,#10241c 78%);border:1px solid #b4e7b566;border-radius:26px;overflow:hidden;box-shadow:0 20px 70px #0008}
+.toolbar{display:flex;justify-content:space-between;align-items:end;gap:12px;flex-wrap:wrap;border-bottom:1px solid #ffffff33;padding:19px}
+fieldset{border:0;margin:0;padding:0}
+label{display:block;color:var(--gold);font-size:12px;font-weight:900;letter-spacing:.08em;margin-bottom:6px}
+select{color:#fff;background:#243e2d;border:1px solid #e7d29188;border-radius:12px;padding:11px;min-height:48px;font-weight:800}
+.controls{display:flex;gap:10px;flex-wrap:wrap}
+.control{border:1px solid #ffffff66;background:#284537;color:white;border-radius:13px;min-height:48px;padding:9px 14px;font-size:14px;font-weight:850}
+.control.primary{background:var(--mint);color:#112719;border-color:var(--mint)}
+.control:disabled{opacity:.48;cursor:default}
+.status{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:19px 20px 0;align-items:center}
+.status strong{color:var(--gold);font-size:22px}.status .help{color:#c9ddce;font-size:13px}
+.meter{height:9px;background:#ffffff22;border-radius:99px;overflow:hidden;margin:12px 20px 0}
+.meter span{display:block;height:100%;background:linear-gradient(90deg,#85eeb1,#f6cf7c);width:0%;transition:width .18s}
+#message{text-align:center;padding:15px 14px 0;min-height:46px;font-weight:800;color:#e2f3e4}
+.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px;padding:18px 20px 22px}
+.cards.warmup,.cards.medium,.cards.challenge{grid-template-columns:repeat(4,minmax(0,1fr))}
+.cards.advanced{grid-template-columns:repeat(5,minmax(0,1fr))}
+.cards.expert{grid-template-columns:repeat(6,minmax(0,1fr))}
+.card{width:100%;aspect-ratio:1.08;min-height:0;border-radius:19px;border:2px solid #a2e8bd77;background:linear-gradient(130deg,#3b7352,#25553e);display:flex;align-items:center;justify-content:center;flex-direction:column;color:#ffefb7;touch-action:manipulation;transition:background .16s,transform .12s}
+.card:active:not(:disabled){transform:scale(.97)}
+.back{font-weight:1000;font-size:clamp(41px,9vw,66px);line-height:1;text-shadow:0 3px 18px #0005}
+.front{display:none;flex-direction:column;align-items:center;justify-content:center;gap:5px}
+.front .emoji{font-size:clamp(32px,7vw,59px);line-height:1.1}.front .name{font-size:clamp(10px,1.8vw,14px);color:#193e23;font-weight:1000}
+.card.open,.card.matched,.card.preview{color:#193e23;background:linear-gradient(145deg,#f9e3aa,#c9f2d8);border-color:#ffefc2}
+.card.open .back,.card.matched .back,.card.preview .back{display:none}
+.card.open .front,.card.matched .front,.card.preview .front{display:flex}
+.card.matched{background:linear-gradient(140deg,#c6f8d0,#9ce4bd);border-color:#70ffc0;position:relative}
+.card.matched:after{content:"✓";color:#227a45;position:absolute;right:8px;top:4px;font-size:20px;font-weight:1000}
+.win{margin:0 20px 22px;border:1px solid #f8d57e;background:#eedc9140;padding:22px;border-radius:17px;text-align:center}
+.win[hidden]{display:none}.win h2{color:var(--gold);font-size:25px;margin:0 0 8px}.win p{margin:0 0 15px}
+.instructions{max-width:680px;text-align:center;color:#d3dfd1;font-size:14px;margin:22px auto 0;padding:0 10px}
+.feedback{margin:31px auto 0;padding:26px;background:linear-gradient(145deg,#213b2a,#0d2018);border:1px solid #a7dba577;border-radius:23px}
+.feedback-tag{font-weight:1000;font-size:11px;letter-spacing:.14em;color:var(--mint)}
+.feedback h2{font-size:clamp(27px,4vw,37px);margin:8px 0;letter-spacing:-.045em}
+.feedback p{color:#d6e5d8;line-height:1.6;margin:0 0 19px}
+.feedback-grid{display:grid;grid-template-columns:1fr 2fr;gap:14px;align-items:start}
+.feedback label{display:block;margin-bottom:7px;color:var(--gold);font-size:12px;font-weight:900;letter-spacing:.05em}
+.feedback select,.feedback textarea{width:100%;background:#101e17;color:#fffef5;border:1px solid #bfdab37a;border-radius:12px;min-height:48px;padding:12px;font-size:16px}
+.feedback textarea{resize:vertical;min-height:108px;line-height:1.45}
+.feedback .feedback-help{margin:14px 0 17px;color:#bacdbb;font-size:12px}
+.feedback-actions{display:flex;gap:10px;flex-wrap:wrap}
+.feedback-email,.feedback-copy{display:inline-flex;align-items:center;justify-content:center;border-radius:12px;padding:13px 16px;font-weight:900;min-height:49px;text-decoration:none}
+.feedback-email{background:var(--mint);color:#102618}
+.feedback-copy{background:#2d4e3d;color:#fff;border:1px solid #9edbad88}
+.feedback-status{font-size:13px;color:#f8dc94;min-height:22px;margin-top:13px}
+@media(max-width:550px){.feedback{padding:20px 14px;margin:25px 4px 0}.feedback-grid{grid-template-columns:1fr}.feedback-actions>*{width:100%}}
+footer{text-align:center;color:#a4b9a7;font-size:12px;margin:28px 0 0}
+footer a{color:#c6e7cc}
+@media(max-width:550px){
+main{width:100%;padding:15px 9px 30px}
+nav{padding:0 7px 17px}nav a{font-size:10px}
+header{padding:8px 9px 22px}header p{font-size:15px}
+.game{border-radius:19px}
+.toolbar{padding:14px;align-items:stretch}
+.toolbar fieldset,select{width:100%}
+.controls{width:100%;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.control{padding:9px 6px;font-size:13px}
+.status{padding:15px 13px 0}.status strong{font-size:18px}.meter{margin:12px 13px 0}
+.cards{gap:8px;padding:15px 10px 19px}
+.cards.warmup,.cards.medium,.cards.challenge,.cards.advanced,.cards.expert{gap:7px}
+.cards.advanced,.cards.expert{grid-template-columns:repeat(4,minmax(0,1fr))}
+.card{border-radius:12px}
+.back{font-size:clamp(28px,10vw,52px)}
+.front .emoji{font-size:clamp(24px,9vw,43px)}
+.front .name{font-size:clamp(9px,2.6vw,12px)}
+}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main>
+<nav><a href="../index.html">← SHANX ARCADE LAB</a><span>JUST FOR FUN · NO TIMER</span></nav>
+<header><div class="kicker">🌸 A LITTLE GARDEN FOR YOUR MIND 🌸</div><h1>Memory <em>Garden</em></h1><p>Turn over two pictures. Find the matching pair. Take your time, enjoy yourself, and celebrate each little win!</p></header>
+<section class="game" aria-label="Memory matching game">
+<div class="toolbar">
+<fieldset><label for="level">CHOOSE YOUR GARDEN</label><select id="level">
+<option value="easy">🌱 Easy · 6 cards</option>
+<option value="warmup">🍀 Gentle · 8 cards</option>
+<option value="medium" selected>🌻 Growing · 12 cards</option>
+<option value="challenge">🌺 Blooming · 16 cards</option>
+<option value="advanced">🌷 Advanced · 20 cards</option>
+<option value="expert">🌟 Expert · 24 cards</option>
+</select></fieldset>
+<div class="controls"><button class="control" id="peek" type="button">👀 Show Me Again</button><button class="control primary" id="new" type="button">↻ New Game</button></div>
+</div>
+<div class="status"><div class="count">Pairs found: <strong id="found">0 / 6</strong></div><div class="help">No pressure. Go at your own pace. 💚</div></div>
+<div class="meter" role="progressbar" aria-label="Pairs matched" aria-valuemin="0" aria-valuemax="6" aria-valuenow="0" id="progress"><span id="fill"></span></div>
+<div id="message" role="status" aria-live="polite">Take a look at the pictures, then find their matches!</div>
+<div id="cards" class="cards" aria-label="Matching cards"></div>
+<div class="win" id="win" hidden><h2>🌼 Beautifully Done! 🌼</h2><p id="winText">You matched all the pairs!</p><button class="control primary" id="next" type="button">Play Another Round ↗</button></div>
+</section>
+<div class="instructions"><strong>How to play:</strong> Tap two cards to find a pair. Choose 6, 8, 12, 16, 20, or 24 cards. Peek allowances are limited: Easy/Gentle <strong>3</strong>, Growing/Blooming <strong>2</strong>, Advanced <strong>1</strong>. Each peek gets shorter on harder levels. Expert automatically reveals all cards once for 1.5 seconds at the start and has <strong>no extra peeks</strong>. No countdown and no penalties.</div>
+<section class="feedback" id="feedback" aria-labelledby="feedbackTitle">
+<div class="feedback-tag">💌 HELP THIS GARDEN GROW</div>
+<h2 id="feedbackTitle">Tell us what you'd change!</h2>
+<p>More cards? Bigger pictures? A different challenge? Your ideas help us make the game better. You do not need to enter a name, but using email will reveal your sending email address. An anonymous in-page submission is not available yet.</p>
+<div class="feedback-grid">
+<div><label for="feedbackKind">WHAT'S YOUR IDEA ABOUT?</label>
+<select id="feedbackKind">
+<option value="Cards and difficulty">Cards and difficulty</option>
+<option value="Pictures and colors">Pictures and colors</option>
+<option value="Controls and accessibility">Controls and accessibility</option>
+<option value="Something not working">Something not working</option>
+<option value="Other ideas">Other ideas</option>
+</select></div>
+<div><label for="feedbackText">YOUR SUGGESTION</label><textarea id="feedbackText" placeholder="For example: I'd like 16 cards and some animal pictures!" maxlength="1200" rows="4" aria-describedby="feedbackHelp"></textarea></div>
+</div>
+<p id="feedbackHelp" class="feedback-help">Tap the email button after writing your idea. Your email app opens a draft; tap <strong>Send</strong> there to deliver it. Suggestions are private, not public comments. Please don't include private or sensitive information.</p>
+<div class="feedback-actions"><a id="feedbackSend" class="feedback-email" href="mailto:henry.shannon@shanxservices.com?subject=Memory%20Garden%20Feedback">✉️ Email My Suggestion ↗</a>
+<button class="feedback-copy" id="feedbackCopy" type="button">📋 Copy Suggestion</button></div>
+<div id="feedbackStatus" role="status" aria-live="polite" class="feedback-status"></div>
+</section>
+<footer>Made with love by ShanX / X13 · A fun matching game, not a medical treatment. <a href="../index.html">Back to Arcade Lab</a></footer>
+</main>
+<script>
+(()=>{
+'use strict';
+const bank=[
+{icon:'🌻',name:'Sunflower'},{icon:'🍎',name:'Apple'},
+{icon:'🐶',name:'Puppy'},{icon:'🦋',name:'Butterfly'},
+{icon:'🍓',name:'Berry'},{icon:'🌈',name:'Rainbow'},
+{icon:'🐢',name:'Turtle'},{icon:'🍋',name:'Lemon'},
+{icon:'🌸',name:'Flower'},{icon:'🐝',name:'Bee'},
+{icon:'🍇',name:'Grapes'},{icon:'🐦',name:'Bird'}
+];
+const levels={easy:3,warmup:4,medium:6,challenge:8,advanced:10,expert:12};
+const peekDuration={easy:3000,warmup:2500,medium:1800,challenge:950,advanced:450,expert:0};
+const peekLimits={easy:3,warmup:3,medium:2,challenge:2,advanced:1,expert:0};
+const expertFirstRevealMs=1500;
+const level=document.getElementById('level'),grid=document.getElementById('cards'),peek=document.getElementById('peek');
+const message=document.getElementById('message'),found=document.getElementById('found');
+const win=document.getElementById('win'),fill=document.getElementById('fill'),progress=document.getElementById('progress');
+let deck=[],selected=[],matched=0,locked=false,generation=0,timeouts=[],peeksLeft=2;
+const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a};
+function later(fn,ms){const id=setTimeout(fn,ms);timeouts.push(id)}
+function cancel(){for(const id of timeouts)clearTimeout(id);timeouts=[];generation++}
+function say(s){message.textContent=s}
+function update(){
+const pairs=deck.length/2;
+found.textContent=matched+' / '+pairs;fill.style.width=(100*matched/pairs)+'%';
+progress.setAttribute('aria-valuemax',pairs);progress.setAttribute('aria-valuenow',matched);
+}
+function display(){
+grid.textContent='';grid.className='cards '+level.value;
+deck.forEach((item,index)=>{
+const card=document.createElement('button');card.type='button';card.className='card';card.dataset.index=index;
+card.setAttribute('aria-label','Card '+(index+1)+', face down');
+const back=document.createElement('span');back.className='back';back.textContent='✿';
+const front=document.createElement('span');front.className='front';
+const icon=document.createElement('span');icon.className='emoji';icon.textContent=item.icon;
+const caption=document.createElement('span');caption.className='name';caption.textContent=item.name;
+front.append(icon,caption);card.append(back,front);
+card.addEventListener('click',()=>choose(index));grid.appendChild(card);
+});
+}
+function paint(){
+const buttons=grid.children;
+deck.forEach((item,i)=>{
+const opened=item.matched||item.open||item.preview;
+buttons[i].className='card'+(item.matched?' matched':item.preview?' preview':item.open?' open':'');
+buttons[i].setAttribute('aria-label','Card '+(i+1)+': '+(opened?item.name:'face down')+(item.matched?', matched':''));
+buttons[i].disabled=locked||item.matched||item.open;
+});
+const peekMs=peekDuration[level.value];
+peek.textContent=peekMs===0?'🚫 No Peeks on Expert':peeksLeft===0?'👀 No Peeks Left':'👀 Peek '+(peekMs/1000).toFixed(peekMs%1000===0?0:2)+'s · '+peeksLeft+' left';
+peek.disabled=locked||matched===deck.length/2||peekMs===0||peeksLeft===0;
+}
+function begin(){
+cancel();matched=0;selected=[];locked=false;peeksLeft=peekLimits[level.value];win.hidden=true;
+const choices=shuffle(bank.slice()).slice(0,levels[level.value]);
+deck=shuffle(choices.flatMap((item,pair)=>[{...item,pair,open:false,matched:false,preview:false},{...item,pair,open:false,matched:false,preview:false}]));
+display();update();
+if(level.value==='expert'){
+  locked=true;deck.forEach(x=>x.preview=true);
+  say('Expert preview! Remember the pictures before they disappear. 🌟');paint();
+  later(()=>{deck.forEach(x=>x.preview=false);locked=false;paint();say('Now find the pairs. No extra peeks on Expert!');},expertFirstRevealMs);
+}else{say('Take your time. Choose any two cards. '+peeksLeft+' peeks available.');paint();}
+}
+function choose(index){
+if(locked)return;
+const current=deck[index];
+if(!current||current.open||current.matched)return;
+current.open=true;selected.push(index);paint();
+if(selected.length===1){say('Good choice! Now find the matching picture.');return}
+locked=true;
+const [a,b]=selected;
+if(deck[a].pair===deck[b].pair){
+say('Wonderful! You found a pair! 🌟');
+later(()=>{deck[a].matched=true;deck[b].matched=true;deck[a].open=false;deck[b].open=false;matched++;selected=[];locked=false;update();paint();
+if(matched===deck.length/2){win.hidden=false;document.getElementById('winText').textContent='You found all '+matched+' pairs. Every match is a little victory!';say('Amazing! You finished the garden! 🌸');}
+},580);
+}else{
+say('Not a match this time. That is okay. Keep going!');
+later(()=>{deck[a].open=false;deck[b].open=false;selected=[];locked=false;paint();say('Look carefully. You can always choose Show Me Again.');},1150);
+}
+paint();
+}
+function showAgain(){
+const ms=peekDuration[level.value];
+if(locked||matched===deck.length/2||ms===0||peeksLeft<=0)return;
+peeksLeft--;cancel();locked=true;selected=[];deck.forEach(x=>{x.open=false;x.preview=!x.matched});
+say('Take a good look. No rush. 👀');paint();
+later(()=>{deck.forEach(x=>x.preview=false);locked=false;paint();say('Ready? Find your matching pictures. '+(peeksLeft>0?peeksLeft+' peeks left.':'No peeks left.'));},ms);
+}
+// Feedback stays private. The email application requires the player to press Send.
+const feedbackText=document.getElementById('feedbackText'),feedbackKind=document.getElementById('feedbackKind');
+const feedbackSend=document.getElementById('feedbackSend'),feedbackCopy=document.getElementById('feedbackCopy');
+const feedbackStatus=document.getElementById('feedbackStatus');
+function feedbackBody(){
+  return 'Hello! I played Memory Garden and have a suggestion.\n\nGame level: '+level.options[level.selectedIndex].text+'\nTopic: '+feedbackKind.value+'\n\nMy suggestion:\n'+feedbackText.value.trim()+'\n\nThank you!';
+}
+function feedbackMailto(){
+  return 'mailto:henry.shannon@shanxservices.com?subject='+encodeURIComponent('Memory Garden: '+feedbackKind.value)+'&body='+encodeURIComponent(feedbackBody());
+}
+function updateFeedback(){feedbackSend.href=feedbackMailto()}
+feedbackText.addEventListener('input',()=>{updateFeedback();feedbackStatus.textContent=''});
+feedbackKind.addEventListener('change',updateFeedback);
+level.addEventListener('change',updateFeedback);
+feedbackSend.addEventListener('click',e=>{
+ if(!feedbackText.value.trim()){e.preventDefault();feedbackStatus.textContent='Write a suggestion in the box first, then try again.';feedbackText.focus();return;}
+ feedbackStatus.textContent='Your email app should open with a draft. Please press Send in your email app to deliver it.';
+});
+feedbackCopy.addEventListener('click',async()=>{
+ if(!feedbackText.value.trim()){feedbackStatus.textContent='Write a suggestion in the box first.';feedbackText.focus();return;}
+ try{if(!navigator.clipboard||!navigator.clipboard.writeText)throw Error('Clipboard unavailable');
+ await navigator.clipboard.writeText(feedbackBody());feedbackStatus.textContent='Copied! You can paste your suggestion into an email or message.';
+ }catch(_){feedbackStatus.textContent='Copy is unavailable here. You can select the text in the box to copy it yourself.';}
+});
+updateFeedback();
+document.getElementById('new').addEventListener('click',begin);
+document.getElementById('next').addEventListener('click',begin);
+level.addEventListener('change',begin);
+peek.addEventListener('click',showAgain);
+if(new URLSearchParams(location.search).has('arcadeQA'))window.__gardenQA={
+state:()=>({level:level.value,matched,selected:selected.slice(),locked,peeksLeft,peekDisabled:peek.disabled,peekLabel:peek.textContent,cards:deck.map(c=>({...c})),status:message.textContent}),
+click:i=>choose(i),preview:showAgain,newGame:begin,feedbackDraft:feedbackMailto
+};
+begin();
+})();
+</script>
+</body>
+</html>

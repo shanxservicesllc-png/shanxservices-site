@@ -1,0 +1,301 @@
+<!doctype html>
+<!-- X13 QA DESCENDANT · V1 ALPHA · MADE BY X13 · ORIGINAL SOURCE LINEAGE PRESERVED IN DRIVE -->
+<html lang="en">
+<head>
+<!-- X13 🔒🔒🔒 LOCK-3 APP HARDENING · V1.1 ALPHA · 2026-09-21 -->
+<script>
+(function(){
+  const X13_BUILD={edition:'BLACK STATUS',lifecycle:'V1.1 ALPHA',command:'X13 🔒🔒🔒',date:'2026-09-21'};
+  window.__X13_LOCK3_BUILD__=Object.freeze(X13_BUILD);
+  const key='x13.lock3.runtime.'+(document.title||location.pathname||'app').replace(/\W+/g,'_').slice(0,80);
+  function keep(kind,data){try{const prior=JSON.parse(localStorage.getItem(key)||'{}');prior.lastLaunch=prior.lastLaunch||new Date().toISOString();prior.lastSeen=new Date().toISOString();if(kind)prior[kind]=data;localStorage.setItem(key,JSON.stringify(prior));}catch(_){}}
+  keep('build',X13_BUILD);
+  addEventListener('error',e=>keep('lastError',{message:String(e.message||'Runtime error'),source:String(e.filename||''),line:e.lineno||0,at:new Date().toISOString()}));
+  addEventListener('unhandledrejection',e=>keep('lastRejection',{message:String(e.reason?.message||e.reason||'Unhandled promise rejection'),at:new Date().toISOString()}));
+})();
+</script>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no" />
+<title>Street Sprint | ShanX Arcade Lab</title>
+<style>
+  :root{--bg:#07090f;--panel:#0f1320;--text:#f7f8fb;--muted:#9ca7b8;--accent:#b9ff3b;--warn:#ffcf3b;--danger:#ff4b5f}
+  *{box-sizing:border-box} html,body{height:100%;margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;overflow:hidden}
+  body{display:flex;align-items:stretch;justify-content:center;touch-action:auto}
+  #app{width:min(100vw,720px);height:100dvh;position:relative;background:linear-gradient(#0a0d15,#05070b);overflow:hidden}
+  canvas{display:block;width:100%;height:100%;touch-action:none}
+  .hud{position:absolute;inset:env(safe-area-inset-top) 0 auto 0;display:flex;gap:8px;justify-content:space-between;padding:12px;pointer-events:none}
+  .chip{background:#0b101bcc;border:1px solid #2b3446;border-radius:14px;padding:8px 10px;backdrop-filter:blur(8px);font-weight:800;font-size:13px;min-width:84px;text-align:center}
+  .chip small{display:block;color:var(--muted);font-size:9px;letter-spacing:.12em;text-transform:uppercase;margin-bottom:2px}
+  #brand{position:absolute;left:12px;bottom:calc(12px + env(safe-area-inset-bottom));font-size:11px;color:#d9e0ea99;pointer-events:none}
+  #controls{position:absolute;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));display:flex;gap:8px;flex-wrap:wrap;justify-content:end;max-width:80%}
+  button{appearance:none;border:1px solid #34405a;background:#101625dd;color:white;border-radius:14px;padding:11px 13px;font-weight:800;font-size:14px;box-shadow:0 6px 18px #0007}
+  button:active{transform:translateY(1px)}
+  #overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:20px;background:linear-gradient(#05070ad9,#05070af0);text-align:center;overflow-y:auto;overscroll-behavior:contain}
+  .card{width:min(92%,440px);background:#0c111ddd;border:1px solid #2b3448;border-radius:24px;padding:24px;box-shadow:0 20px 80px #000b}
+  h1{font-size:32px;margin:0 0 8px;letter-spacing:-.04em}.sub{color:var(--muted);line-height:1.45;margin:0 0 18px}
+  .big{width:100%;background:var(--accent);color:#0a0d0f;border:0;padding:14px 18px;font-size:17px}
+  .hint{font-size:12px;color:#8792a3;margin-top:14px;line-height:1.45}
+  #toast{position:absolute;left:50%;top:23%;transform:translate(-50%,-50%);font-size:26px;font-weight:1000;letter-spacing:.03em;text-shadow:0 3px 16px #000;opacity:0;pointer-events:none;transition:opacity .12s}
+  #toast.show{opacity:1}
+
+/* SHANX ARCADE LAB presentation skin, gameplay code preserved */
+:root{--accent:#d7ff53;--muted:#b3bbca}
+#overlay{background:radial-gradient(ellipse at 50% 5%,#253d3ed9,transparent 52%),linear-gradient(135deg,#03060beb,#050c14f4)}
+  #overlay .card{position:relative;isolation:isolate;overflow:visible;width:min(94%,490px);padding:27px 25px 24px;text-align:left;background:linear-gradient(155deg,#17242bfa,#0d131dfa 62%,#10151df7);border:1px solid #d7ff5366;border-radius:27px;box-shadow:0 25px 90px #000d,0 0 70px #b0ff1a1a}
+#overlay .card:before{content:"";height:5px;background:linear-gradient(90deg,#d7ff53,#6fe3c8,#6689fd);position:absolute;top:0;left:0;right:0}
+#overlay .card:after{content:"";pointer-events:none;position:absolute;right:-42px;top:20%;width:160px;height:160px;border:1px solid #d7ff5320;border-radius:28px;transform:rotate(24deg);z-index:-1}
+.arcade-kicker{display:inline-flex;align-items:center;gap:8px;color:#d7ff53;font-size:10px;font-weight:1000;letter-spacing:.19em;margin-bottom:18px}
+.arcade-kicker:before{content:"";width:19px;height:2px;background:#d7ff53}
+#overlay h1{font-size:clamp(47px,10vw,71px);line-height:.86;margin:0 0 17px;letter-spacing:-.085em;font-weight:1000;text-transform:uppercase}
+#overlay h1 strong{display:block;font-weight:1000;color:#d7ff53;text-shadow:0 0 36px #d7ff534a}
+#overlay .sub{color:#c7d1df;font-size:15px;margin:0 0 23px;line-height:1.6}
+.arcade-details{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 25px}
+.arcade-details span{display:inline-block;border:1px solid #ffffff30;border-radius:50px;padding:7px 10px;font-size:10px;letter-spacing:.07em;font-weight:800;color:#c1d6e4}
+#overlay .big{font-size:16px;letter-spacing:.09em;border-radius:13px;background:#d7ff53;box-shadow:0 10px 35px #d7ff532f;cursor:pointer}
+#overlay .hint{font-size:12px;color:#a2b3c1;line-height:1.6}
+.lab-return{display:inline-flex;align-items:center;margin-top:20px;padding:7px 0;color:#d7ff53;font-size:11px;font-weight:900;letter-spacing:.12em;text-decoration:none}
+.lab-return:hover{text-decoration:underline}
+#brand{font-size:10px;letter-spacing:.1em;font-weight:900;color:#dcf2e0cc}
+.hud .chip{border-color:#d7ff5344;background:#070f17d9;box-shadow:inset 0 0 10px #d7ff530b}
+.hud .chip small{color:#a6c2c1}
+#controls button{border-color:#d7ff5355;background:#111e24dd}
+@media(max-width:480px){#overlay .card{padding:29px 22px 23px}#overlay h1{font-size:51px}#overlay .sub{font-size:13px;margin-bottom:17px}.arcade-details{margin-bottom:17px}.chip{min-width:74px}#overlay .hint{font-size:11px}}
+
+/* Street Sprint gameplay tuning and direct player-to-owner email feedback */
+.sprint-settings{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:11px 0 19px;padding:13px;background:#111e27;border:1px solid #d7ff5350;border-radius:15px}
+.sprint-settings label{font-size:11px;color:#d1dca9;font-weight:850;letter-spacing:.02em;display:flex;flex-direction:column;gap:6px}
+.sprint-settings label:first-child{grid-column:1/-1}
+.sprint-settings select{min-width:0;width:100%;padding:10px 8px;color:#f6f8ed;background:#0b111b;border:1px solid #ffffff52;border-radius:8px;font-size:15px}
+.sprint-feedback{margin:17px 0 0;padding-top:16px;border-top:1px solid #d7ff533f;text-align:left}
+.sprint-feedback summary{font-size:13px;cursor:pointer;font-weight:1000;letter-spacing:.035em;color:#d7ff53;list-style-position:inside}
+.sprint-feedback p{font-size:12px;line-height:1.5;color:#c5d1d8}
+.sprint-feedback textarea{width:100%;min-height:84px;border-radius:9px;padding:11px;font:15px/1.4 system-ui;resize:vertical;background:#09131c;color:white;border:1px solid #bdeba17b}
+.sprint-feedback a{display:block;color:#08170d;background:#d7ff53;border-radius:10px;font-size:13px;text-align:center;text-decoration:none;padding:13px;margin-top:9px;font-weight:900}
+.sprint-feedback a:focus-visible,.sprint-settings select:focus-visible{outline:3px solid #fff;outline-offset:2px}
+.sprint-feedback-status{font-size:12px;color:#ffdf8a;min-height:16px}
+#overlay .card{max-height:none;margin:auto}
+@media(max-width:430px){#overlay{padding:8px 3px}#overlay .card{padding:16px 13px 18px;border-radius:16px;width:96%}#overlay h1{font-size:40px}#overlay .sub{font-size:12px;margin-bottom:8px}#overlay .arcade-details{margin-bottom:7px}.sprint-settings{margin:8px 0 12px;padding:9px;gap:7px}.sprint-settings select{font-size:13px;padding:9px}.sprint-feedback{margin-top:10px}#overlay .hint{margin-top:9px}}
+</style>
+</head>
+<body>
+<div id="app">
+  <canvas id="game" aria-label="ShanX Street Sprint game canvas"></canvas>
+  <div class="hud">
+    <div class="chip"><small>Score</small><span id="score">0</span></div>
+    <div class="chip"><small>Speed</small><span id="speed">1.0x</span></div>
+    <div class="chip"><small>Best</small><span id="best">0</span></div>
+  </div>
+  <div id="toast"></div>
+  <div id="brand">SHANX ARCADE LAB / STREET SPRINT</div>
+  <div id="controls"><button id="pauseBtn">Pause</button><button id="restartBtn">Restart</button><button id="optionsBtn">Settings</button></div>
+  <div id="overlay">
+    <div class="card">
+      <div class="arcade-kicker">SHANX ARCADE LAB / CHALLENGE 001</div>
+      <h1>STREET <strong>SPRINT.</strong></h1>
+      <p class="sub">Race the night. Dodge traffic. Grab glowing energy bolts. Every second gets faster.</p>
+      <div class="arcade-details"><span>ADJUSTABLE SPEED</span><span>TRAFFIC + OBSTACLES</span><span>4-DIRECTION TOUCH</span></div>
+      <div class="sprint-settings" aria-label="Race settings">
+        <label for="raceDifficulty">DIFFICULTY<select id="raceDifficulty"><option value="relaxed">Easy · Room to Learn</option><option value="normal" selected>Normal · City Traffic</option><option value="hard">Hard · Rush Hour</option></select></label>
+        <label for="raceSpeed">ROAD SPEED<select id="raceSpeed"><option value="0.65">Cruise · 0.65×</option><option value="0.85">Slow · 0.85×</option><option value="1" selected>Normal · 1×</option><option value="1.25">Fast · 1.25×</option><option value="1.5">Turbo · 1.5×</option></select></label>
+        <label for="raceTraffic">TRAFFIC<select id="raceTraffic"><option value="0.6">Light</option><option value="1" selected>Regular</option><option value="1.5">Busy</option><option value="2">Very Busy</option></select></label>
+        <label for="raceObstacles">ROAD OBSTACLES<select id="raceObstacles"><option value="0" selected>None</option><option value="0.6">A Few</option><option value="1.2">Some</option><option value="2">Lots</option></select></label>
+      </div>
+      <button class="big" id="startBtn">START YOUR RUN →</button>
+      <div class="hint">Phone/tablet: drag in ANY direction to move your car. Keyboard: arrow keys or W A S D. Catch green energy dots and dodge traffic.</div>
+      <details class="sprint-feedback" id="sprintFeedback"><summary>💌 SUGGEST A CHANGE / REPORT A BUG</summary><p>Tell us how Street Sprint could be better. Your email app opens a draft; you must press Send there. Email feedback identifies the sender, so it is not anonymous.</p><textarea id="sprintFeedbackText" maxlength="1200" placeholder="More cars, less traffic, different controls, bugs you found..."></textarea><a id="sprintFeedbackSend" href="mailto:henry.shannon@shanxservices.com?subject=Street%20Sprint%20feedback">✉️ EMAIL MY FEEDBACK ↗</a><div id="sprintFeedbackStatus" class="sprint-feedback-status" role="status" aria-live="polite"></div></details>
+      <a class="lab-return" href="../index.html">← BACK TO ARCADE LAB</a>
+    </div>
+  </div>
+</div>
+<script>
+(() => {
+  'use strict';
+  const canvas = document.getElementById('game');
+  const ctx = canvas.getContext('2d');
+  const scoreEl = document.getElementById('score');
+  const speedEl = document.getElementById('speed');
+  const bestEl = document.getElementById('best');
+  const overlay = document.getElementById('overlay');
+  const startBtn = document.getElementById('startBtn');
+  const pauseBtn = document.getElementById('pauseBtn');
+  const restartBtn = document.getElementById('restartBtn');
+  const toast = document.getElementById('toast');
+  const optionsBtn=document.getElementById('optionsBtn');
+  const raceDifficulty=document.getElementById('raceDifficulty'),raceSpeed=document.getElementById('raceSpeed');
+  const raceTraffic=document.getElementById('raceTraffic'),raceObstacles=document.getElementById('raceObstacles');
+  const feedbackText=document.getElementById('sprintFeedbackText'),feedbackSend=document.getElementById('sprintFeedbackSend');
+  const feedbackStatus=document.getElementById('sprintFeedbackStatus');
+  function raceSettings(){
+    const preset={relaxed:{speed:.82,traffic:.72,obstacles:.64},normal:{speed:1,traffic:1,obstacles:1},hard:{speed:1.22,traffic:1.4,obstacles:1.6}}[raceDifficulty.value];
+    return {difficulty:raceDifficulty.value,speed:Number(raceSpeed.value)*preset.speed,traffic:Number(raceTraffic.value)*preset.traffic,obstacles:Number(raceObstacles.value)*preset.obstacles};
+  }
+  let appliedRaceSettings=raceSettings();
+  function feedbackUrl(){
+    const subject='Street Sprint: Game feedback',body='I played Street Sprint!\n\nDifficulty: '+raceDifficulty.options[raceDifficulty.selectedIndex].text+'\nRoad speed: '+raceSpeed.options[raceSpeed.selectedIndex].text+'\nTraffic: '+raceTraffic.options[raceTraffic.selectedIndex].text+'\nObstacles: '+raceObstacles.options[raceObstacles.selectedIndex].text+'\n\nMy feedback:\n'+feedbackText.value.trim();
+    return 'mailto:henry.shannon@shanxservices.com?subject='+encodeURIComponent(subject)+'&body='+encodeURIComponent(body);
+  }
+  function updateFeedback(){feedbackSend.href=feedbackUrl()}
+  feedbackText.addEventListener('input',updateFeedback);
+  [raceDifficulty,raceSpeed,raceTraffic,raceObstacles].forEach(el=>el.addEventListener('change',updateFeedback));
+  feedbackSend.addEventListener('click',e=>{if(!feedbackText.value.trim()){e.preventDefault();feedbackText.focus();feedbackStatus.textContent='Write a suggestion first.';}else{feedbackStatus.textContent='Your email app should open a draft. Press Send there to deliver it.';}});
+  updateFeedback();
+
+  let W=0,H=0,dpr=1,raf=0,last=0,running=false,paused=false,gameOver=false;
+  const laneCount=4;
+  const road={left:0,right:0,width:0,laneW:0};
+  const input={left:false,right:false,forward:false,backward:false,pointer:false,targetX:null,targetY:null,downX:0,downY:0,downCarX:0,downCarY:0,pointerId:null};
+  const player={x:0,y:0,w:38,h:68,vx:0,vy:0};
+  function loadBest(){ try { return Number(localStorage.getItem('has2_street_sprint_best')||0); } catch { return 0; } }
+  function saveBest(v){ try { localStorage.setItem('has2_street_sprint_best',String(v)); } catch {} }
+  let traffic=[],bolts=[],particles=[],obstacles=[];
+  let score=0,best=loadBest(),distance=0,combo=0,speed=300,spawnClock=0,boltClock=0,obstacleClock=0;
+  bestEl.textContent=best;
+
+  function resize(){
+    dpr=Math.min(2,window.devicePixelRatio||1); W=canvas.clientWidth; H=canvas.clientHeight;
+    canvas.width=Math.round(W*dpr); canvas.height=Math.round(H*dpr); ctx.setTransform(dpr,0,0,dpr,0,0);
+    road.width=Math.min(W*.94,620); road.left=(W-road.width)/2; road.right=road.left+road.width; road.laneW=road.width/laneCount;
+    player.w=Math.max(32,road.laneW*.34); player.h=player.w*1.75;
+    if(!running){player.x=W/2-player.w/2;player.y=H-player.h-88;}
+    else {player.x=Math.max(road.left+6,Math.min(road.right-player.w-6,player.x));player.y=Math.max(82,Math.min(H-player.h-22,player.y));}
+  }
+  window.addEventListener('resize',resize,{passive:true}); resize();
+
+  function reset(){
+    appliedRaceSettings=raceSettings();traffic=[];bolts=[];particles=[];obstacles=[];score=0;distance=0;combo=0;speed=300*appliedRaceSettings.speed;spawnClock=1.4/Math.max(.2,appliedRaceSettings.traffic);obstacleClock=appliedRaceSettings.obstacles>0?2.6/appliedRaceSettings.obstacles:99999;boltClock=1.4;gameOver=false;paused=false;
+    player.x=W/2-player.w/2;player.y=H-player.h-88;player.vx=0;player.vy=0;input.targetX=null;input.targetY=null;input.pointer=false;input.pointerId=null;
+    scoreEl.textContent='0'; speedEl.textContent='1.0x'; pauseBtn.textContent='Pause';
+  }
+  function start(){reset();running=true;overlay.style.display='none';last=performance.now();cancelAnimationFrame(raf);raf=requestAnimationFrame(loop)}
+  function end(){
+    running=false;gameOver=true;
+    best=Math.max(best,Math.floor(score));saveBest(best);bestEl.textContent=best;
+    overlay.querySelector('h1').textContent='Run Over';
+    overlay.querySelector('.sub').textContent=`Score ${Math.floor(score)} · Best ${best} · Combo x${Math.max(1,combo)}`;
+    startBtn.textContent='Run Again';overlay.style.display='flex';
+  }
+  function laneX(lane,w){return road.left+lane*road.laneW+(road.laneW-w)/2}
+  function spawnTraffic(){
+    const lane=Math.floor(Math.random()*laneCount); const w=Math.max(30,road.laneW*.34); const h=w*(1.5+Math.random()*.35);
+    traffic.push({x:laneX(lane,w),y:-h-20,w,h,vy:speed*(.72+Math.random()*.35),hue:Math.floor(Math.random()*360)});
+  }
+  function spawnObstacle(){
+    const lane=Math.floor(Math.random()*laneCount);
+    const w=Math.max(24,road.laneW*.27),h=Math.max(32,w*.82);
+    obstacles.push({x:laneX(lane,w),y:-h-30,w,h,vy:speed*(.68+Math.random()*.12)});
+  }
+  function spawnBolt(){
+    const lane=Math.floor(Math.random()*laneCount); const r=Math.max(10,road.laneW*.10);
+    bolts.push({x:road.left+(lane+.5)*road.laneW,y:-40,r,vy:speed*.9,pulse:Math.random()*Math.PI*2});
+  }
+  function hit(a,b){return a.x < b.x+b.w && a.x+a.w > b.x && a.y < b.y+b.h && a.y+a.h > b.y}
+  function burst(x,y,count=12){for(let i=0;i<count;i++)particles.push({x,y,vx:(Math.random()-.5)*180,vy:(Math.random()-.5)*180,life:.45+Math.random()*.35})}
+  function flash(text){toast.textContent=text;toast.classList.add('show');clearTimeout(flash.t);flash.t=setTimeout(()=>toast.classList.remove('show'),420)}
+
+  function update(dt){
+    distance+=speed*dt; speed=Math.min(900,300+distance*.012)*appliedRaceSettings.speed; const mult=speed/300; speedEl.textContent=mult.toFixed(1)+'x';
+    score+=dt*10*mult*(1+combo*.06); scoreEl.textContent=Math.floor(score);
+
+    // Smooth relative 2D touch driving: first touch holds the car; the drag is nearly 1:1.
+    // 1050 px/s cap lets a player cross lanes quickly without teleporting.
+    const maxTouchSpeed=1050, keyboardSpeed=540;
+    if(input.pointer&&input.targetX!=null&&input.targetY!=null){
+      const dx=input.targetX-(player.x+player.w/2),dy=input.targetY-(player.y+player.h/2);
+      const dist=Math.hypot(dx,dy),step=Math.min(dist,maxTouchSpeed*dt);
+      if(dist>.001){player.x+=dx/dist*step;player.y+=dy/dist*step;player.vx=dx/dist*step/Math.max(dt,.001);player.vy=dy/dist*step/Math.max(dt,.001);}
+      else {player.vx=0;player.vy=0;}
+    }else{
+      let dx=(input.right?1:0)-(input.left?1:0),dy=(input.backward?1:0)-(input.forward?1:0);
+      const mag=Math.hypot(dx,dy);if(mag>1){dx/=mag;dy/=mag;}
+      player.vx=dx*keyboardSpeed;player.vy=dy*keyboardSpeed;
+      player.x+=player.vx*dt;player.y+=player.vy*dt;
+    }
+    const xMin=road.left+6,xMax=road.right-player.w-6;
+    const yMin=Math.min(82,Math.max(14,H-player.h-40));
+    const yMax=Math.max(yMin,H-player.h-22);
+    player.x=Math.max(xMin,Math.min(xMax,player.x));
+    player.y=Math.max(yMin,Math.min(yMax,player.y));
+
+    spawnClock-=dt; if(spawnClock<=0){spawnTraffic();spawnClock=(Math.max(.29,.95-(mult/appliedRaceSettings.speed)*.14)+Math.random()*.38)/Math.max(.2,appliedRaceSettings.traffic)}
+    if(appliedRaceSettings.obstacles>0){obstacleClock-=dt;if(obstacleClock<=0){spawnObstacle();obstacleClock=(2+Math.random()*1.4)/appliedRaceSettings.obstacles;}}
+    boltClock-=dt; if(boltClock<=0){spawnBolt();boltClock=.9+Math.random()*1.5}
+
+    for(const t of traffic)t.y+=t.vy*dt;
+    for(const o of obstacles)o.y+=o.vy*dt;
+    for(const b of bolts){b.y+=b.vy*dt;b.pulse+=dt*6}
+    for(const p of particles){p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt;p.vx*=.98;p.vy*=.98}
+
+    for(const t of traffic){if(hit(player,t)){burst(player.x+player.w/2,player.y+player.h/2,26);end();return}}
+    for(const o of obstacles){if(hit(player,o)){burst(player.x+player.w/2,player.y+player.h/2,26);end();return}}
+    for(let i=bolts.length-1;i>=0;i--){const b=bolts[i];const box={x:b.x-b.r,y:b.y-b.r,w:b.r*2,h:b.r*2};if(hit(player,box)){bolts.splice(i,1);combo++;score+=75+combo*12;burst(b.x,b.y,14);flash('BOLT +'+(75+combo*12))}}
+    traffic=traffic.filter(t=>t.y<H+120);obstacles=obstacles.filter(o=>o.y<H+80);bolts=bolts.filter(b=>b.y<H+80);particles=particles.filter(p=>p.life>0);
+  }
+
+  function roundedRect(x,y,w,h,r){const rr=Math.min(r,w/2,h/2);ctx.beginPath();ctx.roundRect(x,y,w,h,rr)}
+  function drawCar(x,y,w,h,color,playerCar=false){
+    ctx.save();ctx.shadowColor=playerCar?'#b9ff3b55':'#0008';ctx.shadowBlur=playerCar?18:8;
+    ctx.fillStyle=color;roundedRect(x,y,w,h,w*.22);ctx.fill();
+    ctx.fillStyle='#151b27';roundedRect(x+w*.16,y+h*.18,w*.68,h*.27,w*.12);ctx.fill();
+    ctx.fillStyle='#91a2b8';ctx.globalAlpha=.45;roundedRect(x+w*.2,y+h*.21,w*.6,h*.09,w*.06);ctx.fill();ctx.globalAlpha=1;
+    ctx.fillStyle=playerCar?'#b9ff3b':'#ffd76a';ctx.fillRect(x+w*.18,y+3,w*.18,5);ctx.fillRect(x+w*.64,y+3,w*.18,5);
+    ctx.fillStyle='#ff3e55';ctx.fillRect(x+w*.18,y+h-8,w*.18,5);ctx.fillRect(x+w*.64,y+h-8,w*.18,5);ctx.restore();
+  }
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    const grd=ctx.createLinearGradient(0,0,0,H);grd.addColorStop(0,'#111827');grd.addColorStop(1,'#070a10');ctx.fillStyle=grd;ctx.fillRect(0,0,W,H);
+    const backdrop=ctx.createLinearGradient(0,0,W,H);backdrop.addColorStop(0,'#0d2734');backdrop.addColorStop(.5,'#0a1721');backdrop.addColorStop(1,'#1b1124');ctx.fillStyle=backdrop;
+for(let i=0;i<20;i++){const side=i%2===0?-1:1;const rank=Math.floor(i/2),h=34+((i*37)%110),gap=12+rank*27,x=side<0?road.left-22-gap:road.right+16+gap;const bw=16+((i*19)%28),by=H-h+((i*23)%43);ctx.fillRect(x,by,bw,h);ctx.fillStyle='rgba(245,199,96,.47)';for(let j=0;j<3;j++)ctx.fillRect(x+4,by+10+j*16,3,4);ctx.fillStyle=backdrop;}
+ctx.fillStyle='#12161d';ctx.fillRect(road.left,0,road.width,H);
+    ctx.fillStyle='#252b35';ctx.fillRect(road.left-9,0,9,H);ctx.fillRect(road.right,0,9,H);
+    ctx.strokeStyle='#e7edf455';ctx.lineWidth=2;ctx.setLineDash([28,28]);ctx.lineDashOffset=distance%56;
+    for(let i=1;i<laneCount;i++){ctx.beginPath();ctx.moveTo(road.left+i*road.laneW,0);ctx.lineTo(road.left+i*road.laneW,H);ctx.stroke()}ctx.setLineDash([]);
+    ctx.fillStyle='#b9ff3b22';ctx.fillRect(road.left,0,3,H);ctx.fillRect(road.right-3,0,3,H);ctx.save();ctx.shadowColor='#d7ff53';ctx.shadowBlur=14;ctx.fillStyle='#d7ff5366';ctx.fillRect(road.left,0,2,H);ctx.fillRect(road.right-2,0,2,H);ctx.restore();
+    for(const b of bolts){const r=b.r*(1+.14*Math.sin(b.pulse));ctx.beginPath();ctx.arc(b.x,b.y,r,0,Math.PI*2);ctx.fillStyle='#b9ff3b';ctx.shadowColor='#b9ff3b';ctx.shadowBlur=20;ctx.fill();ctx.shadowBlur=0;ctx.fillStyle='#071008';ctx.font=`900 ${Math.max(10,r)}px system-ui`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('⚡',b.x,b.y+1)}
+    for(const t of traffic)drawCar(t.x,t.y,t.w,t.h,`hsl(${t.hue} 70% 55%)`);
+    for(const o of obstacles){ctx.save();ctx.fillStyle='#ffb84d';ctx.strokeStyle='#fff5d9';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(o.x+o.w/2,o.y);ctx.lineTo(o.x+o.w,o.y+o.h);ctx.lineTo(o.x,o.y+o.h);ctx.closePath();ctx.fill();ctx.stroke();ctx.fillStyle='#fff3e2';ctx.fillRect(o.x+o.w*.22,o.y+o.h*.68,o.w*.56,5);ctx.restore();}
+    drawCar(player.x,player.y,player.w,player.h,'#f7f8fb',true);
+    for(const p of particles){ctx.globalAlpha=Math.max(0,p.life/.8);ctx.fillStyle='#b9ff3b';ctx.fillRect(p.x,p.y,4,4)}ctx.globalAlpha=1;
+    if(paused){ctx.fillStyle='#000a';ctx.fillRect(0,0,W,H);ctx.fillStyle='white';ctx.font='900 36px system-ui';ctx.textAlign='center';ctx.fillText('PAUSED',W/2,H/2)}
+  }
+  function loop(now){
+    if(!running)return;let dt=Math.min(.033,(now-last)/1000);last=now;if(!paused)update(dt);draw();if(running)raf=requestAnimationFrame(loop)
+  }
+
+  function pointerPos(e){const r=canvas.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top}}
+  canvas.addEventListener("pointerdown",e=>{
+    if(!running||input.pointer)return;
+    input.pointer=true;input.pointerId=e.pointerId;
+    const pos=pointerPos(e);input.downX=pos.x;input.downY=pos.y;
+    input.downCarX=player.x+player.w/2;input.downCarY=player.y+player.h/2;
+    input.targetX=input.downCarX;input.targetY=input.downCarY;
+    try{canvas.setPointerCapture(e.pointerId)}catch(_){}
+    e.preventDefault();
+  },{passive:false});
+  canvas.addEventListener("pointermove",e=>{
+    if(!input.pointer||e.pointerId!==input.pointerId)return;
+    const pos=pointerPos(e);
+    input.targetX=Math.max(road.left+player.w/2+6,Math.min(road.right-player.w/2-6,input.downCarX+(pos.x-input.downX)));
+    input.targetY=Math.max(82+player.h/2,Math.min(H-player.h/2-22,input.downCarY+(pos.y-input.downY)));
+    e.preventDefault();
+  },{passive:false});
+  function clearSteering(e){
+    if(e&&e.pointerId!==input.pointerId)return;
+    input.pointer=false;input.pointerId=null;input.targetX=null;input.targetY=null;
+  }
+  canvas.addEventListener("pointerup",clearSteering);
+  canvas.addEventListener("pointercancel",clearSteering);
+  canvas.addEventListener("lostpointercapture",clearSteering);
+  window.addEventListener("blur",()=>clearSteering(null));
+  window.addEventListener('keydown',e=>{if(['ArrowLeft','a','A'].includes(e.key))input.left=true;if(['ArrowRight','d','D'].includes(e.key))input.right=true;if(['ArrowUp','w','W'].includes(e.key))input.forward=true;if(['ArrowDown','s','S'].includes(e.key))input.backward=true;if(e.key.startsWith('Arrow'))e.preventDefault();if(e.key===' '){e.preventDefault();togglePause()}});
+  window.addEventListener('keyup',e=>{if(['ArrowLeft','a','A'].includes(e.key))input.left=false;if(['ArrowRight','d','D'].includes(e.key))input.right=false;if(['ArrowUp','w','W'].includes(e.key))input.forward=false;if(['ArrowDown','s','S'].includes(e.key))input.backward=false});
+  function togglePause(){if(!running)return;paused=!paused;pauseBtn.textContent=paused?'Resume':'Pause'}
+  startBtn.addEventListener('click',start);restartBtn.addEventListener('click',start);pauseBtn.addEventListener('click',togglePause);
+  optionsBtn.addEventListener('click',()=>{if(running){running=false;cancelAnimationFrame(raf);paused=false;}overlay.querySelector('h1').innerHTML='STREET <strong>SPRINT.</strong>';overlay.querySelector('.sub').textContent='Adjust traffic, speed and obstacles. Tap START to race with the new settings.';startBtn.textContent='START WITH SETTINGS →';overlay.style.display='flex';});
+
+  document.addEventListener('visibilitychange',()=>{if(document.hidden&&running&&!paused)togglePause()});
+  if(new URLSearchParams(location.search).has("arcadeQA"))window.__arcadeQA=()=>({running,x:player.x,y:player.y,center:player.x+player.w/2,centerY:player.y+player.h/2,vx:player.vx,vy:player.vy,pointer:input.pointer,targetX:input.targetX,targetY:input.targetY,downX:input.downX,downY:input.downY,roadLeft:road.left,roadRight:road.right,score,boltCount:bolts.length,trafficCount:traffic.length,obstacleCount:obstacles.length,settings:appliedRaceSettings,editableSettings:raceSettings(),feedbackUrl:feedbackUrl()});
+  draw();
+})();
+</script>
+</body>
+</html>

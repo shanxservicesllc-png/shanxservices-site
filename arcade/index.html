@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#080b12">
+<meta name="description" content="ShanX Arcade Lab. Original playable browser game experiments, crafted by ShanX Services.">
+<title>Arcade Lab | ShanX Services</title>
+<link rel="canonical" href="https://shanxservices.com/arcade/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="ShanX Services">
+<meta property="og:title" content="ShanX Arcade Lab | Free Browser Games">
+<meta property="og:description" content="Play original ShanX browser games, including Paddle Duel 3D, Memory Garden, racing and classic arcade challenges.">
+<meta property="og:url" content="https://shanxservices.com/arcade/">
+<meta property="og:image" content="https://shanxservices.com/social-preview-20261011.png">
+<meta property="og:image:secure_url" content="https://shanxservices.com/social-preview-20261011.png">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="ShanX Services branded social preview">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="ShanX Arcade Lab | Free Browser Games">
+<meta name="twitter:description" content="Play original ShanX browser games, including Paddle Duel 3D, Memory Garden, racing and classic arcade challenges.">
+<meta name="twitter:image" content="https://shanxservices.com/social-preview-20261011.png">
+<style>
+:root{--bg:#080b12;--card:#121827;--text:#f9f8f4;--muted:#9da8b8;--lime:#d7ff53;--gold:#ffcf65;--cyan:#7be9f5;--line:#ffffff26}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,"Segoe UI",Arial,sans-serif;min-height:100svh}
+body:before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(ellipse 70% 40% at 8% 3%,#203f4766,transparent),radial-gradient(ellipse 40% 40% at 98% 6%,#684b2030,transparent),linear-gradient(#ffffff07 1px,transparent 1px),linear-gradient(90deg,#ffffff06 1px,transparent 1px);background-size:auto,auto,48px 48px,48px 48px}
+a{color:inherit;text-decoration:none}.shell{width:min(1200px,92%);margin-inline:auto}.topline{background:#d7ff53;color:#142016;text-align:center;text-transform:uppercase;letter-spacing:.19em;font-size:10px;font-weight:900;padding:6px 10px}
+nav{border-bottom:1px solid #ffffff21;background:#080c14e8;backdrop-filter:blur(16px);position:sticky;top:0;z-index:20}.nav-in{height:76px;display:flex;gap:16px;align-items:center;justify-content:space-between}.logo{display:flex;align-items:center;gap:12px;font-size:14px;font-weight:900;letter-spacing:.18em}.logo-mark{width:43px;height:43px;display:grid;place-items:center;border:1px solid var(--lime);border-radius:12px;background:#17221b;box-shadow:inset 0 0 18px #c5ed2f2e;color:var(--lime);font-size:19px;font-weight:1000}.nav-links{display:flex;align-items:center;gap:24px;color:#ccd4df;font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase}.nav-links a:hover,.nav-links a:focus-visible{color:var(--lime)}.nav-pill{border:1px solid #ffffff4d;border-radius:100px;padding:11px 15px}
+.hero{position:relative;padding:82px 0 64px}.hero:after{content:"";position:absolute;right:3%;top:12%;width:150px;height:150px;border:1px solid #d7ff533b;transform:rotate(18deg);border-radius:34px;pointer-events:none}.hero-tag,.eyebrow{display:flex;align-items:center;gap:10px;text-transform:uppercase;color:var(--lime);font-size:12px;font-weight:900;letter-spacing:.2em}.hero-tag:before,.eyebrow:before{content:"";display:block;width:24px;height:2px;background:var(--lime)}.hero h1{font-size:clamp(78px,15vw,182px);line-height:.77;margin:25px 0 30px;font-weight:1000;letter-spacing:-.10em;max-width:100%;overflow:visible}.hero h1 span{display:block}.hero h1 .glow{color:var(--lime);text-shadow:0 0 60px #b8e32f44}.hero-bottom{display:flex;gap:32px;justify-content:space-between;align-items:end}.hero-lead{font-size:clamp(17px,2.4vw,23px);color:#c5cad0;line-height:1.5;max-width:610px;margin:0}.hero-aside{min-width:190px;text-align:right;color:#afbbcb;font-size:13px;line-height:1.65}.hero-aside strong{display:block;font-size:36px;line-height:1;color:white;letter-spacing:-.05em}.strip{border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:19px 0}.strip-in{display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap;font-size:11px;letter-spacing:.16em;font-weight:900;color:#a8b9c5;text-transform:uppercase}.strip em{color:var(--lime);font-style:normal}
+.games{padding:73px 0 100px}.section-head{display:flex;justify-content:space-between;gap:20px;align-items:end;margin-bottom:25px}.section-head h2{font-size:clamp(34px,5vw,64px);line-height:1;margin:13px 0 0;letter-spacing:-.055em}.section-head p{color:#a7b4c1;margin:0;max-width:240px;font-size:13px;line-height:1.55}
+.game-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:19px}
+.game{position:relative;isolation:isolate;background:linear-gradient(150deg,#172029,#0a0d15 65%);border:1px solid #ffffff2e;border-radius:27px;overflow:hidden;min-width:0;box-shadow:0 15px 40px #0006;transition:transform .22s,border-color .22s,box-shadow .22s}
+.game:hover{transform:translateY(-5px);border-color:#d7ff53a0;box-shadow:0 24px 66px #0009}
+.game.gold:hover{border-color:#ffbf55}.game.garden:hover{border-color:#a6efba}.game.garden .game-media{background:radial-gradient(ellipse at 50% 25%,#306e4b,#0e2318 68%)}.game.garden .game-genre{color:#a5f4c3;border-color:#a5f4c3;background:#0b2016dd}.game.garden .play{background:#a6efba;color:#163320}
+.game-media{position:relative;height:390px;overflow:hidden;background:radial-gradient(ellipse at 60% 30%,#244c3d,#11161d 65%);display:flex;justify-content:center;align-items:center}
+.game.gold .game-media{background:radial-gradient(ellipse at 50% 22%,#78623a,#1a1420 64%)}
+.game-media:after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(0deg,#0d101a 0%,#0d101a11 26%,transparent 50%);z-index:1}
+.game-media:before{content:"";position:absolute;inset:-100%;background:linear-gradient(100deg,transparent 45%,#ffffff0b 50%,transparent 55%);transform:rotate(7deg);pointer-events:none}
+.game-media img{height:112%;width:auto;max-width:95%;object-fit:cover;object-position:top center;filter:drop-shadow(0 18px 28px #0009);border-radius:17px;transform:translateY(40px) rotate(-3deg);border:1px solid #ffffff3a;box-shadow:0 12px 60px #0009;transition:transform .3s}
+.game.gold .game-media img{transform:translateY(40px) rotate(3deg)}
+.game:hover .game-media img{transform:translateY(22px) rotate(0deg) scale(1.03)}
+.game-index{position:absolute;top:20px;left:21px;z-index:3;padding:9px 11px;background:#080b12ba;border:1px solid #ffffff4d;border-radius:10px;font-size:12px;letter-spacing:.18em;font-weight:900}
+.game-genre{position:absolute;z-index:3;top:20px;right:20px;padding:9px 12px;border:1px solid #d7ff53bb;border-radius:100px;background:#081509b8;color:var(--lime);font-size:10px;font-weight:900;letter-spacing:.12em}
+.game.gold .game-genre{color:var(--gold);background:#251405bb;border-color:var(--gold)}
+.game-info{padding:27px 28px 30px}.game-info h3{font-size:clamp(30px,3.4vw,49px);margin:0 0 10px;line-height:1.06;letter-spacing:-.055em}.game-info p{margin:0;max-width:480px;color:#aebccc;font-size:15px;line-height:1.6;min-height:70px}
+.game-meta{margin:18px 0 25px;display:flex;flex-wrap:wrap;gap:9px;color:#c2d3db;font-size:11px;font-weight:800;letter-spacing:.08em}.game-meta span{border:1px solid #ffffff2f;padding:6px 10px;border-radius:999px}
+.play{display:flex;align-items:center;justify-content:space-between;width:100%;border-radius:14px;padding:17px 19px;font-size:14px;font-weight:1000;letter-spacing:.06em;background:var(--lime);color:#162012;transition:filter .2s,transform .2s}.play:hover{filter:brightness(1.1)}.play:focus-visible{outline:3px solid white;outline-offset:3px}.play .arrow{font-size:21px}.gold .play{background:var(--gold);color:#2f1b05}
+.hint{margin-top:16px;font-size:12px;color:#9eabba}
+.lab-note{margin-top:28px;border:1px solid #ffffff26;border-radius:19px;display:flex;align-items:center;gap:21px;padding:23px 25px;background:#0e1420}.lab-mark{width:46px;height:46px;border-radius:14px;background:#d7ff531b;border:1px solid #d7ff53aa;color:var(--lime);display:grid;place-items:center;flex-shrink:0;font-size:24px}.lab-note strong{display:block;margin-bottom:4px}.lab-note p{margin:0;color:#abb9c7;line-height:1.55;font-size:13px}
+footer{border-top:1px solid var(--line);padding:30px 0 46px}.foot{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;color:#8a9aaa;font-size:12px}.foot a{color:#d7ff53}
+@media(max-width:1000px){.game-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:800px){.hero{padding-top:60px}.hero-aside{display:none}.game-grid{grid-template-columns:1fr}.game-media{height:330px}.nav-links{gap:12px}.section-head{align-items:start;flex-direction:column}}
+@media(max-width:520px){.nav-in{height:66px}.logo{font-size:12px}.logo-mark{width:36px;height:36px}.nav-links{font-size:10px}.nav-links .nav-pill{display:none}.hero h1{font-size:clamp(65px,18vw,92px);letter-spacing:-.095em}.hero:after{width:64px;height:64px}.hero-lead{font-size:16px}.strip-in{font-size:9px;gap:10px}.games{padding-top:54px}.game-media{height:295px}.game-info{padding:23px}.game-info p{min-height:0}.game-info h3{font-size:33px}.game-index,.game-genre{top:14px}.game-index{left:14px}.game-genre{right:14px}.lab-note{align-items:start}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{transition:none!important;animation:none!important}}
+
+/* Isolated game-only arcade catalog */
+.mini-arcade{border-top:1px solid #ffffff29;margin-top:42px;padding-top:46px}
+.mini-head{display:flex;gap:15px;align-items:end;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap}
+.mini-head h2{margin:8px 0 6px;font-size:clamp(35px,5vw,54px);letter-spacing:-.06em}
+.mini-head p{margin:0;color:#b8c8c9;font-size:14px;max-width:670px;line-height:1.6}
+.mini-open{display:inline-flex;padding:14px 19px;border-radius:12px;border:1px solid #cde4b47a;color:#d8ffad;font-weight:1000;font-size:13px;letter-spacing:.04em}
+.micro-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
+.micro-tile{display:flex;align-items:flex-start;flex-direction:column;gap:9px;min-height:220px;background:linear-gradient(150deg,#20382e,#111a18 70%);border:1px solid #cce0b54f;border-radius:19px;padding:15px;position:relative;transition:transform .16s,border-color .16s}
+.micro-tile:hover{transform:translateY(-3px);border-color:#c9eea5}
+.micro-number{color:#a5c1b0;font-size:11px;font-weight:900;letter-spacing:.13em}
+.micro-emoji{font-size:39px;line-height:1.2}
+.micro-tile strong{font-size:17px;color:#f8f8eb;line-height:1.15}
+.micro-tile small{font-size:12px;color:#b3c5bb;line-height:1.45;flex:1}
+.micro-play{font-size:12px;color:#c7fc9b;letter-spacing:.07em;font-weight:1000}
+@media(max-width:1050px){.micro-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media(max-width:750px){.micro-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:510px){.micro-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.micro-tile{min-height:190px;padding:13px}.micro-emoji{font-size:30px}.micro-tile strong{font-size:15px}.micro-tile small{font-size:11px}.mini-arcade{padding-top:29px}.mini-open{width:100%;justify-content:center}}
+
+/* Separate existing 2D classics from the new true-WebGL 3D game lane */
+.three-d-arcade{margin-top:42px;padding:30px 0 8px;border-top:2px solid #ffe39b6c;scroll-margin-top:20px}
+.three-d-head{display:flex;align-items:end;justify-content:space-between;gap:13px;flex-wrap:wrap;margin-bottom:21px}
+.three-d-head .eyebrow{color:#ffe0a0}
+.three-d-head h2{font-size:clamp(38px,6vw,63px);margin:6px 0;letter-spacing:-.06em;color:#f7f5e7}
+.three-d-head h2 em{font-style:normal;color:#ffe1a3}
+.three-d-head p{font-size:14px;color:#b5cbd2;max-width:680px;line-height:1.6;margin:0}
+.three-d-grid{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(250px,.8fr);gap:17px}
+.three-d-feature{display:grid;grid-template-columns:45% 1fr;gap:18px;min-height:248px;background:linear-gradient(120deg,#233b37,#172529);border:1px solid #e9cf8b88;padding:16px;border-radius:21px;align-items:center}
+.three-d-feature img{width:100%;height:220px;object-fit:cover;border-radius:12px;border:1px solid #cbe7af80;background:#07111c}
+.three-d-feature .label{color:#f7dc91;font-size:11px;letter-spacing:.12em;font-weight:950}
+.three-d-feature h3{font-size:clamp(27px,3.2vw,37px);letter-spacing:-.065em;line-height:1.05;margin:10px 0 8px}
+.three-d-feature p{font-size:13px;color:#c6d7cf;line-height:1.6;margin:0 0 13px}
+.three-d-feature a{display:inline-block;padding:13px 17px;background:#f9dd93;color:#132119;text-decoration:none;border-radius:10px;font-weight:1000;font-size:12px}
+.three-d-queue{padding:21px;border-radius:21px;background:linear-gradient(130deg,#182932,#0d1b20);border:1px solid #f0dfaa54}
+.three-d-queue .label{color:#e8d29d;font-size:11px;font-weight:950;letter-spacing:.12em}
+.three-d-queue h3{font-size:25px;margin:9px 0;letter-spacing:-.03em}
+.three-d-queue p{margin:0 0 13px;font-size:13px;color:#c6d0d2}
+.three-d-queue ul{margin:0;padding:0;list-style:none;display:grid;gap:10px}
+.three-d-queue li{padding:8px 10px;background:#ffffff0b;border-radius:9px;font-size:13px;color:#e3e9e4}
+.three-d-queue li span{color:#f1d69b;font-size:10px;letter-spacing:.09em;font-weight:950;display:block}
+@media(max-width:780px){.three-d-grid{grid-template-columns:1fr}}
+@media(max-width:490px){.three-d-feature{grid-template-columns:1fr}.three-d-feature img{height:164px}.three-d-head h2{font-size:41px}.three-d-arcade{padding-top:25px}}
+</style>
+</head>
+<body>
+<div class="topline">PUBLIC PREVIEW · ARCADE LAB ALPHA</div>
+<nav><div class="shell nav-in">
+<a class="logo" href="../index.html" aria-label="Back to ShanX Services"><span class="logo-mark">X</span><span>SHANX / ARCADE LAB</span></a>
+<div class="nav-links"><a href="#play">2D Games</a><a href="#arcade3d">3D Games</a><a class="nav-pill" href="../index.html">← Main site</a></div>
+</div></nav>
+<main>
+<header class="hero shell">
+<div class="hero-tag">SHANX SERVICES / THE EXPERIMENTAL PLAYGROUND</div>
+<h1><span>ARCADE</span><span class="glow">LAB<span style="color:#fafaf3">.</span></span></h1>
+<div class="hero-bottom"><p class="hero-lead">Big ideas. Tiny browsers. Real games. Explore original playable experiments from the ShanX workshop.</p><div class="hero-aside"><strong>19</strong>Playable arcade challenges<br>Made for the browser</div></div>
+</header>
+<div class="strip"><div class="shell strip-in"><span><em>●</em> CLICK TO PLAY</span><span>DESKTOP + MOBILE</span><span>FREE EXPERIMENTS</span><span>NO DOWNLOAD NEEDED</span></div></div>
+<section class="games shell" id="play">
+<div class="section-head"><div><div class="eyebrow">2D ARCADE · 18 CLASSIC GAMES</div><h2>Choose your 2D game.</h2></div><p>Made to be played, tested, and improved. Your next favorite prototype could start here.</p></div>
+<div class="game-grid">
+<article class="game"><div class="game-media"><span class="game-index">LEVEL 001</span><span class="game-genre">NEON ROAD RUNNER</span><img src="media/street-sprint-gameplay.png" alt="Street Sprint gameplay showing a colorful car racing down a dark neon-lit road" loading="eager"></div><div class="game-info">
+<h3>Street Sprint.</h3>
+<p>Dodge traffic, grab electric power-ups, and beat your best run while the road keeps getting faster.</p>
+<div class="game-meta"><span>FAST ARCADE</span><span>TOUCH + KEYS</span><span>HIGH SCORE</span></div>
+<a class="play" href="games/street-sprint.html">PLAY STREET SPRINT <span class="arrow" aria-hidden="true">↗</span></a>
+<div class="hint">Drag in any direction to drive. Arrow keys or WASD also work.</div></div></article>
+<article class="game gold"><div class="game-media"><span class="game-index">LEVEL 002</span><span class="game-genre">FOAM-BOT ARENA</span><img src="media/chase-foam-blaster-gameplay.png" alt="Foam Blaster gameplay showing bright low-poly city scenery, blaster, and game HUD" loading="lazy"></div><div class="game-info">
+<h3>Foam Blaster.</h3>
+<p>Inspired by Chase's original idea. Pick a map, choose your foam-bot difficulty, and jump into the action.</p>
+<div class="game-meta"><span>CHASE'S IDEA</span><span>3 MAPS</span><span>TOUCH + KEYS</span></div>
+<a class="play" href="games/chase-foam-blaster.html">PLAY FOAM BLASTER <span class="arrow" aria-hidden="true">↗</span></a>
+<div class="hint">Choose your map and difficulty, then step into the arena.</div></div></article>
+<article class="game garden"><div class="game-media"><span class="game-index">LEVEL 003</span><span class="game-genre">RELAXED MATCHING</span><img src="media/memory-garden-gameplay.png" alt="Real screenshot of Memory Garden matching game with flowers, fruit, and gentle green cards" loading="lazy"></div><div class="game-info">
+<h3>Memory Garden.</h3>
+<p>A gentle picture-matching challenge with six card-count choices, limited peeks, and no countdown. Play at your own pace.</p>
+<div class="game-meta"><span>JUST FOR FUN</span><span>6 LEVELS</span><span>BIG TOUCH CARDS</span></div>
+<a class="play" href="games/memory-garden.html">PLAY MEMORY GARDEN <span class="arrow" aria-hidden="true">↗</span></a>
+<div class="hint">Find the matching pictures at your own pace. Tap Show Me Again for a reminder.</div></div></article>
+</div>
+<section class="mini-arcade" id="classics" aria-labelledby="miniHeadline"><div class="mini-head"><div><div class="eyebrow">15 EXTRA ARCADE CHALLENGES</div><h2 id="miniHeadline">The Micro Arcade.</h2><p>Fifteen independently playable retro-inspired games, rescued from our existing H2 Auto Game Mode and repackaged without the automotive app. Each has adjustable speed, difficulty, touch controls, and player suggestions.</p></div><a class="mini-open" href="games/classic-arcade.html">OPEN THE WHOLE ARCADE ↗</a></div><div class="micro-grid"><a class="micro-tile" href="games/classic-arcade.html?game=pong" aria-label="Play Paddle Duel"><span class="micro-number">004</span><span class="micro-emoji" aria-hidden="true">🏓</span><strong>Paddle Duel</strong><small>Beat a quick-thinking rival.</small><span class="micro-play">PLAY NOW ↗</span></a>
+<a class="micro-tile" href="games/classic-arcade.html?game=blockBreaker" aria-label="Play Brick Burst"><span class="micro-number">005</span><span class="micro-emoji" aria-hidden="true">🧱</span><strong>Brick Burst</strong><small>Shatter the wall of bricks.</small><span class="micro-play">PLAY NOW ↗</span></a>
+<a class="micro-tile" href="games/classic-arcade.html?game=tetris" aria-label="Play Block Stacker"><span class="micro-number">006</span><span class="micro-emoji" aria-hidden="true">🧩</span><strong>Block Stacker</strong><small>Stack and clear falling blocks.</small><span class="micro-play">PLAY NOW ↗</span></a>
+<a class="micro-tile" href="games/classic-arcade.html?game=spaceInvaders" aria-label="Play Star Defenders"><span class="micro-number">007</span><span class="micro-emoji" aria-hidden="true">👾</span><strong>Star Defenders</strong><small>Stop the incoming swarm.</small><span class="micro-play">PLAY NOW ↗</span></a>
+<a class="micro-tile" href="games/classic-arcade.html?game=pacman" aria-label="Play Maze Munch"><span class="micro-number">008</span><span class="micro-emoji" aria-hidden="true">🟡</span><strong>Maze Munch</strong><small>Collect dots, outrun ghosts.</small><span class="micro-play">PLAY NOW ↗</span></a>
+<a class="micro-tile" href="games/classic-arcade.html?game=snake" aria-label="Play Neon Snake"><span class="micro-number">009</span><span class="micro-emoji" aria-hidden="true">🐍</span><strong>Neon Snake</strong><small>Grow longer, avoid the walls.</small><span class="micro-play">PLAY NOW ↗</span></a>
+<a class="micro-tile" href="games/classic-arcade.html?game=asteroids" aria-label="Play Meteor Drift"><span class="micro-number">010</span><span class="micro-emoji" aria-hidden="true">☄️</span><strong>Meteor Drift</strong><small>Fly past dangerous space rocks.</small><span class="micro-play">PLAY NOW ↗</span></a>
+<a class="micro-tile" href="games/classic-arcade.html?game=frogger" aria-label="Play Crossing Quest"><span class="micro-number">011</span><span class="micro-emoji" aria-hidden="true">🐸</span><strong>Crossing Quest</strong><small>Time your crossing.</small><span class="micro-play">PLAY NOW ↗</span></a>
+<a class="micro-tile" href="games/classic-arcade.html?game=roadRacer" aria-label="Play Road Dash"><span class="micro-number">012</span><span class="micro-emoji" aria-hidden="true">🏎️</span><strong>Road Dash</strong><small>Dodge the highway traffic.</small><span class="micro-play">PLAY NOW ↗</span></a>
+<a class="micro-tile" href="games/classic-arcade.html?game=flappy" aria-label="Play Wing Hop"><span class="micro-number">013</span><span class="micro-emoji" aria-hidden="true">🐥</span><strong>Wing Hop</strong><small>Flap through tight gaps.</small><span class="micro-play">PLAY NOW ↗</span></a>
+<a class="micro-tile" href="games/classic-arcade.html?game=spaceShooter" aria-label="Play Galaxy Blaster"><span class="micro-number">014</span><span class="micro-emoji" aria-hidden="true">🚀</span><strong>Galaxy Blaster</strong><small>Defend against flying targets.</small><span class="micro-play">PLAY NOW ↗</span></a>
+<a class="micro-tile" href="games/classic-arcade.html?game=helicopter" aria-label="Play Heli Escape"><span class="micro-number">015</span><span class="micro-emoji" aria-hidden="true">🚁</span><strong>Heli Escape</strong><small>Fly low and stay alive.</small><span class="micro-play">PLAY NOW ↗</span></a>
+<a class="micro-tile" href="games/classic-arcade.html?game=lunarLander" aria-label="Play Moon Landing"><span class="micro-number">016</span><span class="micro-emoji" aria-hidden="true">🌙</span><strong>Moon Landing</strong><small>Touch down softly.</small><span class="micro-play">PLAY NOW ↗</span></a>
+<a class="micro-tile" href="games/classic-arcade.html?game=pinball" aria-label="Play Neon Pinball"><span class="micro-number">017</span><span class="micro-emoji" aria-hidden="true">🎱</span><strong>Neon Pinball</strong><small>Keep the ball in play.</small><span class="micro-play">PLAY NOW ↗</span></a>
+<a class="micro-tile" href="games/classic-arcade.html?game=targetRange" aria-label="Play Quick Target"><span class="micro-number">018</span><span class="micro-emoji" aria-hidden="true">🎯</span><strong>Quick Target</strong><small>Hit the target before it escapes.</small><span class="micro-play">PLAY NOW ↗</span></a></div></section>
+<section class="three-d-arcade" id="arcade3d" aria-labelledby="threeDHeading">
+<div class="three-d-head"><div><div class="eyebrow">3D ARCADE · TRUE 3D BROWSER GAMES</div><h2 id="threeDHeading">A new <em>dimension.</em></h2><p>Keep the original 18 games, then step into upgraded 3D editions as they pass testing. 3D games use WebGL, so graphics performance varies by device.</p></div></div>
+<div class="three-d-grid">
+<article class="three-d-feature"><img src="media/paddle-duel-3d-gameplay.png" alt="Actual screenshot of 3D Paddle Duel with lit raised court, glowing ball and green and gold paddles" loading="lazy"><div><div class="label">PLAYABLE NOW · 3D GAME 001</div><h3>Paddle Duel 3D</h3><p>The classic paddle challenge rebuilt with real 3D geometry, lights, a glowing ball, touch controls and Easy, Normal or Hard settings.</p><a href="games/paddle-duel-3d.html">PLAY PADDLE DUEL 3D ↗</a></div></article>
+<aside class="three-d-queue"><div class="label">3D DEVELOPMENT QUEUE</div><h3>Building the next worlds.</h3><p>These editions are planned or in development. They are not public playable 3D games yet.</p><ul>
+<li><span>NEXT UPGRADE</span>Crossing Quest 3D: moving traffic and real depth</li>
+<li><span>PLANNED</span>Street Sprint 3D: a fully modeled road</li>
+<li><span>PLANNED</span>Foam Blaster 3D: richer arenas and animated bots</li>
+<li><span>PROTOTYPE IN REVIEW</span>Pittsburgh Nights: miniature walkable city</li>
+</ul></aside></div></section>
+<div class="lab-note"><span class="lab-mark">✦</span><div><strong>A lab, not a finished-game store.</strong><p>These are experimental alpha builds. They're playable now, and the lab will evolve as we make them better. Gameplay progress and highscores stay in your browser where supported.</p></div></div>
+</section>
+</main>
+<footer><div class="shell foot"><span>© <span id="year">2026</span> ShanX Services · Arcade Lab</span><span>FROM IDEA → INTERACTIVE · <a href="../index.html">BACK TO SHANX SERVICES ↗</a></span></div></footer>
+<script>document.getElementById('year').textContent=new Date().getFullYear();</script>
+</body></html>
