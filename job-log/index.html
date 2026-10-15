@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#101a1a">
+<meta name="description" content="Jon's simple voice-powered job log, with automatic email submission and offline backup.">
+<meta name="robots" content="noindex,nofollow,noarchive,nosnippet">
+<title>Jon's Job Log · X13</title>
+<style>
+:root{color-scheme:dark;--bg:#0d1617;--panel:#152323;--panel2:#1a2d2b;--muted:#aabcb6;--ink:#f5fff7;--green:#51e2ad;--gold:#edce84;--border:#36514a;--danger:#ffb5a9;--shadow:0 12px 38px #0006;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(800px 300px at 50% -10%,#285546 0%,transparent 70%),var(--bg);color:var(--ink);min-height:100vh}
+button,input,textarea{font:inherit}button{cursor:pointer;-webkit-tap-highlight-color:transparent}button:disabled{opacity:.65;cursor:wait}input,textarea{color:var(--ink);background:#0d1919;border:1.5px solid #476159;border-radius:13px;padding:14px;width:100%;font-size:16px;min-height:52px}input:focus,textarea:focus,button:focus-visible{outline:2px solid var(--green);outline-offset:2px}input::placeholder,textarea::placeholder{color:#96aaa3}textarea{min-height:118px;resize:vertical;line-height:1.45}
+.shell{max-width:810px;margin:0 auto;padding:20px 15px 50px}.top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:17px}.brand{display:flex;align-items:center;gap:12px}.brandmark{height:48px;width:48px;border:1px solid #a6c98d;background:linear-gradient(135deg,#214b3d,#173d31);display:grid;place-items:center;border-radius:13px;font-size:27px;box-shadow:0 4px 20px #34a97829}.brand strong{font-size:21px;line-height:1.05;display:block;letter-spacing:.5px}.brand small{display:block;color:var(--gold);letter-spacing:2.2px;margin-top:5px;font-size:10px;font-weight:800}.pill{padding:7px 10px;border:1px solid var(--border);border-radius:99px;font-weight:700;color:#c3e9d8;font-size:11px;white-space:nowrap}
+.hero{background:linear-gradient(130deg,#1d4639,#18342c 60%,#1a2e2b);border:1px solid #457967;border-radius:20px;padding:22px 21px;box-shadow:var(--shadow);margin-bottom:14px}.eyebrow{color:var(--gold);font-size:11px;font-weight:800;letter-spacing:2px}.hero h1{font-size:clamp(26px,6vw,38px);line-height:1.1;margin:10px 0 9px;letter-spacing:-.9px}.hero p{margin:0;color:#d1e8de;font-size:14px;line-height:1.5}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:18px;padding:20px;margin-bottom:14px;box-shadow:0 4px 20px #0002}.card-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap}.card h2{font-size:19px;margin:0 0 14px;letter-spacing:-.25px}.muted,.fine{color:var(--muted)}.fine{font-size:12px;line-height:1.5}.voice{width:100%;min-height:100px;display:flex;justify-content:center;align-items:center;gap:15px;background:linear-gradient(135deg,#50e0a9,#a1e7af);border:0;border-radius:17px;color:#0e2d23;box-shadow:0 7px 0 #227a58,0 12px 23px #0004;font-weight:850;font-size:22px;transition:transform .15s,box-shadow .15s}.voice:active{transform:translateY(5px);box-shadow:0 2px 0 #227a58}.voice .mic{font-size:38px}.voice.live{background:linear-gradient(135deg,#f8b1a0,#f6d1bd);box-shadow:0 7px 0 #ab675c;animation:throb 1.2s infinite}@keyframes throb{50%{filter:brightness(1.16)}}.voice-help{margin:17px 3px 0;text-align:center;color:#c9dbd1;font-size:13px;line-height:1.5}.transcript{margin-top:12px;padding:12px;border-radius:12px;border:1px dashed #709f8e;color:#d7eadf;font-size:13px;display:none;overflow-wrap:anywhere}.transcript.show{display:block}
+.fields{display:grid;grid-template-columns:1fr 1fr;gap:13px}.full{grid-column:1/-1}label{display:block;font-size:13px;font-weight:800;color:#d1e6da;margin-bottom:7px}.hint{font-size:11px;font-weight:400;color:var(--muted)}.money{position:relative}.money::before{content:"$";position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:20px;font-weight:800;color:var(--green)}.money input{padding-left:30px;font-variant-numeric:tabular-nums}
+.main{background:linear-gradient(135deg,#edcf86,#f2ddab);color:#253124;border:0;border-radius:14px;width:100%;min-height:62px;font-weight:900;font-size:19px;box-shadow:0 4px 14px #0004}.main:active,.secondary:active{transform:scale(.99)}.save-area{margin-top:19px}.notice{margin-top:13px;border:1px solid #536a57;background:#17271e;border-radius:12px;padding:13px;color:#d8efdd;font-size:13px;line-height:1.5;display:none;overflow-wrap:anywhere}.notice.show{display:block}.notice.err{background:#35211e;border-color:#8c4940;color:#ffe3dc}.notice.warn{background:#302b1c;border-color:#8e793a;color:#f9e7b6}.notice.ok{background:#133629;border-color:#437d66}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:10px 0 16px}.stat{border-radius:13px;padding:13px 9px;background:var(--panel2);border:1px solid var(--border);text-align:center}.stat .num{font-size:20px;font-weight:900;white-space:nowrap}.stat .desc{font-size:11px;color:#b4c8ba;margin-top:4px}.history{display:grid;gap:10px}.entry{padding:13px;border-radius:13px;border:1px solid #3a534b;background:#10201d}.entry-top{display:flex;align-items:center;justify-content:space-between;gap:12px}.entry-title{font-weight:800;font-size:15px;overflow-wrap:anywhere}.entry-time{font-size:11px;color:var(--muted);margin-top:4px}.entry-details{font-size:13px;line-height:1.5;color:#d0dfd6;margin:11px 0;white-space:pre-wrap;overflow-wrap:anywhere}.entry-bottom{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.status{border:1px solid #4d705f;color:#abe8c9;padding:5px 8px;border-radius:99px;font-size:11px;font-weight:800}.status.queued{color:#ffe5ae;border-color:#a18540}.entry-dollar{font-size:13px;font-weight:800;color:var(--gold)}.smallbtn,.secondary{background:#263d34;border:1px solid #5b8071;color:#e5f9ed;border-radius:10px;min-height:39px;padding:8px 11px;font-size:12px;font-weight:800}.smallbtn.delete{margin-left:auto;color:#efbfb9;border-color:#74514c;background:#302424}.secondary{min-height:46px}.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:12px}.empty{color:#c5d5cc;font-size:13px;padding:10px 0 2px}.settings{margin-top:16px}.settings summary{font-weight:800;cursor:pointer;min-height:28px}.settings label{margin-top:12px}.setting-row{display:flex;gap:9px;align-items:center}.setting-row input{flex:1;min-width:0}.setting-row button{flex:none}.foot{font-size:11px;color:#99aaa3;line-height:1.6;margin:12px 5px}.foot b{color:#d0e0d3}
+@media(max-width:480px){.shell{padding:14px 12px 40px}.hero{padding:20px 17px}.card{padding:17px}.fields{gap:11px}.stats{gap:7px}.stat .num{font-size:17px}.pill{font-size:10px}.setting-row{flex-wrap:wrap}.setting-row button{width:100%}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<main class="shell">
+  <header class="top"><div class="brand"><div class="brandmark" aria-hidden="true">⚡</div><div><strong>JON'S JOB LOG</strong><small>POWERED BY X13</small></div></div><span class="pill">🎙️ VOICE + EMAIL</span></header>
+  <section class="hero"><div class="eyebrow">SIMPLE FIELD REPORTING</div><h1>Finish the job.<br>Say the numbers. Done.</h1><p>Talk your report or type it. Every saved job stays on this device, and the app tries to email your report automatically.</p></section>
+  <section class="card" aria-labelledby="voiceHeading">
+    <h2 id="voiceHeading">1. Talk to the app</h2>
+    <button type="button" class="voice" id="voiceBtn"><span class="mic" aria-hidden="true">🎤</span><span id="voiceLabel">TAP TO TALK</span></button>
+    <p class="voice-help" id="voiceHelp">Try: “Fixed two outlets for Mike. Charged 180 dollars. Collected 150 dollars.”</p>
+    <div id="heard" class="transcript" aria-live="polite"></div>
+  </section>
+  <section class="card" aria-labelledby="detailsHeading">
+    <h2 id="detailsHeading">2. Check the job</h2>
+    <form id="jobForm" novalidate>
+      <div class="fields">
+        <div class="full"><label for="customer">Customer or job location <span class="hint">optional</span></label><input id="customer" name="customer" type="text" placeholder="Who / where was the job?" autocomplete="off" maxlength="150"></div>
+        <div class="full"><label for="work">Work done</label><textarea id="work" name="work" placeholder="What did you fix or install?" required maxlength="3000"></textarea></div>
+        <div><label for="charged">Charged <span class="hint">$</span></label><div class="money"><input id="charged" name="charged" type="number" min="0" max="99999999" step="0.01" inputmode="decimal" placeholder="0.00"></div></div>
+        <div><label for="collected">Collected <span class="hint">$</span></label><div class="money"><input id="collected" name="collected" type="number" min="0" max="99999999" step="0.01" inputmode="decimal" placeholder="0.00"></div></div>
+      </div>
+      <div class="save-area"><button class="main" type="submit" id="saveBtn">⚡ SAVE JOB + EMAIL REPORT</button></div>
+    </form>
+    <div id="notice" class="notice" role="status" aria-live="polite"></div>
+    <p class="fine">No customer email is required. “Charged” is the bill; “Collected” is what Jon actually received. Leave an unknown amount blank.</p>
+  </section>
+  <section class="card" aria-labelledby="historyHeading">
+    <div class="card-head"><h2 id="historyHeading">📋 Job history</h2><span class="fine">Saved on this phone/browser</span></div>
+    <div class="stats" aria-label="Job totals"><div class="stat"><div class="num" id="jobCount">0</div><div class="desc">Jobs</div></div><div class="stat"><div class="num" id="chargeTotal">$0</div><div class="desc">Total charged</div></div><div class="stat"><div class="num" id="collectedTotal">$0</div><div class="desc">Total collected</div></div></div>
+    <div id="history" class="history"></div>
+    <div class="actions"><button type="button" class="secondary" id="retryAll">↻ Retry pending emails</button><button type="button" class="secondary" id="exportCsv">↓ Export CSV</button></div>
+  </section>
+  <details class="card settings" id="settingsPanel"><summary>⚙️ Email destination / setup</summary>
+    <label for="recipient">Send reports to this inbox</label><div class="setting-row"><input id="recipient" type="email" inputmode="email" spellcheck="false" autocomplete="email" placeholder="owner@example.com"><button class="secondary" id="saveEmail" type="button">Save address</button></div>
+    <p class="fine">First-time setup: save the email, submit one real or test job, then open the confirmation email from FormSubmit and approve it. Until that step, delivery is not active. Changing the address requires new confirmation. Reports contain job details and amounts, not a customer email address.</p>
+    <p class="fine">The address is part of a browser form request, not secret. Don't put this file publicly on a website if you need the destination email hidden.</p>
+  </details>
+  <footer class="foot"><b>Direct-access tool:</b> This page is not linked in the public site navigation, but anyone with the URL can open it. This is not a login-protected tool. <b>Works without installation:</b> open this HTML file in Chrome or host it on a website. Speaking uses your browser's speech-recognition service and may require internet and microphone permission. Email needs internet. Pending entries are kept here for retry, but clearing browser data can erase history. Export a CSV for a separate backup. <b>No email delivery is guaranteed until you confirm the recipient and test a real submission.</b></footer>
+</main>
+<script>
+(function(){
+'use strict';
+const STORAGE='x13_jon_job_log_v1', MAILKEY='x13_jon_mail_v1';
+const DEFAULT_INBOX='henry.shannon@shanxservices.com';
+const $=id=>document.getElementById(id);
+const state={jobs:[], inbox:DEFAULT_INBOX, recognizing:false, rec:null, sending:false};
+const dollar=n=>'$'+Number(n||0).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:2});
+const money=n=>n===''||n===null||n===undefined?'Not reported':dollar(n);
+const dateLabel=d=>new Date(d).toLocaleString([], {year:'numeric',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});
+function load(){
+  try{const data=JSON.parse(localStorage.getItem(STORAGE)||'[]');state.jobs=Array.isArray(data)?data.filter(x=>x&&x.id&&x.work):[];}catch(e){state.jobs=[];show('Stored history could not be read. Export or back up previous records if available.','warn');}
+  try{const stored=localStorage.getItem(MAILKEY);state.inbox=stored===null?DEFAULT_INBOX:stored;}catch(e){}
+  $('recipient').value=state.inbox;
+  render();
+}
+function persist(){try{localStorage.setItem(STORAGE,JSON.stringify(state.jobs));return true;}catch(e){show('Could not save to browser storage. Check storage/private mode before continuing.','err');return false;}}
+function show(msg,type){const n=$('notice');n.textContent=msg;n.className='notice show '+(type||'');}
+function safe(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function emailOkay(s){return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(s||'').trim());}
+function cleanAmount(raw){if(raw===''||raw===null||raw===undefined)return '';
+  const n=Number(raw);return Number.isFinite(n)&&n>=0&&n<=99999999?Math.round((n+Number.EPSILON)*100)/100:null;
+}
+function render(){
+ $('jobCount').textContent=state.jobs.length;
+ $('chargeTotal').textContent=dollar(state.jobs.reduce((v,x)=>v+(typeof x.charged==='number'?x.charged:0),0));
+ $('collectedTotal').textContent=dollar(state.jobs.reduce((v,x)=>v+(typeof x.collected==='number'?x.collected:0),0));
+ const history=$('history');history.innerHTML='';
+ if(!state.jobs.length){history.innerHTML='<div class="empty">No jobs yet. Your first report will show up right here.</div>';return;}
+ for(const job of state.jobs){
+ const card=document.createElement('article');card.className='entry';
+ const status=job.status==='accepted'?'Email request accepted':'Email pending';
+ const sclass=job.status==='accepted'?'':' queued';
+ card.innerHTML=`<div class="entry-top"><div><div class="entry-title">${safe(job.customer||'Job report')}</div><div class="entry-time">${safe(dateLabel(job.date))}</div></div><div class="status${sclass}">${status}</div></div>
+ <div class="entry-details">${safe(job.work)}</div><div class="entry-bottom"><span class="entry-dollar">Charged: ${safe(money(job.charged))}</span><span class="entry-dollar">Collected: ${safe(money(job.collected))}</span>
+ ${job.status!=='accepted'?'<button class="smallbtn retry" type="button">Retry email</button>':''}<button class="smallbtn delete" type="button">Delete</button></div>`;
+ const retry=card.querySelector('.retry');if(retry)retry.addEventListener('click',()=>send(job.id));
+ card.querySelector('.delete').addEventListener('click',()=>{if(!confirm('Delete this job from this device? This will not retract any email already sent.'))return;state.jobs=state.jobs.filter(x=>x.id!==job.id);persist();render();show('Job removed from local history.','warn');});
+ history.appendChild(card);
+ }
+}
+function reportPayload(job){return {
+  '_subject':`Jon's Job Report · ${job.customer||'Field job'} · ${dateLabel(job.date)}`,
+  '_template':'table','_captcha':'false',
+  'Worker':'Jon',
+  'Customer or location':job.customer||'(not entered)',
+  'Work completed':job.work,
+  'Amount charged (USD)':money(job.charged),
+  'Amount collected (USD)':money(job.collected),
+  'Job recorded':dateLabel(job.date),
+  'Job reference':job.id
+};}
+async function send(id,quiet=false){
+ const job=state.jobs.find(x=>x.id===id);if(!job)return false;
+ if(state.sending)return false;
+ if(!emailOkay(state.inbox)){show('Job saved, but email address is missing or invalid. Open Email destination / setup and save the inbox.','warn');return false;}
+ if(!navigator.onLine){if(!quiet)show('Job saved on this device. You are offline; open the app online and retry the email.','warn');return false;}
+ state.sending=true;$('saveBtn').disabled=true;
+ if(!quiet)show('Job saved. Submitting email request…','');
+ try{
+  const controller=new AbortController();const timeout=setTimeout(()=>controller.abort(),18000);
+  let response;
+  try{response=await fetch('https://formsubmit.co/ajax/'+encodeURIComponent(state.inbox),{
+    method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify(reportPayload(job)),signal:controller.signal
+  });}finally{clearTimeout(timeout);}
+  let data={};try{data=await response.json();}catch(e){}
+  if(!response.ok || data.success===false || String(data.success).toLowerCase()==='false')throw Error(data.message||`Service returned ${response.status}`);
+  job.status='accepted';job.acceptedAt=new Date().toISOString();persist();render();
+  if(!quiet)show('✅ Email service accepted this report. First time? Check the recipient inbox for FormSubmit’s confirmation email and approve it. Actual inbox delivery is not verified by this app.','ok');
+  return true;
+ }catch(e){
+   job.status='queued';persist();render();
+   if(!quiet)show('⚠️ Job saved here, but the email request was not confirmed. Check internet/setup and tap “Retry email.” If the connection broke after submission, retrying could create a duplicate.','warn');
+   return false;
+ }finally{state.sending=false;$('saveBtn').disabled=false;}
+}
+$('jobForm').addEventListener('submit',async e=>{
+ e.preventDefault();const work=$('work').value.trim(),customer=$('customer').value.trim(),charged=cleanAmount($('charged').value),collected=cleanAmount($('collected').value);
+ if(!work){show('Describe the work first, by speaking or typing.','err');$('work').focus();return;}
+ if(charged===null||collected===null){show('Enter valid non-negative amounts (up to 99,999,999).','err');return;}
+ if(charged===''&&collected===''){show('Enter at least the amount charged or the amount collected.','err');return;}
+ const job={id:(typeof crypto!=='undefined'&&crypto.randomUUID?crypto.randomUUID():'job-'+Date.now()+'-'+Math.random().toString(36).slice(2)),date:new Date().toISOString(),customer,work,charged,collected,status:'queued'};
+ state.jobs.unshift(job);
+ if(!persist()){state.jobs.shift();render();return;}
+ render();$('jobForm').reset();$('heard').classList.remove('show');
+ await send(job.id);
+});
+$('saveEmail').addEventListener('click',()=>{
+ const v=$('recipient').value.trim();if(!emailOkay(v)){show('Enter a valid receiving email address first.','err');$('settingsPanel').open=true;return;}
+ const changed=state.inbox!==v;state.inbox=v;try{localStorage.setItem(MAILKEY,v);}catch(e){show('Could not persist email settings in browser storage.','err');return;}
+ show(changed?'Receiving email saved. Send a test report and approve FormSubmit’s confirmation email for the new address.':'Receiving email saved. If you have not yet approved FormSubmit, submit once and confirm the email.','ok');
+});
+$('retryAll').addEventListener('click',async()=>{
+ const queued=state.jobs.filter(x=>x.status!=='accepted');if(!queued.length){show('No pending emails to retry.','ok');return;}
+ if(!emailOkay(state.inbox)){show('Save a valid receiving email address first.','warn');$('settingsPanel').open=true;return;}
+ let done=0;for(const job of queued){if(await send(job.id,true))done++;}
+ show(`${done} of ${queued.length} pending email request(s) accepted by the service. ${queued.length-done} remain pending. Inbox delivery is not verified here.`,done===queued.length?'ok':'warn');
+});
+function csvField(v){let x=String(v??'');if(/^[\s]*[=+@-]/.test(x)&&!/^\s*-?\d+(\.\d+)?$/.test(x))x="'"+x;return '"'+x.replace(/"/g,'""')+'"';}
+$('exportCsv').addEventListener('click',()=>{
+ const header=['ID','Recorded','Customer or location','Work completed','Amount charged USD','Amount collected USD','Email request status'];
+ const lines=[header.map(csvField).join(',')].concat(state.jobs.map(x=>[x.id,x.date,x.customer,x.work,x.charged,x.collected,x.status].map(csvField).join(',')));
+ const blob=new Blob(['\ufeff',lines.join('\r\n')],{type:'text/csv;charset=utf-8;'});const u=URL.createObjectURL(blob);const a=document.createElement('a');a.href=u;a.download='Jon_Job_Records_'+new Date().toISOString().slice(0,10)+'.csv';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),3000);
+});
+// Extract amounts from phrases like "charged 180", "collected $150", "made two hundred" (digits are most reliable).
+function parseVoice(s){
+ const t=s.replace(/,/g,'');
+ const num='\\$?\\s*(\\d+(?:\\.\\d{1,2})?)';
+ const take=(re)=>{const m=t.match(re);return m?m[1]:null;};
+ const charge=take(new RegExp('(?:charged|charge|quoted|billed|bill|price|cost|charging)\\s*(?:him|her|them|customer|for|is|was|of|at)?\\s*'+num,'i'));
+ const paid=take(new RegExp('(?:collected|received|paid|made|earned|got paid|payment|took home)\\s*(?:him|her|them|me|was|for|is|of|at)?\\s*'+num,'i'));
+ let defaultCharge=null;
+ if(charge===null&&paid===null){let m=t.match(/\$\s*(\d+(?:\.\d{1,2})?)/);if(!m)m=t.match(/\b(\d+(?:\.\d{1,2})?)\s*dollars?\b/i);if(m)defaultCharge=m[1];}
+ if(charge!==null)$('charged').value=charge;
+ if(paid!==null)$('collected').value=paid;
+ if(defaultCharge!==null)$('charged').value=defaultCharge;
+ const customer=t.match(/(?:customer|client|at the home of|at the house of)\s+([A-Za-z][\w '\-]{1,45}?)(?:\s+(?:charged|collected|received|paid|made|for \$)|[.,;]|$)/i);
+ if(customer&&!$('customer').value.trim())$('customer').value=customer[1].trim();
+ $('work').value=($('work').value.trim()?$('work').value.trim()+'\n':'')+s.trim();
+ $('heard').textContent='Heard: “'+s.trim()+'”';$('heard').classList.add('show');
+ show('Voice captured. Check the amounts and job details, then tap Save Job + Email Report.','ok');
+}
+const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
+// Safari's browser speech recognition is inconsistent on iPhones. Use the
+// built-in keyboard dictation for iOS instead of trapping the user in a mic error.
+const isIOS=/iPhone|iPad|iPod/i.test(navigator.userAgent)||
+ (navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+let starting=false;
+function dictationFallback(reason){
+ $('work').focus();
+ show((reason?reason+' ':'')+'Use the microphone on your phone keyboard to dictate into Work done, or type the job. Then check the amounts and save.','warn');
+}
+function resetVoiceButton(){
+ starting=false;state.recognizing=false;
+ $('voiceBtn').classList.remove('live');
+ $('voiceBtn').setAttribute('aria-pressed','false');
+ $('voiceLabel').textContent='TAP TO TALK';
+}
+if(isIOS){
+ $('voiceLabel').textContent='TAP FOR IPHONE DICTATION';
+ $('voiceHelp').textContent='iPhone: tap the button, then the microphone on your keyboard. You can also type your report.';
+ $('voiceBtn').addEventListener('click',()=>dictationFallback('iPhone keyboard dictation is the reliable speech option here.'));
+}else if(!window.isSecureContext&&location.protocol!=='file:'){
+ $('voiceLabel').textContent='MIC NEEDS HTTPS · TYPE BELOW';
+ $('voiceBtn').addEventListener('click',()=>dictationFallback('This page must use HTTPS for microphone features.'));
+}else if(SpeechRecognition){
+ const r=new SpeechRecognition();state.rec=r;
+ r.lang='en-US';r.continuous=false;r.interimResults=true;r.maxAlternatives=1;
+ let finalText='',interimText='',errored=false;
+ r.onstart=()=>{
+   starting=false;state.recognizing=true;errored=false;
+   $('voiceBtn').classList.add('live');
+   $('voiceBtn').setAttribute('aria-pressed','true');
+   $('voiceLabel').textContent='LISTENING… TAP TO STOP';
+   $('heard').textContent='Listening…';$('heard').classList.add('show');
+ };
+ r.onresult=e=>{
+   interimText='';
+   for(let i=e.resultIndex;i<e.results.length;i++){
+     const x=e.results[i][0].transcript;
+     if(e.results[i].isFinal)finalText+=x+' ';else interimText+=x;
+   }
+   $('heard').textContent='Hearing: '+(finalText+interimText).trim();
+ };
+ r.onerror=e=>{
+   errored=true;
+   const code=e.error||'unknown';
+   const detail=({
+    'not-allowed':'Microphone permission was denied. Enable microphone access in the browser settings.',
+    'service-not-allowed':'Browser speech recognition was blocked by the speech service.',
+    'audio-capture':'No usable microphone was found or permission was blocked.',
+    'no-speech':'No speech was heard. Try again.',
+    'network':'The speech-recognition service could not connect.',
+    'language-not-supported':'English speech recognition is unavailable on this browser.',
+    'aborted':'Voice recognition stopped.'
+   })[code]||'Speech recognition stopped unexpectedly.';
+   show(detail+' (Code: '+code+'). You can always use keyboard dictation or type below.','warn');
+ };
+ r.onend=()=>{
+   resetVoiceButton();
+   if(finalText.trim())parseVoice(finalText);
+   else if(!errored){$('heard').textContent='No clear words captured. Try speaking again.';}
+ };
+ $('voiceBtn').addEventListener('click',()=>{
+   if(starting){show('Microphone is still starting. Try again in a moment.','warn');return;}
+   if(state.recognizing){try{r.stop();}catch(e){resetVoiceButton();dictationFallback('Could not stop speech recognition: '+(e.name||'unknown')+'.');}return;}
+   if(location.protocol==='file:'){
+     show('You opened a local HTML file. For the best microphone support, use the hosted HTTPS Job Log link.','warn');
+   }
+   starting=true;errored=false;finalText='';interimText='';
+   $('voiceLabel').textContent='STARTING MICROPHONE…';
+   try{r.start();}catch(e){
+     resetVoiceButton();
+     const name=e&&e.name?e.name:'UnknownError';
+     const message=e&&e.message?e.message:'';
+     dictationFallback('Could not start speech recognition ('+name+(message?': '+message:'')+').');
+   }
+ });
+}else{
+ $('voiceLabel').textContent='TAP FOR KEYBOARD DICTATION';
+ $('voiceHelp').textContent='This browser does not support speech recognition. Tap the button to use keyboard dictation or type below.';
+ $('voiceBtn').addEventListener('click',()=>dictationFallback('This browser has no built-in speech recognition.'));
+}
+window.addEventListener('online',()=>{if(state.jobs.some(x=>x.status==='queued'))show('Internet is back. Pending reports are saved. Tap “Retry pending emails” to send them.','warn');});
+load();
+})();
+</script>
+</body>
+</html>
