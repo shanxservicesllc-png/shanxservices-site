@@ -6,6 +6,7 @@
 <meta name="theme-color" content="#101a1a">
 <meta name="description" content="Jon's simple voice-powered job log, with automatic email submission and offline backup.">
 <meta name="robots" content="noindex,nofollow,noarchive,nosnippet">
+<meta name="x13-build" content="jon-job-log-v1.2">
 <title>Jon's Job Log · X13</title>
 <style>
 :root{color-scheme:dark;--bg:#0d1617;--panel:#152323;--panel2:#1a2d2b;--muted:#aabcb6;--ink:#f5fff7;--green:#51e2ad;--gold:#edce84;--border:#36514a;--danger:#ffb5a9;--shadow:0 12px 38px #0006;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
@@ -28,7 +29,8 @@ button,input,textarea{font:inherit}button{cursor:pointer;-webkit-tap-highlight-c
   <section class="card" aria-labelledby="voiceHeading">
     <h2 id="voiceHeading">1. Talk to the app</h2>
     <button type="button" class="voice" id="voiceBtn"><span class="mic" aria-hidden="true">🎤</span><span id="voiceLabel">TAP TO TALK</span></button>
-    <p class="voice-help" id="voiceHelp">Try: “Fixed two outlets for Mike. Charged 180 dollars. Collected 150 dollars.”</p>
+    <p class="voice-help" id="voiceHelp">Try: “Brakes fifty dollars and rotors twenty dollars.” Then check the itemized total below.</p>
+    <details class="fine" style="margin-top:12px"><summary style="cursor:pointer">Chrome microphone permission not responding?</summary><p>In Chrome, open ⋮ → Settings → Site settings → Microphone and allow this website. Also check Android Settings → Apps → Chrome → Permissions → Microphone. If the popup will not accept a tap, use Samsung Internet or your keyboard microphone instead.</p></details>
     <div id="heard" class="transcript" aria-live="polite"></div>
   </section>
   <section class="card" aria-labelledby="detailsHeading">
@@ -40,6 +42,8 @@ button,input,textarea{font:inherit}button{cursor:pointer;-webkit-tap-highlight-c
         <div><label for="charged">Charged <span class="hint">$</span></label><div class="money"><input id="charged" name="charged" type="number" min="0" max="99999999" step="0.01" inputmode="decimal" placeholder="0.00"></div></div>
         <div><label for="collected">Collected <span class="hint">$</span></label><div class="money"><input id="collected" name="collected" type="number" min="0" max="99999999" step="0.01" inputmode="decimal" placeholder="0.00"></div></div>
       </div>
+      <div id="voiceAmounts" class="transcript" aria-live="polite"></div>
+      <div class="actions"><button class="secondary" type="button" id="analyzeWork">🧮 Calculate prices from description</button></div>
       <div class="save-area"><button class="main" type="submit" id="saveBtn">⚡ SAVE JOB + EMAIL REPORT</button></div>
     </form>
     <div id="notice" class="notice" role="status" aria-live="polite"></div>
@@ -142,7 +146,7 @@ $('jobForm').addEventListener('submit',async e=>{
  const job={id:(typeof crypto!=='undefined'&&crypto.randomUUID?crypto.randomUUID():'job-'+Date.now()+'-'+Math.random().toString(36).slice(2)),date:new Date().toISOString(),customer,work,charged,collected,status:'queued'};
  state.jobs.unshift(job);
  if(!persist()){state.jobs.shift();render();return;}
- render();$('jobForm').reset();$('heard').classList.remove('show');
+ render();$('jobForm').reset();$('heard').classList.remove('show');$('voiceAmounts').classList.remove('show');priceDraft.manualCharged=false;priceDraft.manualCollected=false;
  await send(job.id);
 });
 $('saveEmail').addEventListener('click',()=>{
@@ -162,23 +166,109 @@ $('exportCsv').addEventListener('click',()=>{
  const lines=[header.map(csvField).join(',')].concat(state.jobs.map(x=>[x.id,x.date,x.customer,x.work,x.charged,x.collected,x.status].map(csvField).join(',')));
  const blob=new Blob(['\ufeff',lines.join('\r\n')],{type:'text/csv;charset=utf-8;'});const u=URL.createObjectURL(blob);const a=document.createElement('a');a.href=u;a.download='Jon_Job_Records_'+new Date().toISOString().slice(0,10)+'.csv';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),3000);
 });
-// Extract amounts from phrases like "charged 180", "collected $150", "made two hundred" (digits are most reliable).
+// Collect every clearly spoken price from the COMPLETE work description.
+// Recalculate rather than replacing the amount with the latest voice fragment.
+// This also works with iPhone keyboard dictation via Calculate prices.
+const priceDraft={manualCharged:false,manualCollected:false};
+$('charged').addEventListener('input',()=>{priceDraft.manualCharged=true;});
+$('collected').addEventListener('input',()=>{priceDraft.manualCollected=true;});
+function priceCents(raw){
+ const n=cleanAmount(String(raw).replace(/,/g,''));
+ return n===null||n===''?null:Math.round(n*100);
+}
+function priceLabel(raw){
+ // A label is advisory; the original work description remains the source.
+ let s=raw.split(/[.;!?\n]/).pop().replace(/^\s*(?:and|plus|then|for)\s+/i,'').trim();
+ s=s.replace(/\b(?:charged|charge|quoted|billed|bill|price|cost|charging|for|was|is|a total of)\s*$/i,'').trim();
+ return s.length>45?s.slice(-45):s;
+}
+function spokenPriceCents(words){
+ const units={zero:0,one:1,two:2,three:3,four:4,five:5,six:6,seven:7,eight:8,nine:9,ten:10,eleven:11,twelve:12,thirteen:13,fourteen:14,fifteen:15,sixteen:16,seventeen:17,eighteen:18,nineteen:19,twenty:20,thirty:30,forty:40,fifty:50,sixty:60,seventy:70,eighty:80,ninety:90};
+ let subtotal=0,total=0;
+ for(const word of words.trim().toLowerCase().split(/[\s-]+/)){
+  if(word==='and')continue;
+  if(word==='a'){subtotal+=1;continue;}
+  if(word==='hundred'){subtotal=(subtotal||1)*100;continue;}
+  if(word==='thousand'){total+=(subtotal||1)*1000;subtotal=0;continue;}
+  if(!(word in units))return null;
+  subtotal+=units[word];
+ }
+ const amount=total+subtotal;
+ return amount>=0&&amount<=99999999?amount*100:null;
+}
+function detectAmounts(text){
+ const hits=[];
+ // $50, $1,250.50, 50 dollars, 20 bucks. Bare quantities are NOT prices.
+ const currency=/\$\s*(\d[\d,]*(?:\.\d{1,2})?)\b|\b(\d[\d,]*(?:\.\d{1,2})?)\s*(?:dollars?|bucks?)\b/gi;
+ let m;
+ while((m=currency.exec(text))!==null){
+   const cents=priceCents(m[1]||m[2]);
+   if(cents!==null)hits.push({start:m.index,end:currency.lastIndex,cents});
+ }
+ // Spoken-word amounts are common when speech services do not format them as digits.
+ const words=/(?:\b)((?:(?:zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred|thousand|and|a)[\s-]+)+)(?:dollars?|bucks?)\b/gi;
+ while((m=words.exec(text))!==null){
+   const cents=spokenPriceCents(m[1]);
+   if(cents!==null&&!hits.some(x=>m.index<x.end&&words.lastIndex>x.start))hits.push({start:m.index,end:words.lastIndex,cents});
+ }
+ // Also accept unmarked amounts immediately following a billing/collection/total verb.
+ const explicit=/\b(charged|charge|quoted|billed|bill|charging|collected|received|paid|payment|got\s+paid|took\s+home|total|grand\s+total|altogether)\s*(?:him|her|them|customer|me|for|is|was|of|at|:)?\s*\$?\s*(\d[\d,]*(?:\.\d{1,2})?)\b/gi;
+ while((m=explicit.exec(text))!==null){
+   const raw=m[2],start=explicit.lastIndex-raw.length,end=explicit.lastIndex;
+   if(hits.some(x=>start<x.end&&end>x.start))continue;
+   const cents=priceCents(raw);
+   if(cents!==null)hits.push({start,end,cents});
+ }
+ hits.sort((a,b)=>a.start-b.start);
+ const items=[],paid=[],totals=[];
+ let lastEnd=0;
+ for(const hit of hits){
+   const before=text.slice(lastEnd,hit.start);
+   const near=before.slice(-65);
+   const paidContext=/\b(?:collected|received|paid|payment|got\s+paid|took\s+home)\s*(?:(?:from|for|was|is|of|at|me|him|her|them|customer|in)\s*){0,3}$/i.test(near);
+   const totalContext=/\b(?:total|grand\s+total|altogether|all\s+together|in\s+all)\s*(?:(?:charged|billed|was|is|of|for|:)\s*){0,3}$/i.test(near);
+   if(paidContext)paid.push(hit);
+   else if(totalContext)totals.push(hit);
+   else items.push({...hit,label:priceLabel(before)});
+   lastEnd=hit.end;
+ }
+ const add=xs=>xs.reduce((sum,x)=>sum+x.cents,0);
+ // An explicit total is authoritative only when it occurs AFTER the item prices.
+ const lastTotal=totals.length?totals[totals.length-1]:null;
+ const lastItem=items.length?items[items.length-1]:null;
+ const chargedCents=lastTotal&&(!lastItem||lastTotal.start>lastItem.start)?lastTotal.cents:(items.length?add(items):null);
+ return {items,paid,totals,chargedCents,collectedCents:paid.length?add(paid):null};
+}
+function recalculatePrices(announce=true){
+ const parsed=detectAmounts($('work').value);
+ const display=$('voiceAmounts');
+ if(parsed.chargedCents!==null){
+   if(!priceDraft.manualCharged){$('charged').value=String(parsed.chargedCents/100);}
+ }else if(!priceDraft.manualCharged){$('charged').value='';}
+ if(parsed.collectedCents!==null){
+   if(!priceDraft.manualCollected){$('collected').value=String(parsed.collectedCents/100);}
+ }else if(!priceDraft.manualCollected){$('collected').value='';}
+ const prices=parsed.items.map(x=>(x.label?x.label+' ':'')+dollar(x.cents/100));
+ let pieces=[];
+ if(prices.length)pieces.push('Items: '+prices.join(' + '));
+ if(parsed.chargedCents!==null)pieces.push('Charged total: '+dollar(parsed.chargedCents/100));
+ if(parsed.collectedCents!==null)pieces.push('Collected: '+dollar(parsed.collectedCents/100));
+ if(priceDraft.manualCharged||priceDraft.manualCollected)pieces.push('Manually edited amounts were kept');
+ if(pieces.length){display.textContent=pieces.join(' | ');display.classList.add('show');}
+ else{display.textContent='';display.classList.remove('show');}
+ if(announce){
+   if(pieces.length)show('Prices calculated from the entire description. Review the itemized amounts and totals before saving.','ok');
+   else show('No clear dollar prices detected. Say amounts with “dollars” or “bucks,” or enter them manually.','warn');
+ }
+}
+$('analyzeWork').addEventListener('click',()=>recalculatePrices());
 function parseVoice(s){
- const t=s.replace(/,/g,'');
- const num='\\$?\\s*(\\d+(?:\\.\\d{1,2})?)';
- const take=(re)=>{const m=t.match(re);return m?m[1]:null;};
- const charge=take(new RegExp('(?:charged|charge|quoted|billed|bill|price|cost|charging)\\s*(?:him|her|them|customer|for|is|was|of|at)?\\s*'+num,'i'));
- const paid=take(new RegExp('(?:collected|received|paid|made|earned|got paid|payment|took home)\\s*(?:him|her|them|me|was|for|is|of|at)?\\s*'+num,'i'));
- let defaultCharge=null;
- if(charge===null&&paid===null){let m=t.match(/\$\s*(\d+(?:\.\d{1,2})?)/);if(!m)m=t.match(/\b(\d+(?:\.\d{1,2})?)\s*dollars?\b/i);if(m)defaultCharge=m[1];}
- if(charge!==null)$('charged').value=charge;
- if(paid!==null)$('collected').value=paid;
- if(defaultCharge!==null)$('charged').value=defaultCharge;
+ const t=s.trim();if(!t)return;
  const customer=t.match(/(?:customer|client|at the home of|at the house of)\s+([A-Za-z][\w '\-]{1,45}?)(?:\s+(?:charged|collected|received|paid|made|for \$)|[.,;]|$)/i);
  if(customer&&!$('customer').value.trim())$('customer').value=customer[1].trim();
- $('work').value=($('work').value.trim()?$('work').value.trim()+'\n':'')+s.trim();
- $('heard').textContent='Heard: “'+s.trim()+'”';$('heard').classList.add('show');
- show('Voice captured. Check the amounts and job details, then tap Save Job + Email Report.','ok');
+ $('work').value=($('work').value.trim()?$('work').value.trim()+'\n':'')+t;
+ $('heard').textContent='Heard: “'+t+'”';$('heard').classList.add('show');
+ recalculatePrices(true);
 }
 const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
 // Safari's browser speech recognition is inconsistent on iPhones. Use the
@@ -188,7 +278,7 @@ const isIOS=/iPhone|iPad|iPod/i.test(navigator.userAgent)||
 let starting=false;
 function dictationFallback(reason){
  $('work').focus();
- show((reason?reason+' ':'')+'Use the microphone on your phone keyboard to dictate into Work done, or type the job. Then check the amounts and save.','warn');
+ show((reason?reason+' ':'')+'Use the microphone on your phone keyboard to dictate into Work done, or type the job. Then tap Calculate prices from description, check the amounts, and save.','warn');
 }
 function resetVoiceButton(){
  starting=false;state.recognizing=false;
@@ -198,7 +288,7 @@ function resetVoiceButton(){
 }
 if(isIOS){
  $('voiceLabel').textContent='TAP FOR IPHONE DICTATION';
- $('voiceHelp').textContent='iPhone: tap the button, then the microphone on your keyboard. You can also type your report.';
+ $('voiceHelp').textContent='iPhone: tap the button, then the keyboard microphone. Tap Calculate prices from description to add up item prices.';
  $('voiceBtn').addEventListener('click',()=>dictationFallback('iPhone keyboard dictation is the reliable speech option here.'));
 }else if(!window.isSecureContext&&location.protocol!=='file:'){
  $('voiceLabel').textContent='MIC NEEDS HTTPS · TYPE BELOW';
