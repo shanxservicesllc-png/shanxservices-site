@@ -210,8 +210,8 @@ function sightClearance(target,eye){let best=1;
 function clearCamera(target,eye){let v=sightClearance(target,eye);return target.map((x,i)=>x+(eye[i]-x)*v)}
 function resize(){let d=Math.min(1.6,window.devicePixelRatio||1),w=Math.max(1,Math.round(cv.clientWidth*d)),h=Math.max(1,Math.round(cv.clientHeight*d));if(cv.width!==w||cv.height!==h){cv.width=w;cv.height=h;gl.viewport(0,0,w,h)}}
 function frame(now){let dt=Math.min(.037,(now-last)/1000||.016);last=now;if(mode==='play')step(dt);else t+=dt*.23;resize();
-let tar=[player.x,player.y+2.3,player.z],desired=clearCamera(tar,[player.x+4,player.y+16,player.z+26]),k=Math.min(1,dt*4.0);cam=cam.map((v,i)=>v+(desired[i]-v)*k);cam=clearCamera(tar,cam);let vp=matMul(perspective(66*Math.PI/180,cv.width/cv.height,.2,750),lookAt(cam,tar));gl.uniformMatrix4fv(loc.mvp,false,vp);gl.uniform3fv(loc.eye,new Float32Array(cam));gl.clearColor(0,0,0,0);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);world.draw();dynamic.v=[];fx(dynamic);dynamic.upload(true);dynamic.draw();requestAnimationFrame(frame)}
-drawMiniMap(now);updateHud();requestAnimationFrame(frame);
+let tar=[player.x,player.y+2.3,player.z],desired=clearCamera(tar,[player.x+4,player.y+16,player.z+26]),k=Math.min(1,dt*4.0);cam=cam.map((v,i)=>v+(desired[i]-v)*k);cam=clearCamera(tar,cam);let vp=matMul(perspective(66*Math.PI/180,cv.width/cv.height,.2,750),lookAt(cam,tar));gl.uniformMatrix4fv(loc.mvp,false,vp);gl.uniform3fv(loc.eye,new Float32Array(cam));gl.clearColor(0,0,0,0);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);world.draw();dynamic.v=[];fx(dynamic);dynamic.upload(true);dynamic.draw();drawMiniMap(now);requestAnimationFrame(frame)}
+updateHud();requestAnimationFrame(frame);
 window.__SHANX_3D={getState:()=>({mode,hero,score,player:{...player},solidTowers:towers.length,worldVertices:world.count,activeOrbs:orbs.filter(x=>!x.taken).length,activatedGates:gates.filter(g=>g.lit).length,worldSpan:570, camera:[...cam],usingWebGL:!!gl})};
 })();
 </script></body></html>
