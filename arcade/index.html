@@ -95,6 +95,13 @@ footer{border-top:1px solid var(--line);padding:30px 0 46px}.foot{display:flex;j
 .three-d-queue li span{color:#f1d69b;font-size:10px;letter-spacing:.09em;font-weight:950;display:block}
 @media(max-width:780px){.three-d-grid{grid-template-columns:1fr}}
 @media(max-width:490px){.three-d-feature{grid-template-columns:1fr}.three-d-feature img{height:164px}.three-d-head h2{font-size:41px}.three-d-arcade{padding-top:25px}}
+/* ShanX Speed and Swing: additive 3D Alpha card, preserves existing Arcade entries. */
+.three-d-feature.shanx-alpha{grid-column:1/-1;background:linear-gradient(120deg,#113a50,#15203b 63%,#183c3e)}
+.shanx-alpha-art{height:220px;display:flex;align-items:center;justify-content:center;flex-direction:column;text-align:center;position:relative;overflow:hidden;border-radius:12px;border:1px solid #8bf7efa1;background:radial-gradient(circle at 68% 18%,#fbe7a9a6,transparent 24%),linear-gradient(160deg,#304899 0%,#264773 45%,#0b2037 80%);box-shadow:inset 0 -15px 45px #030a2290}
+.shanx-alpha-art:before{content:"";position:absolute;left:-4%;right:-4%;bottom:-5%;height:75%;background:repeating-linear-gradient(90deg,#122846 0 10%,#335779 10% 14%,#09203b 14% 24%);clip-path:polygon(0 100%,0 45%,9% 45%,9% 15%,19% 15%,19% 55%,31% 55%,31% 7%,46% 7%,46% 34%,57% 34%,57% 5%,68% 5%,68% 48%,79% 48%,79% 22%,89% 22%,89% 52%,100% 52%,100% 100%);opacity:.88}
+.shanx-alpha-art b{position:relative;z-index:2;color:#dbfffb;font-size:clamp(23px,4vw,42px);line-height:1;text-shadow:0 5px 20px #000b;letter-spacing:-.035em}
+.shanx-alpha-art small{position:relative;z-index:2;padding:8px 14px;margin-top:8px;color:#143c51;font-size:11px;font-weight:950;letter-spacing:.16em;background:#94fff0;border-radius:40px}
+@media(max-width:720px){.three-d-feature.shanx-alpha{grid-column:1/-1}}
 </style>
 </head>
 <body>
@@ -158,6 +165,7 @@ footer{border-top:1px solid var(--line);padding:30px 0 46px}.foot{display:flex;j
 <div class="three-d-head"><div><div class="eyebrow">3D ARCADE · TRUE 3D BROWSER GAMES</div><h2 id="threeDHeading">A new <em>dimension.</em></h2><p>Keep the original 18 games, then step into upgraded 3D editions as they pass testing. 3D games use WebGL, so graphics performance varies by device.</p></div></div>
 <div class="three-d-grid">
 <article class="three-d-feature"><img src="media/paddle-duel-3d-gameplay.png" alt="Actual screenshot of 3D Paddle Duel with lit raised court, glowing ball and green and gold paddles" loading="lazy"><div><div class="label">PLAYABLE NOW · 3D GAME 001</div><h3>Paddle Duel 3D</h3><p>The classic paddle challenge rebuilt with real 3D geometry, lights, a glowing ball, touch controls and Easy, Normal or Hard settings.</p><a href="games/paddle-duel-3d.html">PLAY PADDLE DUEL 3D ↗</a></div></article>
+<article class="three-d-feature shanx-alpha" aria-label="ShanX Speed and Swing 3D public alpha playtest"><div class="shanx-alpha-art" role="img" aria-label="Stylized neon city skyline for ShanX Speed and Swing"><b>SHANX<br>SPEED &amp; SWING</b><small>3D CITY ADVENTURE</small></div><div><div class="label">PLAYABLE ALPHA · 3D GAME 002</div><h3>ShanX Speed and Swing</h3><p>Explore a neon 3D city as two original heroes, use a thumb joystick to dash or auto-grapple toward rooftops, collect glowing lights and activate sky gates. Includes a city mini-map. This is a live work-in-progress playtest, and your feedback helps shape it.</p><a href="games/shanx-speed-and-swing-3d/">PLAY SPEED &amp; SWING 3D ↗</a></div></article>
 <aside class="three-d-queue"><div class="label">3D DEVELOPMENT QUEUE</div><h3>Building the next worlds.</h3><p>These editions are planned or in development. They are not public playable 3D games yet.</p><ul>
 <li><span>NEXT UPGRADE</span>Crossing Quest 3D: moving traffic and real depth</li>
 <li><span>PLANNED</span>Street Sprint 3D: a fully modeled road</li>
