@@ -49,12 +49,26 @@ h1{font-family:Georgia,Cambria,"Times New Roman",serif;font-weight:500;letter-sp
 .active-face{margin:12px 0 0;padding:8px 14px;border-radius:999px;border:1px solid #83e9df70;background:#15334b;color:#b4fff3;letter-spacing:.12em;font-size:11px;font-weight:750;text-align:center}
 .active-face[data-status="solved"]{border-color:#9ef2b28a;color:#cbffda} .active-face[data-status="sealed"]{border-color:#f3c5a255;color:#e3baba}
 .touch-plane{position:absolute;left:50%;top:50%;width:var(--cube-size);height:var(--cube-size);z-index:7;transform-origin:50% 50%;pointer-events:none;opacity:0}.touch-plane.ready{opacity:1}.touch-cell{position:absolute;appearance:none;border:0;padding:0;background:transparent;touch-action:none;pointer-events:auto;cursor:pointer;-webkit-tap-highlight-color:transparent}.touch-plane:not(.ready) .touch-cell{pointer-events:none}
+
+/* SXS Arcade public player feedback, matching Paddle Duel's email-draft delivery. */
+.sxs-feedback{margin:30px auto 23px;padding:clamp(18px,4vw,26px);border:1px solid #76f5e275;border-radius:20px;background:linear-gradient(140deg,#122d41,#151832 85%);box-shadow:0 18px 48px #02071655;max-width:900px}
+.sxs-feedback h2{font-size:clamp(22px,4vw,30px);margin:0 0 7px;color:#d5fffa;letter-spacing:-.035em}
+.sxs-feedback p{color:#bdcde2;font-size:13px;line-height:1.6;margin:5px 0 16px}
+.sxs-feedback-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px;margin-bottom:12px}
+.sxs-feedback label{display:block;color:#dcecf4;font-size:12px;font-weight:700;margin-bottom:7px}
+.sxs-feedback input,.sxs-feedback select,.sxs-feedback textarea{display:block;width:100%;font:inherit;font-size:15px;border-radius:11px;border:1px solid #a5e5df7c;background:#081b30;color:#f1fffd;padding:12px;min-height:45px}
+.sxs-feedback textarea{min-height:108px;resize:vertical;line-height:1.5}
+.sxs-feedback input:focus-visible,.sxs-feedback textarea:focus-visible,.sxs-feedback select:focus-visible,.sxs-feedback a:focus-visible{outline:3px solid #b8ffe7;outline-offset:3px}
+.sxs-feedback .sxs-send{display:inline-block;margin-top:13px;padding:13px 19px;border-radius:11px;background:#92ffdf;color:#062638;font-size:13px;font-weight:850;text-decoration:none}
+.sxs-feedback #sxsFeedbackStatus{min-height:20px;margin:9px 0 0;color:#ffe4a1;font-size:12px}
+@media(max-width:560px){.sxs-feedback-grid{grid-template-columns:1fr}}
+
 </style>
 </head>
 <body>
 <div class="aurora" aria-hidden="true"></div>
 <div class="shell">
-<header class="topbar"><a class="brand" href="../index.html#arcade3d" aria-label="Back to SXS Arcade 3D Games"><div class="brandmark" aria-hidden="true">✦</div><div class="brandcopy"><strong>SHANX SERVICES</strong><span>SXS ARCADE / VOL. 01</span></div></a><div class="toplinks"><span class="chip">3D PUZZLE EXPERIENCE</span><span class="chip preview-chip">PRIVATE • V1.2</span></div></header>
+<header class="topbar"><a class="brand" href="../index.html#arcade3d" aria-label="Back to SXS Arcade 3D Games"><div class="brandmark" aria-hidden="true">✦</div><div class="brandcopy"><strong>SHANX SERVICES</strong><span>SXS ARCADE / VOL. 01</span></div></a><div class="toplinks"><span class="chip">3D PUZZLE EXPERIENCE</span><span class="chip preview-chip">PUBLIC PLAYTEST • V1.2</span></div></header>
 <main id="main">
 <section class="hero" aria-label="Aurora Vault puzzle game">
 <div class="intro"><div class="eyebrow">A LITTLE WONDER FOR YOUR DAY</div><h1>Aurora<br><span>Vault.</span></h1><p class="dek">An enchanted cube has lost its glow. Turn it in your hands, tap the crystal tiles, and bring every facet back to life. A thoughtful little escape, one sparkle at a time.</p><div class="howto"><b aria-hidden="true">↗</b><span><strong style="color:#e6f7fc">Drag to rotate.</strong> Tap a crystal to change its neighbors.<br>Make <strong style="color:#b8ffeb">every tile glow</strong> to solve a face.</span></div></div>
@@ -67,7 +81,20 @@ h1{font-family:Georgia,Cambria,"Times New Roman",serif;font-weight:500;letter-sp
 </section>
 <div class="message" id="message" role="status" aria-live="polite">Welcome to the vault. Start with the crystal face in front of you. ✨</div>
 </main>
-<footer class="bottom"><span>© SXS ARCADE • AN ORIGINAL SHANX SERVICES EXPERIENCE</span><span class="secure"><b>✦</b> No account. No ads. No data sent. Your progress stays on this device.</span></footer>
+<section class="sxs-feedback" id="player-feedback" aria-labelledby="sxsFeedbackTitle">
+<h2 id="sxsFeedbackTitle">How should we improve Aurora Vault? 💌</h2>
+<p>Test the puzzles and tell us what you enjoyed, what was confusing, or what needs fixing. Your feedback opens an email draft. <strong>You choose whether to send it.</strong> Sending an email is not anonymous.</p>
+<div class="sxs-feedback-grid">
+<div><label for="sxsFeedbackTester">Your name or nickname (optional)</label><input id="sxsFeedbackTester" type="text" maxlength="60" placeholder="Your name or nickname" autocomplete="nickname"></div>
+<div><label for="sxsFeedbackType">What is your feedback about?</label><select id="sxsFeedbackType"><option>Gameplay idea</option><option>Bug or something broken</option><option>Mobile controls</option><option>Look and feel</option><option>Other feedback</option></select></div>
+</div>
+<label for="sxsFeedbackText">Your comments</label>
+<textarea id="sxsFeedbackText" maxlength="1200" placeholder="What happened, or what would make this better?"></textarea>
+<a id="sxsFeedbackSend" class="sxs-send" href="mailto:henry.shannon@shanxservices.com?subject=Aurora%20Vault%203D%20Playtest%20Feedback">✉ Email my feedback ↗</a>
+<p id="sxsFeedbackStatus" role="status" aria-live="polite"></p>
+</section>
+
+<footer class="bottom"><span>© SXS ARCADE • AN ORIGINAL SHANX SERVICES EXPERIENCE</span><span class="secure"><b>✦</b> No account. No ads. Progress stays on your device. Feedback is emailed only if you send it.</span></footer>
 </div>
 <div class="modal" id="winmodal" hidden><div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="winheading"><div class="modal-gem" aria-hidden="true">✧</div><h2 id="winheading">The light returns.</h2><p id="wintext">Every crystal is glowing. The vault is coming back to life.</p><div class="modal-actions"><button class="btn primary" id="next" type="button">Continue the journey →</button><button class="btn" id="again" type="button">Play again</button></div></div></div>
 <script>
@@ -127,5 +154,17 @@ h1{font-family:Georgia,Cambria,"Times New Roman",serif;font-weight:500;letter-sp
  window.__SXS_QA__={state:()=>({level,states:{...states},moves,levelSolved,orientation:{rotX,rotY},hintVisible:!$('hintcallout').hidden}),solve,touchTile,focus,freshLevel,hint,levels:LEVELS,moveMasks:MOVE_MASKS};
 })();
 </script>
+
+<script>
+/* Email-draft feedback only: no automatic network send or remote logging. */
+(()=>{'use strict';
+const box=document.getElementById('sxsFeedbackText'),name=document.getElementById('sxsFeedbackTester'),type=document.getElementById('sxsFeedbackType'),send=document.getElementById('sxsFeedbackSend'),status=document.getElementById('sxsFeedbackStatus');
+function update(){send.href='mailto:henry.shannon@shanxservices.com?subject='+encodeURIComponent('Aurora Vault 3D v1.2 playtest feedback')+'&body='+encodeURIComponent('Game: Aurora Vault 3D v1.2\nTester: '+(name.value.trim()||'Not provided')+'\nCategory: '+type.value+'\n\nFeedback:\n'+box.value.trim());}
+[box,name,type].forEach(el=>{el.addEventListener('input',update);el.addEventListener('change',update)});
+send.addEventListener('click',ev=>{if(!box.value.trim()){ev.preventDefault();status.textContent='Please write your feedback before sending.';box.focus();return}update();status.textContent='Your email app should open a draft. Press Send there to deliver your feedback.'});
+update();
+})();
+</script>
+
 </body>
 </html>
