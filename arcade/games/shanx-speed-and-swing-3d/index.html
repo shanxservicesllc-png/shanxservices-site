@@ -33,14 +33,50 @@ canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none}
 #radarText{margin-top:5px;color:#fff0c7;font-size:10px;font-weight:850;white-space:nowrap}
 @media(max-width:670px){#radar{top:72px;right:8px;width:124px;padding:5px;border-radius:11px}#radarHeader{font-size:8px}#miniMap{width:112px;height:112px}#radarText{font-size:8px}#mission{max-width:calc(100vw - 141px);font-size:9px}#gates{top:125px}}
 @media(max-height:470px){#radar{top:49px;width:113px}#miniMap{width:101px;height:101px}#radarText{font-size:8px}#mission{max-width:calc(100vw - 133px);font-size:8px}}
+
+/* SXS public playtest feedback: bottom drawer preserves full-screen 3D controls. */
+#sxsFeedbackOpen{position:fixed;z-index:12;left:50%;transform:translateX(-50%);bottom:max(170px,calc(env(safe-area-inset-bottom) + 165px));border:1px solid #aaffeb;background:#0a284edb;color:#e8fff8;border-radius:999px;padding:10px 17px;box-shadow:0 10px 25px #001a3cab;font:850 12px system-ui;letter-spacing:.02em;cursor:pointer;pointer-events:auto}
+#overlay:not(.hidden) ~ #sxsFeedbackOpen{display:none}
+#sxsIntroFeedback{display:block;margin:12px auto 0;border:1px solid #9bf5eaa9;background:#122f50;color:#e5fff8;border-radius:10px;padding:11px 17px;font:800 13px system-ui;cursor:pointer}
+#sxsFeedbackBackdrop{position:fixed;inset:0;z-index:30;background:#061025b8;touch-action:auto}
+#sxsFeedbackPanel{position:fixed;z-index:31;bottom:0;left:0;right:0;width:min(720px,100%);margin:auto;max-height:min(76dvh,710px);overflow:auto;overscroll-behavior:contain;touch-action:pan-y;user-select:text;-webkit-user-select:text;background:linear-gradient(145deg,#123452,#101735 83%);border:1px solid #a6ffec88;border-radius:23px 23px 0 0;box-shadow:0 -15px 70px #000b;padding:clamp(18px,3vw,30px) clamp(18px,4vw,32px) max(22px,env(safe-area-inset-bottom));}
+#sxsFeedbackPanel[hidden],#sxsFeedbackBackdrop[hidden]{display:none!important}
+#sxsFeedbackPanel h2{font-size:clamp(22px,4vw,28px);margin:0 50px 8px 0;color:#c4fff2}
+#sxsFeedbackPanel p{color:#c8dcef;font-size:13px;line-height:1.5;margin:5px 0 15px}
+#sxsFeedbackPanel label{display:block;color:#f0faff;font-size:13px;font-weight:750;margin:11px 0 6px}
+#sxsFeedbackPanel input,#sxsFeedbackPanel textarea,#sxsFeedbackPanel select{box-sizing:border-box;width:100%;display:block;background:#071d39;color:#fff;border:1px solid #a2e3dc88;border-radius:11px;font:15px system-ui;padding:11px;touch-action:auto;user-select:text;-webkit-user-select:text}
+#sxsFeedbackPanel textarea{min-height:100px;resize:vertical;touch-action:pan-y}
+#sxsFeedbackPanel input:focus-visible,#sxsFeedbackPanel textarea:focus-visible,#sxsFeedbackPanel select:focus-visible,#sxsFeedbackPanel a:focus-visible,#sxsFeedbackPanel button:focus-visible{outline:3px solid #aaffdf;outline-offset:3px}
+.sxsFeedbackGrid{display:grid;grid-template-columns:1fr 1fr;gap:13px}
+#sxsFeedbackClose{position:absolute;right:15px;top:14px;border:1px solid #a8e0d37c;background:#133d57;color:#f4fffc;font-size:22px;border-radius:50%;width:39px;height:39px;cursor:pointer}
+#sxsFeedbackSend{display:inline-block;text-decoration:none;margin:15px 0 3px;padding:12px 19px;background:#8ff4dc;color:#08334e;border-radius:11px;font-size:13px;font-weight:900}
+#sxsFeedbackStatus{min-height:15px;color:#ffe89c!important;font-size:12px!important}
+@media(max-width:470px){.sxsFeedbackGrid{grid-template-columns:1fr}#sxsFeedbackOpen{bottom:max(145px,calc(env(safe-area-inset-bottom) + 142px));padding:8px 13px;font-size:11px}}
+@media(max-height:460px){#sxsFeedbackOpen{bottom:10px}#sxsFeedbackPanel{max-height:95dvh}}
 </style></head><body>
 <div id="sky"></div><canvas id="world" aria-label="Three dimensional ShanX Speed and Swing city game"></canvas><div id="vignette"></div>
 <div id="top"><div id="brand"><strong>SHAN<em>X</em></strong><small>SPEED + SWING</small></div><div id="score">✦ <b id="gemCount">0</b> / 28</div><button id="pause" aria-label="Pause game">Ⅱ</button></div>
 <div id="mission">✦ COLLECT LIGHTS · ACTIVATE FOUR SKY GATES</div><div id="gates" role="status" aria-live="polite">SKY GATES <b id="gateCount">0/4</b></div><div id="rightHud"><b id="heroLabel">⚡ VOLT</b><span id="heroSub">SPEED RUNNER</span></div>
 <aside id="radar" aria-label="Navigation mini-map showing nearby city lights and sky gates"><div id="radarHeader">CITY RADAR</div><canvas id="miniMap" width="150" height="150"></canvas><div id="radarText">FINDING LIGHTS...</div></aside><div id="toast" role="status" aria-live="polite"></div>
 <div id="controls"><div id="joystick" aria-label="Move with thumb joystick" role="group"><div id="stick">✦</div></div><div id="buttons"><button id="heroBtn" class="action" aria-label="Change hero"><span class="glyph">⇄</span><span>HERO</span></button><button id="special" class="action" aria-label="Special ability"><span class="glyph">✧</span><span id="specialLabel">DASH</span></button><button id="jump" class="action" aria-label="Jump"><span class="glyph">↑</span><span>JUMP</span></button></div></div>
-<section id="overlay"><div id="panel"><div id="eyebrow">SHANX 3D LAB · CITY ADVENTURE V4</div><h1 id="menuTitle">SPEED <em>&amp;</em><br>SWING</h1><p id="menuText">Explore the neon city! Follow your radar to glowing lights and four sky gates. Tap SWING with Skyline to auto-grapple toward a nearby rooftop.</p><div class="heroCards"><div class="heroCard"><b style="color:#75ecff">⚡ VOLT</b><small>Original cobalt speedster. Dash across the skyline in a blue streak.</small></div><div class="heroCard"><b style="color:#ff8b83">✧ SKYLINE</b><small>Original crimson masked flyer. Jump, grapple and swing through the city.</small></div></div><button id="play">▶ EXPLORE THE CITY</button><div id="sub">Touch: move + jump + special • Keyboard: WASD, Space, E, Q</div></div></section>
+<section id="overlay"><div id="panel"><div id="eyebrow">SHANX 3D LAB · CITY ADVENTURE V4</div><h1 id="menuTitle">SPEED <em>&amp;</em><br>SWING</h1><p id="menuText">Explore the neon city! Follow your radar to glowing lights and four sky gates. Tap SWING with Skyline to auto-grapple toward a nearby rooftop.</p><div class="heroCards"><div class="heroCard"><b style="color:#75ecff">⚡ VOLT</b><small>Original cobalt speedster. Dash across the skyline in a blue streak.</small></div><div class="heroCard"><b style="color:#ff8b83">✧ SKYLINE</b><small>Original crimson masked flyer. Jump, grapple and swing through the city.</small></div></div><button id="play">▶ EXPLORE THE CITY</button><div id="sub">Touch: move + jump + special • Keyboard: WASD, Space, E, Q</div><button type="button" id="sxsIntroFeedback">💌 Leave player feedback</button></div></section>
 <div id="unsupported">This device needs a browser with WebGL to display the 3D city.</div>
+<button id="sxsFeedbackOpen" type="button" aria-controls="sxsFeedbackPanel" aria-expanded="false">💌 TESTER FEEDBACK</button>
+<div id="sxsFeedbackBackdrop" hidden aria-hidden="true"></div>
+<section id="sxsFeedbackPanel" role="dialog" aria-modal="true" aria-labelledby="sxsFeedbackTitle" hidden>
+<button id="sxsFeedbackClose" type="button" aria-label="Close feedback">×</button>
+<h2 id="sxsFeedbackTitle">Tell us about Speed and Swing 💌</h2>
+<p>Did something break? Have an idea for the city or controls? Leave comments below. This opens your email app with a draft and <strong>you choose whether to send it</strong>. Emails are not anonymous.</p>
+<div class="sxsFeedbackGrid">
+<div><label for="sxsFeedbackTester">Name or nickname (optional)</label><input type="text" id="sxsFeedbackTester" maxlength="60" autocomplete="nickname" placeholder="Name or nickname"></div>
+<div><label for="sxsFeedbackType">Feedback category</label><select id="sxsFeedbackType"><option>Gameplay idea</option><option>Bug or something broken</option><option>Joystick or mobile controls</option><option>Performance</option><option>Other feedback</option></select></div>
+</div>
+<label for="sxsFeedbackText">Your comments</label>
+<textarea id="sxsFeedbackText" maxlength="1200" placeholder="What worked well, or what needs fixing?"></textarea>
+<a id="sxsFeedbackSend" href="mailto:henry.shannon@shanxservices.com?subject=ShanX%20Speed%20and%20Swing%20Feedback">✉ Email my feedback ↗</a>
+<p id="sxsFeedbackStatus" role="status" aria-live="polite"></p>
+</section>
+
 <script>
 (()=>{'use strict';
 const cv=document.getElementById('world'),gl=cv.getContext('webgl',{alpha:true,antialias:true,depth:true,premultipliedAlpha:false,powerPreference:'high-performance'});
@@ -214,4 +250,21 @@ let tar=[player.x,player.y+2.3,player.z],desired=clearCamera(tar,[player.x+4,pla
 updateHud();requestAnimationFrame(frame);
 window.__SHANX_3D={getState:()=>({mode,hero,score,player:{...player},solidTowers:towers.length,worldVertices:world.count,activeOrbs:orbs.filter(x=>!x.taken).length,activatedGates:gates.filter(g=>g.lit).length,worldSpan:570, camera:[...cam],usingWebGL:!!gl})};
 })();
-</script></body></html>
+</script>
+<script>
+/* Email-draft feedback: no automatic submission and no change to 3D engine. */
+(()=>{'use strict';
+const $=id=>document.getElementById(id),panel=$('sxsFeedbackPanel'),backdrop=$('sxsFeedbackBackdrop'),float=$('sxsFeedbackOpen'),intro=$('sxsIntroFeedback'),close=$('sxsFeedbackClose'),box=$('sxsFeedbackText'),tester=$('sxsFeedbackTester'),kind=$('sxsFeedbackType'),send=$('sxsFeedbackSend'),status=$('sxsFeedbackStatus');
+let previous=null;
+function open(){previous=document.activeElement;panel.hidden=false;backdrop.hidden=false;float.setAttribute('aria-expanded','true');box.focus();}
+function shut(){panel.hidden=true;backdrop.hidden=true;float.setAttribute('aria-expanded','false');if(previous&&typeof previous.focus==='function')previous.focus();}
+[intro,float].forEach(el=>el.addEventListener('click',open));[close,backdrop].forEach(el=>el.addEventListener('click',shut));
+panel.addEventListener('keydown',ev=>{ev.stopPropagation();if(ev.key==='Escape'){ev.preventDefault();shut();}});
+panel.addEventListener('keyup',ev=>ev.stopPropagation());
+function update(){send.href='mailto:henry.shannon@shanxservices.com?subject='+encodeURIComponent('ShanX Speed and Swing 3D V4 playtest feedback')+'&body='+encodeURIComponent('Game: ShanX Speed and Swing 3D V4\nTester: '+(tester.value.trim()||'Not provided')+'\nCategory: '+kind.value+'\n\nFeedback:\n'+box.value.trim());}
+[box,tester,kind].forEach(el=>{el.addEventListener('input',update);el.addEventListener('change',update);});
+send.addEventListener('click',ev=>{if(!box.value.trim()){ev.preventDefault();status.textContent='Write a comment first.';box.focus();return}update();status.textContent='Your email draft should open. Press Send in your email app to deliver.'});
+update();
+})();
+</script>
+</body></html>
