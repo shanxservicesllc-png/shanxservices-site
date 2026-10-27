@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"><meta name="theme-color" content="#071124"><title>ShanX Speed and Swing | 3D City Playtest V4</title>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"><meta name="theme-color" content="#071124"><title>ShanX Speed and Swing | 3D City Playtest V5</title>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html,body{height:100%;margin:0;overflow:hidden;touch-action:none;font-family:system-ui,-apple-system,Segoe UI,Arial,sans-serif;background:#071329;color:#f6fcff;user-select:none}body{position:relative}
 #sky{position:absolute;inset:0;background:radial-gradient(ellipse at 73% 18%,#ffe5ad 0%,#fca5a7 15%,#7d8ada 42%,#3e548d 64%,#132c51 92%)}#sky:after{content:"";position:absolute;top:7%;right:18%;width:min(15vw,125px);aspect-ratio:1;border-radius:50%;background:#ffedbe;box-shadow:0 0 75px 22px #ffd4a88e,0 0 160px 70px #ffaf9874}
@@ -62,7 +62,7 @@ canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none}
 <div id="mission">✦ COLLECT LIGHTS · ACTIVATE FOUR SKY GATES</div><div id="gates" role="status" aria-live="polite">SKY GATES <b id="gateCount">0/4</b></div><div id="rightHud"><b id="heroLabel">⚡ VOLT</b><span id="heroSub">SPEED RUNNER</span></div>
 <aside id="radar" aria-label="Navigation mini-map showing nearby city lights and sky gates"><div id="radarHeader">CITY RADAR</div><canvas id="miniMap" width="150" height="150"></canvas><div id="radarText">FINDING LIGHTS...</div></aside><div id="toast" role="status" aria-live="polite"></div>
 <div id="controls"><div id="joystick" aria-label="Move with thumb joystick" role="group"><div id="stick">✦</div></div><div id="buttons"><button id="heroBtn" class="action" aria-label="Change hero"><span class="glyph">⇄</span><span>HERO</span></button><button id="special" class="action" aria-label="Special ability"><span class="glyph">✧</span><span id="specialLabel">DASH</span></button><button id="jump" class="action" aria-label="Jump"><span class="glyph">↑</span><span>JUMP</span></button></div></div>
-<section id="overlay"><div id="panel"><div id="eyebrow">SHANX 3D LAB · CITY ADVENTURE V4</div><h1 id="menuTitle">SPEED <em>&amp;</em><br>SWING</h1><p id="menuText">Explore the neon city! Follow your radar to glowing lights and four sky gates. Tap SWING with Skyline to auto-grapple toward a nearby rooftop.</p><div class="heroCards"><div class="heroCard"><b style="color:#75ecff">⚡ VOLT</b><small>Original cobalt speedster. Dash across the skyline in a blue streak.</small></div><div class="heroCard"><b style="color:#ff8b83">✧ SKYLINE</b><small>Original crimson masked flyer. Jump, grapple and swing through the city.</small></div></div><button id="play">▶ EXPLORE THE CITY</button><div id="sub">Left joystick to move · Drag open screen to look around · ↻ reset camera · Keyboard: WASD, Space, E, Q, R</div><button type="button" id="sxsIntroFeedback">💌 Leave player feedback</button></div></section>
+<section id="overlay"><div id="panel"><div id="eyebrow">SHANX 3D LAB · CITY ADVENTURE V5</div><h1 id="menuTitle">SPEED <em>&amp;</em><br>SWING</h1><p id="menuText">Explore four shimmering city districts with two original animated heroes. Collect lights, visit sky gates, dash through streets, and fire Skyline’s luminous web toward nearby rooftops.</p><div class="heroCards"><div class="heroCard"><b style="color:#75ecff">⚡ VOLT</b><small>Original blue quill runner with expressive face, animated legs, luminous trails and turbo dash.</small></div><div class="heroCard"><b style="color:#ff8b83">✧ SKYLINE</b><small>Original crimson-and-navy roof runner with articulated limbs, visor and glowing web-swing arcs.</small></div></div><button id="play">▶ EXPLORE THE CITY</button><div id="sub">Left joystick to move · Drag open screen to look around · ↻ reset camera · Keyboard: WASD, Space, E, Q, R</div><button type="button" id="sxsIntroFeedback">💌 Leave player feedback</button></div></section>
 <div id="unsupported">This device needs a browser with WebGL to display the 3D city.</div>
 <button id="sxsFeedbackOpen" type="button" aria-controls="sxsFeedbackPanel" aria-expanded="false">💌 TESTER FEEDBACK</button>
 <div id="sxsFeedbackBackdrop" hidden aria-hidden="true"></div>
@@ -99,6 +99,35 @@ class Mesh{constructor(){this.v=[];this.buffer=null;this.count=0;this.transform=
  box(x,y,z,w,h,d,col){let x0=x-w/2,x1=x+w/2,z0=z-d/2,z1=z+d/2,y0=y,y1=y+h;this.quad([x0,y0,z0],[x1,y0,z0],[x1,y1,z0],[x0,y1,z0],tinted(col,1.08));this.quad([x1,y0,z1],[x0,y0,z1],[x0,y1,z1],[x1,y1,z1],tinted(col,.77));this.quad([x1,y0,z0],[x1,y0,z1],[x1,y1,z1],[x1,y1,z0],tinted(col,.88));this.quad([x0,y0,z1],[x0,y0,z0],[x0,y1,z0],[x0,y1,z1],tinted(col,1.0));this.quad([x0,y1,z0],[x1,y1,z0],[x1,y1,z1],[x0,y1,z1],tinted(col,1.25));this.quad([x0,y0,z1],[x1,y0,z1],[x1,y0,z0],[x0,y0,z0],tinted(col,.65))}
  cylinder(x,y,z,r,h,col,segments=9){let N=segments;for(let i=0;i<N;i++){let a=i*2*Math.PI/N,b=(i+1)*2*Math.PI/N,sa=Math.sin(a),ca=Math.cos(a),sb=Math.sin(b),cb=Math.cos(b);this.quad([x+r*sa,y,z+r*ca],[x+r*sb,y,z+r*cb],[x+r*sb,y+h,z+r*cb],[x+r*sa,y+h,z+r*ca],tinted(col,.85+i/N*.3));this.tri([x,y+h,z],[x+r*sa,y+h,z+r*ca],[x+r*sb,y+h,z+r*cb],tinted(col,1.23));}}
  sphere(x,y,z,r,col,seg=10,rings=6){for(let i=0;i<rings;i++){let a=(i/rings-.5)*Math.PI,b=((i+1)/rings-.5)*Math.PI;for(let j=0;j<seg;j++){let p=j/seg*Math.PI*2,q=(j+1)/seg*Math.PI*2;const v=(t,s)=>[x+r*Math.cos(t)*Math.sin(s),y+r*Math.sin(t),z+r*Math.cos(t)*Math.cos(s)];let c=tinted(col,.93+.15*Math.sin(j+1));this.quad(v(a,p),v(a,q),v(b,q),v(b,p),c)}}}
+
+ // Rounded organic forms and tapered articulated body parts.
+ ellipsoid(x,y,z,rx,ry,rz,col,seg=11,rings=7){
+  for(let i=0;i<rings;i++){const a=(i/rings-.5)*Math.PI,b=((i+1)/rings-.5)*Math.PI;
+   for(let j=0;j<seg;j++){const p=j/seg*2*Math.PI,q=(j+1)/seg*2*Math.PI;
+    const pt=(lat,lon)=>[x+rx*Math.cos(lat)*Math.sin(lon),y+ry*Math.sin(lat),z+rz*Math.cos(lat)*Math.cos(lon)];
+    this.quad(pt(a,p),pt(a,q),pt(b,q),pt(b,p),tinted(col,.94+.10*Math.sin(j+1)));
+   }
+  }
+ }
+ taper(a,b,ra,rb,col,seg=8){
+  const dx=b[0]-a[0],dy=b[1]-a[1],dz=b[2]-a[2],length=Math.hypot(dx,dy,dz)||1;
+  const n=[dx/length,dy/length,dz/length],ref=Math.abs(n[1])>.88?[1,0,0]:[0,1,0];
+  let u=[n[1]*ref[2]-n[2]*ref[1],n[2]*ref[0]-n[0]*ref[2],n[0]*ref[1]-n[1]*ref[0]];
+  const l=Math.hypot(...u)||1;u=u.map(v=>v/l);
+  const v=[n[1]*u[2]-n[2]*u[1],n[2]*u[0]-n[0]*u[2],n[0]*u[1]-n[1]*u[0]];
+  const pt=(c,r,p)=>c.map((x,i)=>x+r*(u[i]*Math.cos(p)+v[i]*Math.sin(p)));
+  for(let j=0;j<seg;j++){
+   const p=j*2*Math.PI/seg,q=(j+1)*2*Math.PI/seg;
+   this.quad(pt(a,ra,p),pt(a,ra,q),pt(b,rb,q),pt(b,rb,p),tinted(col,.84+.24*j/seg));
+  }
+ }
+ curve(a,c,b,r,col,steps=7){
+  let prev=a;
+  for(let i=1;i<=steps;i++){
+   const f=i/steps,g=1-f,pt=[0,1,2].map(k=>g*g*a[k]+2*g*f*c[k]+f*f*b[k]);
+   this.taper(prev,pt,r*(1-.18*f),r*(1-.18*f),col,6);prev=pt;
+  }
+ }
  spike(a,b,r,col){const t=[r,0,0],u=[0,0,r];this.tri([a[0]-r,a[1],a[2]-r],[a[0]+r,a[1],a[2]-r],b,col);this.tri([a[0]+r,a[1],a[2]-r],[a[0]+r,a[1],a[2]+r],b,col);this.tri([a[0]+r,a[1],a[2]+r],[a[0]-r,a[1],a[2]+r],b,col);this.tri([a[0]-r,a[1],a[2]+r],[a[0]-r,a[1],a[2]-r],b,col)}
  line(a,b,w,col){let u=[b[0]-a[0],b[1]-a[1],b[2]-a[2]],le=Math.hypot(...u);if(le<.01)return;let right=[u[2]/le*w,0,-u[0]/le*w];this.quad([a[0]-right[0],a[1],a[2]-right[2]],[a[0]+right[0],a[1],a[2]+right[2]],[b[0]+right[0],b[1],b[2]+right[2]],[b[0]-right[0],b[1],b[2]-right[2]],col)}
  upload(dynamic=false){if(!this.buffer)this.buffer=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,this.buffer);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(this.v),dynamic?gl.DYNAMIC_DRAW:gl.STATIC_DRAW);this.count=this.v.length/9;}
@@ -117,6 +146,43 @@ for(let i=0;i<28;i++){let x=(rand()-.5)*500,z=(rand()-.5)*500;if(i%2===0)x=Math.
 const gates=[{x:-203,z:-203,lit:false},{x:203,z:-203,lit:false},{x:203,z:203,lit:false},{x:-203,z:203,lit:false}];
 for(const g of gates){world.cylinder(g.x,0,g.z,4,.34,'#2b658a',18);world.cylinder(g.x,.34,g.z,3.6,.23,'#71dcdf',18);world.box(g.x,.57,g.z,2.4,4.8,1.8,'#255a79');world.sphere(g.x,6.3,g.z,1.35,'#ffe9a5',10,6)}
 for(let i=0;i<36;i++){let x=(rand()-.5)*520,z=(rand()-.5)*520;world.cylinder(x,0,z,.27,5,'#326777',7);world.sphere(x,5,z,.75,'#fff0a5',8,5)}
+
+/* X13 CITY V5 ENVIRONMENT: anchored detail with the same no-download WebGL
+   renderer; avoids new frameworks and preserves every original tower. */
+for(let i=-8;i<=8;i+=2){
+ const z=i*29;
+ for(const side of [-1,1]){
+  let x=side*6.3;
+  world.box(x,0,z+10,2.7,.13,2.7,'#50796f');
+  world.cylinder(x,0,z+10,.19,3.4,'#765747',7);
+  world.ellipsoid(x,3.55,z+10,1.2,1.1,1.05,'#408e83',9,6);
+  world.ellipsoid(x+.3,3.87,z+9.8,.79,.65,.81,'#83cbb1',9,5);
+  let lx=i*29+6,lz=side*6.2;
+  world.cylinder(lx,0,lz,.12,5.4,'#90bed0',7);
+  world.sphere(lx,5.55,lz,.35,'#ffe9b5',9,5);
+  world.box(lx,5.2,lz,.83,.15,.36,'#8ffcf2');
+ }
+}
+for(let i=-5;i<=5;i+=2){
+ let z=i*29;
+ for(let k=-3;k<=3;k++)world.box(k*1.25,.048,z+5,.73,.045,1.1,'#dbebe1');
+ for(let side of [-1,1])world.box(side*5.8,.09,z+11,1.4,.13,15,'#668d88');
+}
+for(let i=0;i<anchors.length;i+=21){
+ const a=anchors[i],color=['#68f1db','#ffc48c','#b2a4fb','#ff9fb7'][Math.floor(i/21)%4];
+ world.cylinder(a.x,a.y-1.9,a.z,1.35,.14,color,12);
+ world.cylinder(a.x,a.y-1.7,a.z,.06,1.3,'#dcecff',6);
+ world.sphere(a.x,a.y-.05,a.z,.40,'#fff3be',9,6);
+}
+// Public plaza: landmark fountain and sculptural rings in the open city center.
+world.cylinder(6,0,6,3,.22,'#457d8d',18);
+world.cylinder(6,.20,6,2.55,.16,'#9fdad5',18);
+world.cylinder(6,.38,6,.33,1.15,'#78c0cf',10);
+world.sphere(6,1.7,6,.55,'#d4fff5',12,7);
+for(let j=0;j<10;j++){
+ const a=j*Math.PI/5,x=6+2.1*Math.sin(a),z=6+2.1*Math.cos(a);
+ world.cylinder(x,.40,z,.08,.64,'#63e3e4',6);
+}
 world.upload();
 const el=id=>document.getElementById(id);let hero=0,mode='menu',score=0,toastUntil=0,jumpQueued=false,heroQueued=false,specialQueued=false,key={},joy={x:0,z:0,id:null},t=0,last=0,cam=[0,17,32],player={x:0,y:0,z:18,vx:0,vz:0,vy:0,yaw:0,ground:true,boost:0,swing:0,rope:null,swingCooldown:0,skyLeapAvailable:true},trail=[];
 // Camera is independent from movement. On touch, dragging open 3D scenery
@@ -231,7 +297,7 @@ let speed=hero?10:16;if(hero===1&&player.rope&&player.swing>0)speed=41;if(player
 const feetBeforeMovement=player.y;
 slideAxis('x',player.vx*dt,feetBeforeMovement);
 slideAxis('z',player.vz*dt,feetBeforeMovement);
-if(player.boost>0){player.boost-=dt;if(rand()<.7)trail.push({x:player.x,y:player.y+1.1,z:player.z,life:.45,c:hero?'#fc8b9b':'#79fbff'})}
+if(player.boost>0){player.boost-=dt;if(rand()<.7)trail.push({x:player.x,y:player.y+1.1,z:player.z,life:.45,c:hero?'#fc8b9b':'#79fbff'});if(rand()<.47)trail.push({x:player.x+(rand()-.5)*2,y:player.y+.35+rand()*2,z:player.z+(rand()-.5)*2,life:.25,c:'#c4f9ff'})}
 if(player.swing>0&&player.rope){let a=player.rope,d=Math.hypot(a.x-player.x,a.z-player.z);player.swing-=dt;
  const liftTarget=a.y-1.2;
  if(player.y<liftTarget)player.vy=Math.max(player.vy,Math.min(29,19+(liftTarget-player.y)*.45));
@@ -249,21 +315,105 @@ for(const g of gates){if(!g.lit&&score>=4&&Math.hypot(player.x-g.x,player.z-g.z)
 for(let i=trail.length-1;i>=0;i--){trail[i].life-=dt;if(trail[i].life<0)trail.splice(i,1)}
 if(toastUntil&&performance.now()>toastUntil){el('toast').classList.remove('show');toastUntil=0}
 }
-function heroModel(m){m.transform={x:player.x,y:player.y+.13+Math.abs(Math.sin(t*10))*(player.ground&&Math.hypot(player.vx,player.vz)>2?.13:0),z:player.z,yaw:player.yaw};
-let run=player.ground?Math.sin(t*15)*Math.min(1,Math.hypot(player.vx,player.vz)/8):0;let fast=!hero;if(fast){
-m.box(0,.22,-.21,.85,.46,1.38,'#ee704e');m.box(0,.18,.44,.85,.29,.5,'#ffe1a6');m.box(-.30,.15,.02,.67,.26,1.0,'#f39155');m.box(.31,.15,.02,.65,.26,1.0,'#f39155');
-m.box(-.31,.52+.10*run,0,.35,.75,.38,'#1546a0');m.box(.31,.52-.10*run,0,.35,.75,.38,'#1546a0');m.sphere(0,1.5,0,.67,'#0873d9');m.sphere(0,2.35,-.02,.65,'#0b80f4');m.sphere(0,2.40,-.42,.50,'#2482d8');m.box(0,2.32,-.62,.77,.22,.08,'#f8d9ab');m.box(-.21,2.37,-.68,.19,.11,.05,'#f3fffc');m.box(.21,2.37,-.68,.19,.11,.05,'#f3fffc');
-for(let i=0;i<5;i++){let a=(i-2)*.55;m.spike([Math.sin(a)*.42,2.45+Math.cos(a)*.25,.3],[Math.sin(a)*.92,2.65+Math.cos(a)*.5,1.16],.22,i%2?'#105aca':'#29bdff')}
-m.box(-.66,1.48,-.04,.31,.85,.35,'#0b68d1');m.box(.66,1.48,-.04,.31,.85,.35,'#0b68d1');m.sphere(-.67,1.07,-.1,.29,'#fff4e2',7,4);m.sphere(.67,1.07,-.1,.29,'#fff4e2',7,4);
-}else{
-m.box(-.29,.11,-.23,.52,.30,.86,'#fc7c70');m.box(.29,.11,-.23,.52,.30,.86,'#fc7c70');m.box(-.23,.55+.11*run,0,.4,.72,.45,'#263a85');m.box(.23,.55-.11*run,0,.4,.72,.45,'#263a85');m.box(0,1.50,.05,1.08,1.2,.55,'#b51f43');m.box(0,1.46,-.27,.75,.34,.12,'#213d8d');m.sphere(0,2.40,-.07,.60,'#b51f43');m.box(0,2.43,-.61,.94,.18,.055,'#253d78');m.box(-.24,2.47,-.67,.29,.20,.06,'#ffffff');m.box(.24,2.47,-.67,.29,.20,.06,'#ffffff');m.box(-.66,1.39,0,.34,.96,.33,'#263e87');m.box(.66,1.39,0,.34,.96,.33,'#263e87');m.sphere(-.69,1.03,-.08,.24,'#d6324c',7,4);m.sphere(.69,1.03,-.08,.24,'#d6324c',7,4);
-m.spike([0,1.64,-.34],[0,1.99,-.41],.26,'#8cfae4');m.spike([0,1.30,-.34],[0,1.05,-.39],.22,'#8cfae4');
+/* X13 CITY V5 CHARACTER UPGRADE: custom original silhouettes and procedural skeletal motion.
+   Volt: sapphire quill runner with face, expressive eyes, ears and animated limbs.
+   Skyline: crimson/navy roof runner with luminous mask, gloved web hands and harness.
+   Both share original movement/collision logic. */
+function heroModel(m){
+ const moving=Math.min(1,Math.hypot(player.vx,player.vz)/10);
+ const stride=t*(hero?10:16),swing=player.ground?Math.sin(stride)*moving:.25;
+ const opposite=player.ground?Math.sin(stride+Math.PI)*moving:-.45;
+ const airborne=!player.ground;
+ m.transform={x:player.x,y:player.y+.08+(player.ground?.05*Math.abs(Math.sin(stride*2))*moving:0),z:player.z,yaw:player.yaw};
+ const blue=!hero,primary=blue?'#167be8':'#b82e60',secondary=blue?'#0f55ba':'#1c3b83';
+ const skin=blue?'#e9ccac':'#19284e';
+ // Two dynamic leg chains, ankle movement, toes and heel silhouettes.
+ for(const side of [-1,1]){
+  const legPhase=side<0?swing:opposite;
+  const hip=[side*.29,1.28,.02],knee=[side*(.28+.07*legPhase),.70,.19*legPhase];
+  const ankle=[side*.29,.18,-.33*legPhase];
+  m.taper(hip,knee,.245,.195,secondary,9);m.ellipsoid(...knee,.23,.24,.23,primary,9,6);
+  m.taper(knee,ankle,.18,.145,blue?'#236fcf':'#263f85',9);
+  m.ellipsoid(...ankle,.19,.18,.20,blue?'#ffca78':'#ec6b76',9,5);
+  m.ellipsoid(side*.30,.18,-.26-.38*legPhase,.33,.18,.50,blue?'#ff694c':'#f26386',11,6);
+  m.ellipsoid(side*.30,.22,-.63-.38*legPhase,.22,.09,.20,'#f8e0ae',9,5);
+  // Arms move opposite the corresponding leg for a readable running cycle.
+  let armPhase=-legPhase;
+  if(!blue&&player.rope)armPhase=-1.4;
+  const shoulder=[side*.58,2.05,.02],elbow=[side*(.80+.10*armPhase),1.63,-.30*armPhase];
+  const hand=[side*(.78+.17*armPhase),1.24,-.58*armPhase];
+  m.ellipsoid(...shoulder,.26,.29,.28,primary,10,6);
+  m.taper(shoulder,elbow,.215,.16,blue?'#1580e9':'#a82c5b',9);
+  m.ellipsoid(...elbow,.18,.18,.18,secondary,8,5);
+  m.taper(elbow,hand,.145,.13,secondary,9);
+  m.ellipsoid(...hand,.24,.22,.19,blue?'#fff8e7':'#75e6e0',10,7);
+  m.ellipsoid(hand[0],hand[1]-.055,hand[2]-.14,.16,.12,.12,blue?'#f8e8c8':'#e1fff8',8,5);
+ }
+ // Anatomically recognizable chest, waist and head.
+ m.ellipsoid(0,1.63,.06,.54,.75,.41,primary,13,9);
+ m.ellipsoid(0,1.26,.11,.37,.30,.35,secondary,11,6);
+ m.ellipsoid(0,1.78,-.315,.34,.47,.07,blue?'#f5d7a3':'#193a69',11,7);
+ if(blue){
+  m.ellipsoid(0,2.60,.055,.65,.67,.60,'#146ed7',14,9);
+  // Distinctive quill hairstyle, flaring backward, not an existing character model.
+  for(let i=-3;i<=3;i++){
+   const x=i*.16;
+   m.taper([x*.88,2.90, .25],[x*1.32,3.12-.045*Math.abs(i),1.05+.08*(3-Math.abs(i))],.19,.01,i%2?'#1152bc':'#2d9cf8',8);
+  }
+  m.taper([-.48,2.86,.06],[-.79,3.25,.17],.27,.02,'#1876e3',9);
+  m.taper([.48,2.86,.06],[.79,3.25,.17],.27,.02,'#1876e3',9);
+  m.ellipsoid(-.56,2.94,-.04,.18,.25,.09,'#e5a9b0',9,5);
+  m.ellipsoid(.56,2.94,-.04,.18,.25,.09,'#e5a9b0',9,5);
+  // Light cheek / muzzle mask, eyes, nose and mouth for a readable face.
+  m.ellipsoid(0,2.39,-.44,.44,.28,.25,'#f3dab8',13,7);
+  m.ellipsoid(0,2.35,-.67,.135,.10,.115,'#16223c',10,6);
+  for(const side of [-1,1]){
+   m.ellipsoid(side*.21,2.72,-.485,.22,.29,.16,'#fffcf4',10,8);
+   m.ellipsoid(side*.24,2.67,-.635,.073,.16,.060,'#0d3f7d',8,6);
+   m.ellipsoid(side*.24-.03,2.72,-.681,.025,.045,.022,'#def9ff',6,4);
+   m.ellipsoid(side*.36,2.43,-.45,.17,.13,.13,'#e3c7a9',9,5);
+  }
+  m.curve([-.17,2.20,-.60],[0,2.11,-.67],[.17,2.20,-.60],.024,'#793e48',6);
+  // Back quills and tail add a character silhouette from any camera angle.
+  for(let i=-2;i<=2;i++)m.taper([i*.15,1.74,.26],[i*.31,1.50,.87],.22,.01,'#1a72d1',8);
+  m.taper([0,1.37,.32],[0,1.12,.78],.16,.01,'#167be8',8);
+ }else{
+  m.ellipsoid(0,2.54,-.04,.52,.62,.49,'#ae3159',13,9);
+  m.ellipsoid(0,2.51,-.48,.43,.36,.10,'#1b366f',11,7);
+  // Distinctive translucent cyan visor panes and utility trim.
+  for(const side of [-1,1]){
+   m.ellipsoid(side*.22,2.61,-.533,.20,.19,.075,'#adfff3',11,7);
+   m.ellipsoid(side*.20,2.61,-.585,.10,.07,.028,'#ebffff',9,5);
+   m.taper([side*.44,2.35,.01],[side*.25,2.14,.16],.08,.03,'#84f4de',8);
+  }
+  m.taper([- .3,2.03,-.30],[0,1.70,-.44],.035,.035,'#67eadf',6);
+  m.taper([.3,2.03,-.30],[0,1.70,-.44],.035,.035,'#67eadf',6);
+  m.ellipsoid(0,1.75,-.42,.18,.25,.07,'#90fff0',9,6);
+  m.ellipsoid(0,1.74,-.49,.075,.115,.04,'#182959',8,5);
+  // Belt pouches, wrist launchers, back-mounted web canister.
+  for(const side of [-1,1]){
+   m.ellipsoid(side*.34,1.17,-.17,.19,.16,.15,'#314c85',9,5);
+   m.ellipsoid(side*.78,1.30,-.41,.12,.10,.18,'#b9fff6',8,5);
+  }
+  m.ellipsoid(0,1.78,.42,.34,.42,.21,'#264b78',10,6);
+  m.ellipsoid(0,1.90,.58,.17,.27,.12,'#6fdecf',8,5);
+  m.curve([-.18,2.61,-.55],[0,2.76,-.58],[.18,2.61,-.55],.025,'#86f7ee',5);
+ }
+ m.transform=null;
 }
-m.transform=null;}
 function fx(m){for(let o of orbs)if(!o.taken){let y=o.y+Math.sin(t*2.7+o.x)*.65;m.sphere(o.x,y,o.z,.69,'#ffedac',8,6);m.sphere(o.x,y,o.z,.31,'#ffffff',8,5);m.cylinder(o.x,0,o.z,.13,.5,'#b3ffda',7)}
 for(const g of gates){if(!g.lit){m.sphere(g.x,7.5+Math.sin(t*3)*.45,g.z,.75,'#ffe4a7',8,5);m.sphere(g.x,8.7,g.z,.37,'#ffffff',6,4)}else{m.sphere(g.x,7,g.z,1.7,'#72ffce',10,5)}}
 for(let s of trail){let r=Math.max(.03,s.life*.46);m.sphere(s.x,s.y,s.z,r,s.c,6,4)}
-if(player.rope){m.line([player.x,player.y+2.0,player.z],[player.rope.x,player.rope.y,player.rope.z],.12,'#c2f8ff');m.sphere(player.rope.x,player.rope.y,player.rope.z,.7,'#e5fffd',8,5)}
+if(player.rope){
+ const root=[player.x,player.y+2.16,player.z],anchor=[player.rope.x,player.rope.y,player.rope.z];
+ const pull=Math.hypot(anchor[0]-root[0],anchor[1]-root[1],anchor[2]-root[2]);
+ const mid=[(root[0]+anchor[0])/2,(root[1]+anchor[1])/2-1.3,(root[2]+anchor[2])/2];
+ // Braided curved web line with a glowing tip, sampled as tapered 3D segments.
+ m.curve(root,mid,anchor,.095,'#d9faff',Math.min(15,Math.max(6,Math.ceil(pull/4))));
+ m.curve([root[0]+.09,root[1],root[2]],mid,[anchor[0]+.10,anchor[1],anchor[2]],.029,'#68e6eb',10);
+ m.sphere(...anchor,.56,'#baffff',10,6);
+ if(player.swing>0){m.ellipsoid(...root,.21,.21,.21,'#e1fffd',9,5);}
+}
 // grounded visual anchor and speed rings
 m.cylinder(player.x,.025,player.z,1.2,.05,player.ground?'#183b6e':'#365b80',12);
 heroModel(m)}
@@ -308,7 +458,7 @@ const safeDistance=Math.hypot(safe[0]-tar[0],safe[1]-tar[1],safe[2]-tar[2]);
 cam=safeDistance<7&&Math.hypot(desired[0]-tar[0],desired[1]-tar[1],desired[2]-tar[2])>7?desired:safe;
 let vp=matMul(perspective(66*Math.PI/180,cv.width/cv.height,.2,750),lookAt(cam,tar));gl.uniformMatrix4fv(loc.mvp,false,vp);gl.uniform3fv(loc.eye,new Float32Array(cam));gl.clearColor(0,0,0,0);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);world.draw();dynamic.v=[];fx(dynamic);dynamic.upload(true);dynamic.draw();drawMiniMap(now);requestAnimationFrame(frame)}
 updateHud();requestAnimationFrame(frame);
-window.__SHANX_3D={getState:()=>({mode,hero,score,player:{...player},solidTowers:towers.length,worldVertices:world.count,activeOrbs:orbs.filter(x=>!x.taken).length,activatedGates:gates.filter(g=>g.lit).length,worldSpan:570,camera:[...cam],cameraRig:{yaw:cameraRig.yaw,pitch:cameraRig.pitch,distance:cameraRig.distance,dragActive:cameraRig.pointerId!==null},cameraDistance:Math.hypot(cam[0]-player.x,cam[1]-player.y-2.3,cam[2]-player.z),usingWebGL:!!gl})};
+window.__SHANX_3D={getState:()=>({mode,hero,score,player:{...player},solidTowers:towers.length,worldVertices:world.count,activeOrbs:orbs.filter(x=>!x.taken).length,activatedGates:gates.filter(g=>g.lit).length,worldSpan:570,visualRevision:5,characterArt:'organic-articulated-v5',districtDetails:true,braidedWeb:true,camera:[...cam],cameraRig:{yaw:cameraRig.yaw,pitch:cameraRig.pitch,distance:cameraRig.distance,dragActive:cameraRig.pointerId!==null},cameraDistance:Math.hypot(cam[0]-player.x,cam[1]-player.y-2.3,cam[2]-player.z),usingWebGL:!!gl})};
 })();
 </script>
 <script>
