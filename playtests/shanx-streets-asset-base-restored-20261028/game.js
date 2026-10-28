@@ -170,13 +170,13 @@ function makeCharacter(gltf,x,z,kind='npc'){
  root.add(wrap);root.position.set(x,0,z);
  root.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;o.frustumCulled=false;}});
  const mixer=new THREE.AnimationMixer(model),clips=gltf.animations||[];
- // Use only supplied rigged animations. The CC0 civilian provides a running
- // track; clones run at different playback speeds for walking and idle.
- const source=findClip(clips,['run','walk','idle'])||clips[0];
- const idle=findClip(clips,['idle'])||(source?source.clone():null);
- const walk=findClip(clips,['walk'])||(source?source.clone():null);
- const run=findClip(clips,['run'])||(source?source.clone():null);
- if(!idle||!walk||!run)throw Error('Civilian GLB has no usable skeletal animation');
+ // Use genuine, separate locomotion clips from the seven-clip model.
+ // No slowed-down running masquerading as walking or idle.
+ const idleSource=findClip(clips,['idle']);
+ const walkSource=findClip(clips,['relaxed walk','brisk walk','walk']);
+ const runSource=findClip(clips,['run']);
+ if(!idleSource||!walkSource||!runSource)throw Error('Civilian model lacks independent idle / walk / run clips. Available: '+clips.map(c=>c.name).join(', '));
+ const idle=idleSource.clone(),walk=walkSource.clone(),run=runSource.clone();
  const acts={};
  for(const [label,clip] of Object.entries({idle,walk,run})){
   if(clip){
@@ -184,7 +184,7 @@ function makeCharacter(gltf,x,z,kind='npc'){
    acts[label]=mixer.clipAction(clip);
    acts[label].enabled=true;acts[label].play();
    acts[label].setEffectiveWeight(label==='idle'?1:0);
-   acts[label].timeScale=label==='idle'?.015:label==='walk'?.37:1;
+   acts[label].timeScale=1;
   }
  }
  const state={root,model,mixer,acts,x,z,speed:kind==='player'?0:1.15,dir:1,home:z,kind};
@@ -389,12 +389,13 @@ $('send').onclick=e=>{if(!$('message').value.trim()){e.preventDefault();$('formS
 button.onclick=()=>{if(!ready)return;playing=true;$('overlay').hidden=true;mark('WELCOME TO THE BLOCK · WALK OR DRIVE');};
 async function assets(){
  const status=s=>loading.textContent=s;
- status('Loading textured civilian 3D model (CC0, external host)…');
+ status('Loading textured civilian model with idle, walk and run animation (CC0)…');
  let character;
- const civilianURL='https://www.innerscene.com/api/library/run-sam-3d-person-animated-fa008c06/download';
+ const civilianURL='https://www.innerscene.com/api/library/locomotion-collection-sam-3d-person-animated-dc23800f/download';
  const carURL='https://threejs.org/examples/models/gltf/ferrari.glb';
- // Civilian Sam is a rigged, textured MakeHuman-derived CC0 animation model
- // from Innerscene. Independent publisher, no ownership or likeness claim.
+ // Sam locomotion collection is a textured MakeHuman-derived CC0 civilian GLB
+ // with independent idle / walk / run clips per publisher documentation.
+ // Independent publisher, no ownership or personal likeness claim.
  // Network/CORS and actual tablet rendering remain acceptance gates.
  try{character=await loader.loadAsync(civilianURL);}
  catch(error){
@@ -425,4 +426,4 @@ async function assets(){
 }
 camera.position.set(0,9,15);clock.getDelta();loop();
 assets().catch(err=>{loading.textContent='GAME INITIALIZATION ERROR: '+String(err.message||err);console.error(err);});
-window.__SHANX_STREETS_REBUILD_QA__={state:()=>({version:'asset-foundation-restored-1.3',civilianSource:'Innerscene Sam CC0 glTF',carsSource:'Three.js detailed Ferrari glTF',vehicleForward:driven?{sign:driven.modelForward,measured:driven.measuredFront}:null,ready,playing,driving:player.driving,characters:walkers.length+(playerModel?1:0),playerVisible:!!(playerModel&&playerModel.root.visible),vehicles:allCars.length,traffic:traffic.map(c=>({x:c.x,z:c.z,velocity:c.cruise,waiting:c.waiting,waitTime:c.waitTime})),houses:houses.length,fps:$('fps').textContent,animated:!!playerMixer}),stop:()=>playing=false};
+window.__SHANX_STREETS_REBUILD_QA__={state:()=>({version:'asset-foundation-restored-1.4',civilianSource:'Innerscene Sam locomotion collection CC0 glTF',carsSource:'Three.js detailed Ferrari glTF',vehicleForward:driven?{sign:driven.modelForward,measured:driven.measuredFront}:null,ready,playing,driving:player.driving,characters:walkers.length+(playerModel?1:0),playerVisible:!!(playerModel&&playerModel.root.visible),vehicles:allCars.length,traffic:traffic.map(c=>({x:c.x,z:c.z,velocity:c.cruise,waiting:c.waiting,waitTime:c.waitTime})),houses:houses.length,fps:$('fps').textContent,animated:!!playerMixer}),stop:()=>playing=false};
