@@ -16,7 +16,7 @@ renderer.toneMappingExposure=1.25;
 renderer.shadowMap.enabled=true;
 renderer.shadowMap.type=THREE.PCFSoftShadowMap;
 const scene=new THREE.Scene();scene.background=new THREE.Color('#899aaa');scene.fog=new THREE.Fog('#889cae',74,220);
-const camera=new THREE.PerspectiveCamera(66,innerWidth/innerHeight,.11,400);
+const camera=new THREE.PerspectiveCamera(65,innerWidth/innerHeight,.25,400);
 scene.add(new THREE.HemisphereLight('#e4edf7','#60685d',1.85));
 const sun=new THREE.DirectionalLight('#ffe3ba',2.2);
 sun.position.set(-55,85,40);sun.castShadow=true;
@@ -150,8 +150,8 @@ for(const [x,z] of [[-12,-16],[12,23],[43,78]]){const g=new THREE.Group();g.posi
  cube(g,material('#313e39'),0,1.42,0,2.08,.16,1.24);dumpsters.push(g);}
 function intersects(x,z,r=0){if(Math.abs(x)>116||Math.abs(z)>116)return true;
  for(const h of houses)if(Math.abs(x-h.x)<h.halfX+r&&Math.abs(z-h.z)<h.halfZ+r)return true;return false;}
-const player={x:1.4,z:31.5,yaw:0,driving:false,run:false},car={x:5.7,z:34,yaw:0,speed:0},
- cameraRig={yaw:0,pitch:.18,dist:8.5,first:false,pointer:null,cx:0,cy:0};
+const player={x:1.4,z:31.5,yaw:0,driving:false,run:false},car={x:8.7,z:34,yaw:0,speed:0},
+ cameraRig={yaw:0,pitch:.18,dist:6.5,first:false,pointer:null,cx:0,cy:0};
 let playerModel=null,playerMixer=null,animations={},carVisual=null,modelHeight=1.8,modelFrontOffset=0;
 const traffic=[],walkers=[],allCars=[];
 function normalizeModel(model,targetHeight,axis='y'){
@@ -182,18 +182,37 @@ function animationState(state,motion){
 function vehicle(gltf,x,z,paint='#385e77'){
  const root=new THREE.Group();scene.add(root);root.position.set(x,0,z);
  const model=gltf.scene.clone(true);const wrap=normalizeModel(model,4.6,'z');root.add(wrap);
- wrap.rotation.y=0; // Correct the sample Ferrari's forward axis; previous 180-degree flip made traffic appear to reverse.
+ wrap.rotation.y=0; // Later calibrated using the actual front/rear wheel positions.
  model.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;
   if(o.name.toLowerCase().includes('body')&&o.material){o.material=o.material.clone();o.material.color.set(paint);}
  }});
  const wheels=[];model.traverse(o=>{if(/wheel/i.test(o.name))wheels.push(o);});
- const v={root,wrap,wheels,x,z,yaw:0,speed:0,active:true};allCars.push(v);return v;
+ // Calibrate the model's nose from physical wheel axles, not assumed glTF orientation.
+ const front=model.getObjectByName('wheel_fl')||model.getObjectByName('rim_fl');
+ const rear=model.getObjectByName('wheel_rl')||model.getObjectByName('rim_rl');
+ let modelForward=-1;
+ if(front&&rear){
+  root.updateMatrixWorld(true);
+  const fz=front.getWorldPosition(new THREE.Vector3()).z;
+  const rz=rear.getWorldPosition(new THREE.Vector3()).z;
+  if(Math.abs(fz-rz)>.02)modelForward=Math.sign(fz-rz);
+ }
+ wrap.rotation.y=modelForward>0?Math.PI:0;
+ const v={root,wrap,wheels,x,z,yaw:0,speed:0,active:true,modelForward,measuredFront:!!(front&&rear)};
+ allCars.push(v);return v;
 }
 const avatarRoot=new THREE.Group();scene.add(avatarRoot);
 let driven=null;
-function worldCarPosition(c){c.root.position.set(c.x,0,c.z);c.root.rotation.y=c.yaw;for(const w of c.wheels)w.rotation.x+=c.speed*.009;}
+function worldCarPosition(c,dt=1/60){c.root.position.set(c.x,0,c.z);c.root.rotation.y=c.yaw;for(const w of c.wheels)w.rotation.x+=c.speed*dt*1.9;}
 function carCollision(x,z,omit=null,range=3.5){return allCars.some(v=>v!==omit&&Math.hypot(v.x-x,v.z-z)<range);}
 function pedestrianCollision(x,z){if(!player.driving&&Math.hypot(player.x-x,player.z-z)<1.7)return true;return walkers.some(w=>Math.hypot(w.x-x,w.z-z)<1.7);}
+// Overlapping a vehicle never traps a pedestrian: moving away remains possible.
+function footCarSafe(nextX,nextZ,oldX,oldZ){
+ for(const c of allCars){
+  const before=Math.hypot(oldX-c.x,oldZ-c.z),after=Math.hypot(nextX-c.x,nextZ-c.z);
+  if(after<2.1&&after<before-.005)return false;
+ }return true;
+}
 function vehicleBlocked(v,x,z){const dx=x-v.x,dz=z-v.z,steps=Math.max(1,Math.ceil(Math.hypot(dx,dz)/.6));for(let i=1;i<=steps;i++){const xx=v.x+dx*i/steps,zz=v.z+dz*i/steps;if(intersects(xx,zz,1.5)||carCollision(xx,zz,v,4.3)||pedestrianCollision(xx,zz))return true;}return false;}
 function mark(msg){$('toast').textContent=msg;$('toast').classList.add('visible');clearTimeout(mark.handle);mark.handle=setTimeout(()=>$('toast').classList.remove('visible'),2300);}
 const joy={id:null,x:0,z:0};
@@ -218,7 +237,7 @@ canvas.addEventListener('pointermove',e=>{if(cameraRig.pointer!==e.pointerId)ret
  cameraRig.yaw-=(e.clientX-cameraRig.cx)*.007;cameraRig.pitch=THREE.MathUtils.clamp(cameraRig.pitch-(e.clientY-cameraRig.cy)*.004,.14,.95);
  cameraRig.cx=e.clientX;cameraRig.cy=e.clientY;});
 for(const t of ['pointerup','pointercancel','lostpointercapture'])canvas.addEventListener(t,e=>{if(cameraRig.pointer===e.pointerId)cameraRig.pointer=null;});
-function changeCamera(){cameraRig.first=!cameraRig.first;mark(cameraRig.first?'CLOSE VIEW':'CHASE VIEW');}
+function changeCamera(){cameraRig.first=!cameraRig.first;$('view').textContent=cameraRig.first?'◉ SWITCH TO CHASE':'◉ SWITCH TO CLOSE';mark(cameraRig.first?'CLOSE VIEW':'THIRD-PERSON CHASE VIEW');}
 function recenter(){cameraRig.yaw=player.yaw;cameraRig.pitch=.18;mark('CAMERA RECENTERED');}
 $('center').onclick=recenter;$('view').onclick=changeCamera;
 $('run').addEventListener('pointerdown',e=>{keys.run=true;e.preventDefault();});
@@ -249,8 +268,8 @@ function move(dt){
  }else{
   const mag=Math.max(1,Math.hypot(ix,iz)),dx=(Math.cos(cameraRig.yaw)*ix+Math.sin(cameraRig.yaw)*iz)/mag,dz=(-Math.sin(cameraRig.yaw)*ix+Math.cos(cameraRig.yaw)*iz)/mag;
   const vel=keys.run?7.4:3.5;const nx=player.x+dx*vel*dt,nz=player.z+dz*vel*dt;
-  if(!intersects(nx,player.z,.45)&&!carCollision(nx,player.z,null,2))player.x=nx;
-  if(!intersects(player.x,nz,.45)&&!carCollision(player.x,nz,null,2))player.z=nz;
+  if(!intersects(nx,player.z,.45)&&footCarSafe(nx,player.z,player.x,player.z))player.x=nx;
+  if(!intersects(player.x,nz,.45)&&footCarSafe(player.x,nz,player.x,player.z))player.z=nz;
   const moving=Math.abs(dx)+Math.abs(dz)>.09;
   if(moving)player.yaw=Math.atan2(-dx,-dz);
   if(playerModel){playerModel.root.visible=true;playerModel.root.position.set(player.x,0,player.z);playerModel.root.rotation.y=player.yaw;
@@ -284,9 +303,9 @@ function animateWorld(dt,sec){
  if(playerMixer)playerMixer.update(dt);
 }
 function cameraStep(dt){
- const pivot=new THREE.Vector3(player.x,player.driving?1.7:1.48,player.z);
- const dist=cameraRig.first?1.8:player.driving?11.4:8.5;
- const up=cameraRig.first?.13:player.driving?1.8:1.5;
+ const pivot=new THREE.Vector3(player.x,player.driving?1.40:1.24,player.z);
+ const dist=cameraRig.first?1.4:player.driving?8.8:6.5;
+ const up=cameraRig.first?.5:player.driving?2.25:1.25;
  const desired=pivot.clone().add(new THREE.Vector3(
   Math.sin(cameraRig.yaw)*dist*Math.cos(cameraRig.pitch),
   Math.sin(cameraRig.pitch)*dist+up,
@@ -303,10 +322,17 @@ function cameraStep(dt){
   }
  }
  if(fraction<1)desired.copy(pivot).addScaledVector(displacement,fraction);
+ // Imported vehicles are opaque meshes: don't let the camera enter their cabin/body.
+ const carOccludes=q=>allCars.some(c=>Math.abs(q.x-c.x)<1.5&&Math.abs(q.z-c.z)<2.65&&q.y<2.6&&q.y>-.1);
+ const span=desired.clone().sub(pivot),num=Math.max(4,Math.ceil(span.length()/.28));
+ for(let i=1;i<=num;i++){
+  const q=pivot.clone().addScaledVector(span,i/num);
+  if(carOccludes(q)){desired.copy(pivot).addScaledVector(span,Math.max(.14,(i-2)/num));break;}
+ }
  const blended=camera.position.clone().lerp(desired,Math.min(1,dt*8));
  const inside=houses.some(h=>Math.abs(blended.x-h.x)<h.halfX+.4&&
     Math.abs(blended.z-h.z)<h.halfZ+.4&&blended.y>=-.3&&blended.y<12.9);
- camera.position.copy(inside?desired:blended);
+ camera.position.copy((inside||carOccludes(blended))?desired:blended);
  camera.lookAt(pivot);
 }
 const map=$('mini'),ctx=map.getContext('2d');
@@ -378,4 +404,4 @@ async function assets(){
 }
 camera.position.set(0,9,15);clock.getDelta();loop();
 assets().catch(err=>{loading.textContent='GAME INITIALIZATION ERROR: '+String(err.message||err);console.error(err);});
-window.__SHANX_STREETS_REBUILD_QA__={state:()=>({version:'traffic-camera-1.1',ready,playing,driving:player.driving,characters:walkers.length+(playerModel?1:0),playerVisible:!!(playerModel&&playerModel.root.visible),vehicles:allCars.length,traffic:traffic.map(c=>({x:c.x,z:c.z,velocity:c.cruise,waiting:c.waiting,waitTime:c.waitTime})),houses:houses.length,fps:$('fps').textContent,animated:!!playerMixer}),stop:()=>playing=false};
+window.__SHANX_STREETS_REBUILD_QA__={state:()=>({version:'traffic-camera-1.2',vehicleForward:driven?{sign:driven.modelForward,measured:driven.measuredFront}:null,ready,playing,driving:player.driving,characters:walkers.length+(playerModel?1:0),playerVisible:!!(playerModel&&playerModel.root.visible),vehicles:allCars.length,traffic:traffic.map(c=>({x:c.x,z:c.z,velocity:c.cruise,waiting:c.waiting,waitTime:c.waitTime})),houses:houses.length,fps:$('fps').textContent,animated:!!playerMixer}),stop:()=>playing=false};
