@@ -114,7 +114,9 @@ world.add(roadsRoot,houseRoot,decorRoot);
 function planeQuad(points,material,parent){
   const geo=new THREE.BufferGeometry(),verts=points.flat();
   geo.setAttribute('position',new THREE.Float32BufferAttribute(verts,3));
-  geo.setIndex([0,1,2,0,2,3]);geo.computeVertexNormals();
+  geo.setAttribute('uv',new THREE.Float32BufferAttribute([0,0,1,0,1,1,0,1],2));
+  // East/north geographic coordinates map to Three.js X/-Z: flip winding so streets face up.
+  geo.setIndex([0,2,1,0,3,2]);geo.computeVertexNormals();
   const mesh=new THREE.Mesh(geo,material);parent.add(mesh);return mesh;
 }
 function box(parent,material,w,h,d,x,y,z,angle=0){
