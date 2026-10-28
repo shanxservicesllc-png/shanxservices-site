@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import { clone as cloneSkinned } from 'three/addons/utils/SkeletonUtils.js';
 
 /* ShanX Streets · original browser game systems; no earlier Streets game code reused.
@@ -22,6 +23,11 @@ sun.position.set(-55,85,40);sun.castShadow=true;
 sun.shadow.mapSize.set(1024,1024);sun.shadow.camera.left=-90;sun.shadow.camera.right=90;sun.shadow.camera.top=90;sun.shadow.camera.bottom=-90;sun.shadow.camera.far=200;sun.shadow.bias=-.0006;scene.add(sun);
 const clock=new THREE.Clock();
 const loader=new GLTFLoader();
+// Ferrari glTF meshes use KHR_draco_mesh_compression; configure before loadAsync.
+const dracoLoader=new DRACOLoader();
+dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.7/');
+dracoLoader.setDecoderConfig({type:'js'});
+loader.setDRACOLoader(dracoLoader);
 const materials=new Map(),geometry=new THREE.BoxGeometry(1,1,1);
 function material(color,roughness=.86,metalness=0){const key=color+':'+roughness+':'+metalness;if(!materials.has(key))materials.set(key,new THREE.MeshStandardMaterial({color,roughness,metalness}));return materials.get(key);}
 function cube(parent,mat,x,y,z,sx,sy,sz,shadows=false){const mesh=new THREE.Mesh(geometry,typeof mat==='string'?material(mat):mat);mesh.position.set(x,y,z);mesh.scale.set(sx,sy,sz);mesh.receiveShadow=true;mesh.castShadow=shadows;parent.add(mesh);return mesh;}
