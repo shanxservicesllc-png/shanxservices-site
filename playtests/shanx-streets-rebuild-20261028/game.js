@@ -51,10 +51,30 @@ g.fillStyle='#efe8d6';g.textAlign='center';g.font='bold 79px Arial';g.fillText(l
 const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;return t;}
 // Ground / road meshes. Street names are artistic labels, not a surveyed or digitized map.
 const turf=new THREE.Mesh(new THREE.PlaneGeometry(310,310),material('#596b5d'));turf.rotation.x=-Math.PI/2;turf.position.y=-.07;turf.receiveShadow=true;scene.add(turf);
-for(const road of [{x:0,z:0,w:15,d:245},{x:54,z:0,w:12,d:245},{x:0,z:-49,w:185,d:13},{x:0,z:61,w:185,d:13}]){
- cube(scene,asphalt,road.x,.018,road.z,road.w,.13,road.d);
- if(road.d>road.w){for(const side of [-1,1])cube(scene,concrete,road.x+side*(road.w/2+2.1),.13,road.z,4,.24,road.d);}
- else for(const side of [-1,1])cube(scene,concrete,road.x,.13,road.z+side*(road.d/2+2.1),road.w,.24,4);
+// V1.1: no coplanar overlapping asphalt at intersections, or sidewalks across driving lanes.
+const streetCenterX=[{x:0,width:15},{x:54,width:12}];
+const crossZ=[-49,61],crossWidth=13;
+function streetStrip(x0,x1,z,depth,walk=false){
+ if(x1<=x0)return;
+ cube(scene,walk?concrete:asphalt,(x0+x1)/2,walk?.13:.018,z,x1-x0,walk?.24:.13,depth);
+}
+function northStrip(z0,z1,x,width,walk=false){
+ if(z1<=z0)return;
+ cube(scene,walk?concrete:asphalt,x,walk?.13:.018,(z0+z1)/2,walk?4:width,walk?.24:.13,z1-z0);
+}
+for(const road of streetCenterX)northStrip(-122.5,122.5,road.x,road.width);
+const across=[[-92.5,-7.5],[7.5,48],[60,92.5]];
+for(const z of crossZ)for(const [left,right] of across)streetStrip(left,right,z,crossWidth,false);
+// Long sidewalks must stop at intersections instead of building invisible barriers.
+const nSegments=[[-122.5,-55.5],[-42.5,54.5],[67.5,122.5]];
+for(const road of streetCenterX)for(const side of [-1,1]){
+ const x=road.x+side*(road.width/2+2.1);
+ for(const [z0,z1] of nSegments)northStrip(z0,z1,x,road.width,true);
+}
+// East/west sidewalks must also leave north/south crossings open.
+const eSegments=[[-92.5,-7.5],[7.5,48],[60,92.5]];
+for(const z of crossZ)for(const side of [-1,1])for(const [left,right] of eSegments){
+ streetStrip(left,right,z+side*(crossWidth/2+2.1),4,true);
 }
 for(let z=-114;z<=113;z+=10){cube(scene,'#d1bc86',0,.099,z,.17,.018,4.4);cube(scene,'#d1bc86',54,.099,z,.17,.018,4.4);}
 for(let x=-87;x<=88;x+=10)for(const z of [-49,61])cube(scene,'#d4bf8c',x,.102,z,4,.018,.16);
@@ -130,8 +150,8 @@ for(const [x,z] of [[-12,-16],[12,23],[43,78]]){const g=new THREE.Group();g.posi
  cube(g,material('#313e39'),0,1.42,0,2.08,.16,1.24);dumpsters.push(g);}
 function intersects(x,z,r=0){if(Math.abs(x)>116||Math.abs(z)>116)return true;
  for(const h of houses)if(Math.abs(x-h.x)<h.halfX+r&&Math.abs(z-h.z)<h.halfZ+r)return true;return false;}
-const player={x:-2.2,z:30,yaw:0,driving:false,run:false},car={x:2.7,z:34,yaw:0,speed:0},
- cameraRig={yaw:0,pitch:.38,dist:11,first:false,pointer:null,cx:0,cy:0};
+const player={x:1.4,z:31.5,yaw:0,driving:false,run:false},car={x:5.7,z:34,yaw:0,speed:0},
+ cameraRig={yaw:0,pitch:.18,dist:8.5,first:false,pointer:null,cx:0,cy:0};
 let playerModel=null,playerMixer=null,animations={},carVisual=null,modelHeight=1.8,modelFrontOffset=0;
 const traffic=[],walkers=[],allCars=[];
 function normalizeModel(model,targetHeight,axis='y'){
@@ -147,7 +167,7 @@ function makeCharacter(gltf,x,z,kind='npc'){
  const model=cloneSkinned(gltf.scene);
  const wrap=normalizeModel(model,1.78);
  root.add(wrap);root.position.set(x,0,z);
- root.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;}});
+ root.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;o.frustumCulled=false;}});
  const mixer=new THREE.AnimationMixer(model),clips=gltf.animations||[];
  const idle=findClip(clips,['idle']),walk=findClip(clips,['walk']),run=findClip(clips,['run']);
  const acts={};
@@ -162,7 +182,7 @@ function animationState(state,motion){
 function vehicle(gltf,x,z,paint='#385e77'){
  const root=new THREE.Group();scene.add(root);root.position.set(x,0,z);
  const model=gltf.scene.clone(true);const wrap=normalizeModel(model,4.6,'z');root.add(wrap);
- wrap.rotation.y=Math.PI; // model axis offset is isolated to its visual wrapper
+ wrap.rotation.y=0; // Correct the sample Ferrari's forward axis; previous 180-degree flip made traffic appear to reverse.
  model.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;
   if(o.name.toLowerCase().includes('body')&&o.material){o.material=o.material.clone();o.material.color.set(paint);}
  }});
@@ -199,7 +219,7 @@ canvas.addEventListener('pointermove',e=>{if(cameraRig.pointer!==e.pointerId)ret
  cameraRig.cx=e.clientX;cameraRig.cy=e.clientY;});
 for(const t of ['pointerup','pointercancel','lostpointercapture'])canvas.addEventListener(t,e=>{if(cameraRig.pointer===e.pointerId)cameraRig.pointer=null;});
 function changeCamera(){cameraRig.first=!cameraRig.first;mark(cameraRig.first?'CLOSE VIEW':'CHASE VIEW');}
-function recenter(){cameraRig.yaw=player.yaw;cameraRig.pitch=.38;mark('CAMERA RECENTERED');}
+function recenter(){cameraRig.yaw=player.yaw;cameraRig.pitch=.18;mark('CAMERA RECENTERED');}
 $('center').onclick=recenter;$('view').onclick=changeCamera;
 $('run').addEventListener('pointerdown',e=>{keys.run=true;e.preventDefault();});
 for(const event of ['pointerup','pointercancel','lostpointercapture'])$('run').addEventListener(event,()=>keys.run=false);
@@ -239,8 +259,19 @@ function move(dt){
 }
 function animateWorld(dt,sec){
  for(const c of traffic){
-  const next=c.z+c.speed*dt;const wrap=next>111||next< -111;const nz=wrap?(next>111?-111:111):next;
-  if((wrap?!carCollision(c.x,nz,c,4):!vehicleBlocked(c,c.x,nz))){c.z=nz;c.waiting=false;}else c.waiting=true;
+  // Direction is independent of collision state; NPC cars never reverse to escape traffic.
+  c.speed=c.cruise;
+  const next=c.z+c.cruise*dt,wrap=next>111||next< -111;
+  const nz=wrap?(next>111?-111:111):next;
+  const clear=wrap?(!carCollision(c.x,nz,c,4.3)&&!pedestrianCollision(c.x,nz)):
+                   !vehicleBlocked(c,c.x,nz);
+  if(clear){c.z=nz;c.waitTime=0;c.waiting=false;}
+  else{
+   c.waitTime+=dt;c.waiting=true;
+   // Traffic must yield, but should never teleport through a visible obstacle.
+   if(c.waitTime>6)c.stuckCount++;
+  }
+  c.yaw=c.cruise>0?Math.PI:0;
   worldCarPosition(c);
  }
  for(let i=0;i<walkers.length;i++){
@@ -253,16 +284,30 @@ function animateWorld(dt,sec){
  if(playerMixer)playerMixer.update(dt);
 }
 function cameraStep(dt){
- const x=player.x,z=player.z,pivot=new THREE.Vector3(x,player.driving?1.1:1.65,z);
- const dist=cameraRig.first?1.8:player.driving?15:11,up=cameraRig.first?.15:player.driving?4.5:3.8;
- const desired=pivot.clone().add(new THREE.Vector3(Math.sin(cameraRig.yaw)*dist*Math.cos(cameraRig.pitch),Math.sin(cameraRig.pitch)*dist+up,Math.cos(cameraRig.yaw)*dist*Math.cos(cameraRig.pitch)));
- const dir=desired.clone().sub(pivot);const len=dir.length();dir.normalize();
- // Camera obstruction only uses solid buildings, so players cannot be visually buried in walls.
- const ray=new THREE.Raycaster(pivot,dir,.2,len);const near=[];
- for(const h of houses){if(Math.abs(h.x-x)<24&&Math.abs(h.z-z)<25)near.push(h.mesh);}
- const hits=ray.intersectObjects(near,true);
- if(hits.length&&hits[0].distance<len){const clip=hits[0].distance;desired.copy(pivot).addScaledVector(dir,Math.max(1.7,clip-.55));}
- camera.position.lerp(desired,Math.min(1,dt*7));camera.lookAt(pivot);
+ const pivot=new THREE.Vector3(player.x,player.driving?1.7:1.48,player.z);
+ const dist=cameraRig.first?1.8:player.driving?11.4:8.5;
+ const up=cameraRig.first?.13:player.driving?1.8:1.5;
+ const desired=pivot.clone().add(new THREE.Vector3(
+  Math.sin(cameraRig.yaw)*dist*Math.cos(cameraRig.pitch),
+  Math.sin(cameraRig.pitch)*dist+up,
+  Math.cos(cameraRig.yaw)*dist*Math.cos(cameraRig.pitch)));
+ // V1.1 camera: intersect the character-to-camera segment with building volumes,
+ // rather than relying on front-face raycasts (which miss inside/back-face collisions).
+ const displacement=desired.clone().sub(pivot);
+ const steps=Math.max(5,Math.ceil(displacement.length()/.40));let fraction=1;
+ for(let i=1;i<=steps;i++){
+  const t=i/steps,q=pivot.clone().addScaledVector(displacement,t);
+  if(houses.some(h=>Math.abs(q.x-h.x)<h.halfX+.40&&
+    Math.abs(q.z-h.z)<h.halfZ+.40&&q.y>=-.3&&q.y<12.9)){
+   fraction=Math.max(.17,(i-2)/steps);break;
+  }
+ }
+ if(fraction<1)desired.copy(pivot).addScaledVector(displacement,fraction);
+ const blended=camera.position.clone().lerp(desired,Math.min(1,dt*8));
+ const inside=houses.some(h=>Math.abs(blended.x-h.x)<h.halfX+.4&&
+    Math.abs(blended.z-h.z)<h.halfZ+.4&&blended.y>=-.3&&blended.y<12.9);
+ camera.position.copy(inside?desired:blended);
+ camera.lookAt(pivot);
 }
 const map=$('mini'),ctx=map.getContext('2d');
 function drawMap(){
@@ -321,12 +366,16 @@ async function assets(){
  catch(e){try{vehicleAsset=await loader.loadAsync('https://cdn.jsdelivr.net/gh/mrdoob/three.js@r170/examples/models/gltf/ferrari.glb');}catch(err){status('VEHICLE ASSET FAILED: '+String(err.message||err)+'. Reload to retry.');return;}}
  driven=vehicle(vehicleAsset,car.x,car.z,'#346f89');worldCarPosition(driven);
  for(let i=0;i<3;i++){
-  const c=vehicle(vehicleAsset,i%2?3:-3,-99+i*45,['#7b7772','#634a45','#7a8a8e'][i]);
-  c.speed=i%2?-6:7;c.yaw=c.speed>0?Math.PI:0;traffic.push(c);worldCarPosition(c);
+  // Consistent lane directions, with cars spaced so they do not begin nose-to-nose.
+  const c=vehicle(vehicleAsset,i%2?3:-3,-91+i*44,['#7b7772','#634a45','#7a8a8e'][i]);
+  c.cruise=i%2?-6:7;c.speed=c.cruise;
+  c.yaw=c.speed>0?Math.PI:0;
+  c.waitTime=0;c.stuckCount=0;
+  traffic.push(c);worldCarPosition(c);
  }
  ready=true;status('3D character, vehicle, streets and collision systems ready.');
  button.disabled=false;button.textContent='▶ PLAY SHANX STREETS';
 }
 camera.position.set(0,9,15);clock.getDelta();loop();
 assets().catch(err=>{loading.textContent='GAME INITIALIZATION ERROR: '+String(err.message||err);console.error(err);});
-window.__SHANX_STREETS_REBUILD_QA__={state:()=>({ready,playing,driving:player.driving,characters:walkers.length+(playerModel?1:0),vehicles:allCars.length,houses:houses.length,fps:$('fps').textContent,animated:!!playerMixer}),stop:()=>playing=false};
+window.__SHANX_STREETS_REBUILD_QA__={state:()=>({version:'traffic-camera-1.1',ready,playing,driving:player.driving,characters:walkers.length+(playerModel?1:0),playerVisible:!!(playerModel&&playerModel.root.visible),vehicles:allCars.length,traffic:traffic.map(c=>({x:c.x,z:c.z,velocity:c.cruise,waiting:c.waiting,waitTime:c.waitTime})),houses:houses.length,fps:$('fps').textContent,animated:!!playerMixer}),stop:()=>playing=false};
