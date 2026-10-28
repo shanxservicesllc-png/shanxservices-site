@@ -49,6 +49,8 @@ function mapError(msg){mapDataError=String(msg).slice(0,120);}
 map.on('error',e=>{if(!buildingsLoaded&&!roadsLoaded)mapError(e?.error?.message||e?.error||'Map tiles unavailable')});
 map.on('load',()=>{
   try {
+    if(!map.getSource('openmaptiles')&&!map.getSource('sxs-vector'))
+      map.addSource('sxs-vector',{type:'vector',url:'https://tiles.openfreemap.org/planet'});
     map.addSource('sxs-true-aerial',{type:'raster',
       tiles:['https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
       tileSize:256,maxzoom:19,attribution:'Aerial imagery © Esri, Maxar, Earthstar Geographics, GIS User Community'});
