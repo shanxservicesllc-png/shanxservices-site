@@ -214,7 +214,7 @@ function makeCar(x,z,color,playerCar){
  CARS.push(c);return c;
 }
 const car=makeCar(3,17,'#2989c3',true);
-for(let k=0;k<6;k++){let c=makeCar((k%2?1:-1)*((k%3)*45+11),((k+1)%3)*36-48,['#c16c4e','#83a89d','#cab579','#8d79ab'][k%4],false);c.yaw=k%2?Math.PI/2:0;c.g.rotation.y=c.yaw;}
+for(let k=0;k<6;k++){let c=makeCar((k%2?1:-1)*((k%3)*45+11),(k===0?-92:((k+1)%3)*36-48),['#c16c4e','#83a89d','#cab579','#8d79ab'][k%4],false);c.yaw=k%2?Math.PI/2:0;c.g.rotation.y=c.yaw;}
 
 // X13 Homewood V2 ambient simulation. Fictional residents; ordinary daily activities.
 const neighbors=[];
@@ -295,11 +295,24 @@ el('soundToggle').onclick=()=>{
  audioContext.resume();
 };
 function updateLivingBlock(dt,now){
- for(const c of passing){c.z+=c.speed*dt;if(c.z>118)c.z=-118;if(c.z< -118)c.z=118;c.g.position.set(c.x,.53,c.z);c.g.rotation.y=c.yaw;}
+ 
+for(const c of passing){
+ const next=c.z+c.speed*dt;
+ const looping=next>118||next< -118;
+ const targetZ=looping?(next>118?-118:118):next;
+ const hit=looping?(carNear(c.x,targetZ,c)||walkerNear(c.x,targetZ)):carPathBlocked(c,c.x,targetZ);
+ if(!hit){c.z=targetZ;c.waiting=false;}
+ else if(!c.waiting){collisionStats.trafficStops++;c.waiting=true;}
+ c.g.position.set(c.x,.53,c.z);c.g.rotation.y=c.yaw;
+}
  for(const p of neighbors){
- if(p.mode==='walk'){p.z+=p.direction*p.speed*dt;if(Math.abs(p.z-p.home)>25)p.direction*=-1;
-   p.root.position.z=p.z;p.root.rotation.y=p.direction>0?Math.PI:0;}
- const gait=p.mode==='walk'?Math.sin(now*.008*p.speed+p.phase)*.44:p.mode==='dance'?Math.sin(now*.014+p.phase)*.35:0;
+ if(p.mode==='walk'){
+  const next=p.z+p.direction*p.speed*dt;
+  if(carNear(p.x,next,null,3.3)){if(!p.yielding)collisionStats.pedestrianYields++;p.yielding=true;}
+  else{p.z=next;p.yielding=false;if(Math.abs(p.z-p.home)>25)p.direction*=-1;}
+  p.root.position.z=p.z;p.root.rotation.y=p.direction>0?Math.PI:0;
+ }
+ const gait=p.mode==='walk'&&!p.yielding?Math.sin(now*.008*p.speed+p.phase)*.44:p.mode==='dance'?Math.sin(now*.014+p.phase)*.35:0;
  p.legs[0].rotation.x=gait;p.legs[1].rotation.x=-gait;
  p.arms[0].rotation.x=-gait*.8;p.arms[1].rotation.x=gait*.8;
  if(p.mode==='talk'||p.mode==='shop')p.arms[0].rotation.z=Math.sin(now*.002+p.phase)*.18;
@@ -341,6 +354,33 @@ function blocked(x,z,pad){
  if(Math.abs(x)>130-pad||Math.abs(z)>130-pad)return true;
  return buildings.some(b=>Math.abs(x-b.x)<b.r+pad&&Math.abs(z-b.z)<b.r+pad);
 }
+
+/* X13 V2.1 COLLISIONS: swept checks, vehicle stops and pedestrian yields.
+   Visual prototype collision only; not complete rigid-body simulation. */
+const collisionStats={trafficStops:0,driverStops:0,pedestrianYields:0};
+function closeXZ(x,z,x2,z2,r){return (x-x2)**2+(z-z2)**2<r*r;}
+function carNear(x,z,omit=null,r=5.2){
+ for(const c of CARS){if(c!==omit&&closeXZ(x,z,c.x,c.z,r))return true;}
+ return false;
+}
+function walkerNear(x,z,r=3.30){
+ for(const n of neighbors){
+  if(n.mode==='dance'&&!partyOn)continue;
+  const px=n.mode==='dance'?gathering.position.x+n.root.position.x:n.x;
+  const pz=n.mode==='dance'?gathering.position.z+n.root.position.z:n.z;
+  if(closeXZ(x,z,px,pz,r))return true;
+ }
+ return !driving&&closeXZ(x,z,p.x,p.z,r);
+}
+function carPathBlocked(c,tx,tz){
+ const steps=Math.max(1,Math.ceil(Math.hypot(tx-c.x,tz-c.z)/.55));
+ for(let i=1;i<=steps;i++){
+  const x=c.x+(tx-c.x)*i/steps,z=c.z+(tz-c.z)*i/steps;
+  if(blocked(x,z,2)||carNear(x,z,c)||walkerNear(x,z))return true;
+ }
+ return false;
+}
+
 function moveActor(dt){
  const ix=joy.x+(keys.d?1:0)-(keys.a?1:0),iz=joy.y+(keys.s?1:0)-(keys.w?1:0);
  const speedMode=keys.shift||p.run;
@@ -352,7 +392,7 @@ function moveActor(dt){
   car.speed=Math.max(-14,Math.min(speedMode?47:33,car.speed));
   car.yaw-=ix*dt*(.42+Math.min(1,Math.abs(car.speed)/14)*1.45)*(car.speed<0?-1:1);
   const nextX=car.x-Math.sin(car.yaw)*car.speed*dt,nextZ=car.z-Math.cos(car.yaw)*car.speed*dt;
-  if(!blocked(nextX,nextZ,2)){car.x=nextX;car.z=nextZ;}else{car.speed=0;}
+  if(!carPathBlocked(car,nextX,nextZ)){car.x=nextX;car.z=nextZ;}else{if(Math.abs(car.speed)>.1)collisionStats.driverStops++;car.speed=0;}
   car.g.position.x=car.x;car.g.position.z=car.z;car.g.rotation.y=car.yaw;
   p.x=car.x;p.z=car.z;p.yaw=car.yaw;
  }else{
@@ -361,8 +401,8 @@ function moveActor(dt){
   let dz=(-Math.sin(look.yaw)*ix+Math.cos(look.yaw)*iz)/len;
   const sp=speedMode?16:9;
   const xx=p.x+dx*sp*dt,zz=p.z+dz*sp*dt;
-  if(!blocked(xx,p.z,.46))p.x=xx;
-  if(!blocked(p.x,zz,.46))p.z=zz;
+  if(!blocked(xx,p.z,.46)&&!carNear(xx,p.z,null,3.3))p.x=xx;
+  if(!blocked(p.x,zz,.46)&&!carNear(p.x,zz,null,3.3))p.z=zz;
   if(Math.abs(dx)+Math.abs(dz)>.1)p.yaw=Math.atan2(-dx,-dz);
   person.position.set(p.x,0,p.z);person.rotation.y=p.yaw;
   let walking=(Math.abs(dx)+Math.abs(dz)>.12);
@@ -448,7 +488,7 @@ function updateMail(){send.href='mailto:henry.shannon@shanxservices.com?subject=
 [comment,name,category].forEach(v=>{v.addEventListener('input',updateMail);v.addEventListener('change',updateMail);});
 send.onclick=e=>{if(!comment.value.trim()){e.preventDefault();fbstatus.textContent='Write a comment first.';comment.focus();return;}updateMail();fbstatus.textContent='Your email app should open a draft; press Send to deliver.';};
 updateMail();updateUI();positionCamera(.2);renderer.render(scene,camera);el('loading').style.display='none';requestAnimationFrame(frame);
-window.__SXS_STREETS_QA__={state:()=>({version:2,mode,driving,partyOn,neighbors:neighbors.length,traffic:passing.length,shops:2,completed,car:{x:car.x,z:car.z,speed:car.speed},player:{...p},buildingCount:buildings.length,street:streetName(),visibleMarkers:markers.length,hasFeedback:!!el('comments')})};
+window.__SXS_STREETS_QA__={state:()=>({version:2.1,collisions:{...collisionStats},mode,driving,partyOn,neighbors:neighbors.length,traffic:passing.length,shops:2,completed,car:{x:car.x,z:car.z,speed:car.speed},player:{...p},buildingCount:buildings.length,street:streetName(),visibleMarkers:markers.length,hasFeedback:!!el('comments')})};
 })();
 </script>
 </body></html>
