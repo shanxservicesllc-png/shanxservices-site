@@ -54,15 +54,15 @@ for(let z=-114;z<=113;z+=10){cube(scene,'#d1bc86',0,.099,z,.17,.018,4.4);cube(sc
 for(let x=-87;x<=88;x+=10)for(const z of [-49,61])cube(scene,'#d4bf8c',x,.102,z,4,.018,.16);
 for(const z of [-49,61])for(let x=-5;x<=5;x+=1.35){cube(scene,'#e9e5d9',x,.11,z+5.6,.74,.016,1.65);cube(scene,'#e9e5d9',x,.11,z-5.6,.74,.016,1.65);}
 const houses=[];
-function roof(parent,width,depth,height){const shape=new THREE.Shape();shape.moveTo(-width/2,0);shape.lineTo(0,height);shape.lineTo(width/2,0);shape.closePath();
+function roof(parent,width,depth,base,height){const shape=new THREE.Shape();shape.moveTo(-width/2,0);shape.lineTo(0,height);shape.lineTo(width/2,0);shape.closePath();
 const ext=new THREE.ExtrudeGeometry(shape,{depth:depth+1,bevelEnabled:false});ext.computeVertexNormals();
-const r=new THREE.Mesh(ext,material('#43494f'));r.position.set(0,height,-depth/2-.5);r.castShadow=true;r.receiveShadow=true;parent.add(r);}
+const r=new THREE.Mesh(ext,material('#43494f'));r.position.set(0,base,-depth/2-.5);r.castShadow=true;r.receiveShadow=true;parent.add(r);}
 function house(x,z,w=10,d=13,h=8,style='home',palette=0){
  const root=new THREE.Group();root.position.set(x,0,z);root.rotation.y=x>0?Math.PI/2:-Math.PI/2;scene.add(root);
  const facade=['#aa9b88','#8c938f','#b0a38d','#b5a48b'][palette%4],isShop=style==='shop';
  cube(root,isShop?material(facade):brick,0,h/2,0,w,h,d,true);
  cube(root,material('#454a50'),0,h+.18,0,w+.9,.35,d+.9,true);
- if(!isShop&&palette%2===1)roof(root,w,d,h*.22);
+ if(!isShop&&palette%2===1)roof(root,w,d,h,h*.22);
  // Continuous cornice, sills, authentic front entrance and window recesses
  for(const y of [1.4,h-1.0])cube(root,material('#cec9b8'),0,y,-d/2-.10,w,.25,.35);
  for(const level of [0,1])for(const side of [-1,1]){
@@ -302,7 +302,7 @@ async function assets(){
  const soldierURL='https://threejs.org/examples/models/gltf/Soldier.glb';
  const carURL='https://threejs.org/examples/models/gltf/ferrari.glb';
  try{character=await loader.loadAsync(soldierURL);}
- catch(e){status('CHARACTER ASSET FAILED: '+String(e.message||e)+'. Reload to retry.');return;}
+ catch(e){try{character=await loader.loadAsync('https://cdn.jsdelivr.net/gh/mrdoob/three.js@r170/examples/models/gltf/Soldier.glb');}catch(err){status('CHARACTER ASSET FAILED: '+String(err.message||err)+'. Reload to retry.');return;}}
  playerModel=makeCharacter(character,player.x,player.z,'player');
  playerMixer=playerModel.mixer;animationState(playerModel,'idle');
  // NPCs use the same detailed skinned GLB via skeleton-safe clones.
@@ -312,7 +312,7 @@ async function assets(){
  status('Loading detailed 3D vehicle and collision world…');
  let vehicleAsset;
  try{vehicleAsset=await loader.loadAsync(carURL);}
- catch(e){status('VEHICLE ASSET FAILED: '+String(e.message||e)+'. Reload to retry.');return;}
+ catch(e){try{vehicleAsset=await loader.loadAsync('https://cdn.jsdelivr.net/gh/mrdoob/three.js@r170/examples/models/gltf/ferrari.glb');}catch(err){status('VEHICLE ASSET FAILED: '+String(err.message||err)+'. Reload to retry.');return;}}
  driven=vehicle(vehicleAsset,car.x,car.z,'#346f89');worldCarPosition(driven);
  for(let i=0;i<3;i++){
   const c=vehicle(vehicleAsset,i%2?3:-3,-99+i*45,['#7b7772','#634a45','#7a8a8e'][i]);
