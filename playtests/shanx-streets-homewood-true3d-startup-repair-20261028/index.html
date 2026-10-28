@@ -1,0 +1,424 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"><meta name="theme-color" content="#091a18">
+<title>ShanX Streets | Homewood 3D • Analog Joystick</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#8baabd;color:#f4fff9;font:13px system-ui,-apple-system,sans-serif;touch-action:none;overscroll-behavior:none}
+#game{position:fixed;inset:0;display:block;width:100%;height:100%;outline:0}
+#shade{position:fixed;inset:0;background:linear-gradient(180deg,#071b1eaa 0%,transparent 26%,transparent 67%,#061b18aa 100%);pointer-events:none}
+#head{position:fixed;top:max(9px,env(safe-area-inset-top));left:10px;right:10px;display:flex;justify-content:space-between;align-items:flex-start;gap:10px;pointer-events:none}
+.brand,.info{padding:9px 12px;border:1px solid #95ccae77;border-radius:13px;background:#09251fcc;backdrop-filter:blur(10px);box-shadow:0 4px 20px #071d1930}
+.brand strong{font-weight:850;font-size:clamp(15px,4vw,22px);letter-spacing:.01em}.brand small{display:block;color:#8df7b7;font-size:10px;letter-spacing:.09em;font-weight:850}
+.info{font-size:11px;text-align:right;line-height:1.5;color:#e2fae8}.info b{color:#8ef3ba}
+#tip{position:fixed;top:83px;left:10px;max-width:min(380px,70vw);border-radius:10px;padding:7px 10px;background:#09251ec9;color:#f0fff5;border:1px solid #8bd4a75c;font-size:11px;pointer-events:none}
+#look{position:fixed;left:42%;top:24%;bottom:0;right:0;touch-action:none;z-index:2;cursor:grab}
+#joystick{position:fixed;left:max(18px,env(safe-area-inset-left));bottom:max(26px,env(safe-area-inset-bottom) + 20px);width:144px;height:144px;border-radius:50%;border:2px solid #d5ffe68f;background:radial-gradient(circle,#113c328a,#08281e91);box-shadow:0 0 30px #05160d66,inset 0 0 22px #caffd817;touch-action:none;z-index:10}
+#joystick::before,#joystick::after{content:"";position:absolute;background:#d0f9db20;pointer-events:none}#joystick::before{width:1px;height:105px;left:71px;top:18px}#joystick::after{height:1px;width:105px;left:18px;top:71px}
+#knob{position:absolute;left:40px;top:40px;width:60px;height:60px;border:2px solid #bbffcf;border-radius:50%;background:radial-gradient(circle at 35% 30%,#8af3bb,#17735a 65%,#104837);box-shadow:0 3px 15px #0019149a;pointer-events:none;transform:translate(0,0)}
+#joystick-label{position:absolute;width:100%;top:-23px;text-align:center;pointer-events:none;font-size:11px;color:#f0ffed;font-weight:750;text-shadow:0 1px 6px #062019}
+#run{position:fixed;bottom:max(45px,env(safe-area-inset-bottom) + 39px);right:18px;width:80px;height:80px;border-radius:50%;border:2px solid #d1ffcd93;background:#145943d9;color:#fafff9;font-size:15px;font-weight:850;z-index:15;touch-action:none;box-shadow:0 4px 22px #0622179e}
+#run.pressed{background:#50a66a;transform:scale(.96)}
+#near{position:fixed;right:21px;bottom:max(141px,env(safe-area-inset-bottom) + 135px);z-index:15;display:flex;gap:7px}
+#near button,#reset,#quality{background:#0a3129dd;border:1px solid #bdf4d599;color:#fff;border-radius:11px;padding:10px 13px;font-size:14px;font-weight:800;touch-action:manipulation}
+#reset{position:fixed;left:12px;top:125px;z-index:15;font-size:11px}#quality{position:fixed;left:12px;top:164px;z-index:15;font-size:11px}
+#bottom{position:fixed;bottom:8px;left:50%;transform:translateX(-50%);background:#09261dcc;color:#deffe5;padding:7px 9px;border-radius:9px;border:1px solid #8adbab77;font-size:10px;white-space:nowrap;pointer-events:none;z-index:3}
+#loading{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:20;border:1px solid #98d8b5;background:#0b2e27ee;border-radius:15px;padding:17px 22px;box-shadow:0 5px 28px #0007;text-align:center;line-height:1.6;max-width:85vw}#loading[hidden]{display:none}
+#loading strong{font-size:18px}#loading small{display:block;color:#a4eac2}
+#note{position:fixed;right:12px;top:122px;max-width:230px;border:1px solid #8ccfa76d;padding:8px;background:#07291fd9;border-radius:10px;font-size:10px;line-height:1.45;z-index:8}#note[hidden]{display:none}
+#proof{position:fixed;right:12px;top:167px;z-index:16;background:#10392ada;color:#fff;border:1px solid #9be7c280;padding:9px;border-radius:10px;font-size:11px}
+@media(max-width:540px){#head{left:5px;right:5px} .brand,.info{padding:7px 9px}.brand strong{font-size:16px}.info{font-size:10px}#tip{top:72px;font-size:10px;max-width:85vw}#reset{top:115px}#quality{top:154px}#proof{top:195px}#note{top:230px}#bottom{font-size:9px}#joystick{width:134px;height:134px;bottom:max(30px,env(safe-area-inset-bottom) + 25px)}#joystick::before{left:65px}#joystick::after{top:65px}#knob{left:35px;top:35px}}
+
+/* 2026-10-28 non-destructive startup repair. Visible before Three.js downloads. */
+body.booting #head,body.booting #tip,body.booting #look,body.booting #joystick,body.booting #run,body.booting #near,body.booting #reset,body.booting #quality,body.booting #proof,body.booting #note,body.booting #bottom,body.booting #loading{visibility:hidden;pointer-events:none}
+#boot{position:fixed;inset:0;z-index:99;display:grid;place-items:center;overflow:auto;padding:22px;background:linear-gradient(165deg,#071b20f0,#0b232bdf 54%,#092119ed),radial-gradient(ellipse at 80% 10%,#47887899,#091c20);color:#eef9ef;touch-action:pan-y}
+#boot[hidden]{display:none!important}
+#boot:before{content:"";position:absolute;bottom:0;left:0;right:0;height:35%;opacity:.42;pointer-events:none;background:linear-gradient(0deg,#081513 8%,transparent 8%),repeating-linear-gradient(90deg,transparent 0 6%,#43645c 6% 10%,transparent 10% 14%,#1c413a 14% 22%);clip-path:polygon(0 35%,7% 35%,7% 5%,17% 5%,17% 47%,30% 47%,30% 15%,40% 15%,40% 40%,53% 40%,53% 0,62% 0,62% 40%,76% 40%,76% 12%,84% 12%,84% 48%,100% 48%,100% 100%,0 100%)}
+.boot-card{position:relative;max-width:520px;width:100%;padding:clamp(22px,5vw,36px);border:1px solid #b2d6b287;border-radius:18px;background:#08221fe9;box-shadow:0 16px 65px #010d0cba;text-align:center}
+.boot-mark{font-size:11px;font-weight:850;letter-spacing:.19em;color:#91dab2}
+.boot-card h1{margin:9px 0 6px;font-size:clamp(32px,8vw,56px);letter-spacing:-.055em;line-height:1.03}
+.boot-card h1 span{color:#91db9c}
+.boot-area{font-weight:750;letter-spacing:.08em;color:#eacb86;margin:0 0 14px;font-size:12px}
+.boot-copy{line-height:1.6;color:#c8d9ce;margin:0 auto 18px;max-width:400px;font-size:13px}
+#bootStatus{font-size:12px;min-height:38px;line-height:1.45;color:#e3f5e6;white-space:normal;overflow-wrap:anywhere}
+#enter{display:block;width:100%;padding:15px 18px;margin:8px 0;font:850 15px system-ui;color:#08221d;background:#a8f3be;border:1px solid #d4fce0;border-radius:12px;letter-spacing:.08em;touch-action:manipulation}
+#enter:disabled{opacity:.43;cursor:wait;filter:grayscale(.55)}
+#retry{border:1px solid #a7c2b3;background:#1e463b;color:#e8ffec;padding:10px 18px;border-radius:10px;margin:8px;touch-action:manipulation}
+#bootError{margin:12px 0;text-align:left;font:11px ui-monospace,monospace;line-height:1.5;max-height:26vh;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;color:#ffcbc0;background:#411a21d6;border-radius:8px;padding:11px}
+.boot-footer{font-size:10px;line-height:1.5;color:#abc6b6;margin:13px 0 0}
+
+</style>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.171.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.171.0/examples/jsm/"}}</script>
+</head><body class="booting">
+
+<div id="boot" role="dialog" aria-modal="true" aria-label="ShanX Streets game startup">
+ <section class="boot-card"><div class="boot-mark">SXS INTERACTIVE PRESENTS</div>
+ <h1>SHANX <span>STREETS</span></h1><p class="boot-area">HOMEWOOD · PITTSBURGH</p>
+ <p class="boot-copy">A street-level 3D neighborhood study. Walk the blocks, explore house-lined streets, and choose your own direction.</p>
+ <div id="bootStatus" role="status" aria-live="polite">Checking the 3D engine and building the neighborhood…</div>
+ <button id="enter" disabled>PREPARING THE STREETS…</button>
+ <button id="retry" hidden>RETRY LOADING</button>
+ <pre id="bootError" hidden></pre>
+ <p class="boot-footer">Independent browser prototype · Original geometry · Use left joystick to move, right side to look, RUN to sprint.</p>
+ </section></div>
+<script>
+(function(){
+'use strict';
+const $=id=>document.getElementById(id);
+const boot={ready:false,entered:false,failed:false,diagnostics:null,
+ fail(reason){if(this.entered)return;this.failed=true;this.ready=false;
+ const detail=String(reason?.stack||reason?.message||reason||'Unknown renderer failure');
+ $('bootStatus').textContent='The 3D scene did not start. No blank screen: check the error below.';
+ $('enter').disabled=true;$('enter').textContent='3D NOT READY';
+ $('bootError').textContent=detail;$('bootError').hidden=false;$('retry').hidden=false;},
+ success(details){if(this.failed||this.ready)return;this.ready=true;this.diagnostics=details;
+ $('bootStatus').textContent='3D renderer active · '+details.triangles+' triangles · '+details.chunks+' neighborhood sections ready';
+ $('enter').disabled=false;$('enter').textContent='ENTER THE STREETS';},
+ };
+ window.__streetsBoot=boot;
+ $('enter').addEventListener('click',()=>{if(!boot.ready||boot.failed)return;boot.entered=true;
+ document.body.classList.remove('booting');document.body.classList.add('playing');$('boot').hidden=true;});
+ $('retry').addEventListener('click',()=>location.reload());
+ window.addEventListener('error',e=>{if(boot.entered)return;const target=e.target;
+ const resource=target&&target!==window&&(target.src||target.href);
+ boot.fail(resource?'Asset unavailable: '+resource:(e.error||e.message||'Script load or WebGL error'));},true);
+ window.addEventListener('unhandledrejection',e=>boot.fail(e.reason||'Uncaught game startup promise error'));
+ window.setTimeout(()=>{if(!boot.ready&&!boot.failed)boot.fail('3D engine startup timed out. A browser/WebGL or Three.js CDN connection problem may be preventing initialization. Confirm internet access and retry.');},24000);
+})();
+</script>
+
+<canvas id="game" aria-label="Live three-dimensional ShanX Streets gameplay"></canvas><div id="shade"></div>
+<div id="head"><div class="brand"><small>SXS INTERACTIVE • HOMEWOOD STUDY</small><strong>SHANX STREETS</strong></div><div class="info"><b>ACTUAL 3D GEOMETRY</b><div id="meter">0 m explored</div><div id="avatarStatus">Character loading…</div></div></div>
+<div id="tip">Left thumb: analog joystick · Right thumb: look around · RUN to sprint</div>
+<div id="look" aria-label="Drag to rotate the three-dimensional camera"></div>
+<div id="joystick" aria-label="Move with 360 degree analog joystick"><span id="joystick-label">MOVE</span><div id="knob"></div></div>
+<button id="run">RUN</button><div id="near"><button id="closer" aria-label="Closer camera">＋</button><button id="farther" aria-label="Farther camera">－</button></div>
+<button id="reset">↺ RESPAWN</button><button id="quality">⚙ QUALITY</button><button id="proof" aria-label="Show limitations">ⓘ INFO</button>
+<div id="note" hidden>Locally generated 3D neighborhood study inspired by Homewood, Pittsburgh. The streets and architecture are illustrative, not an address-accurate 3D survey. No aerial photos are enlarged into the ground. No cars are drivable yet. Avatar, physics and phone performance remain review gates.</div>
+<div id="bottom">REAL 3D STREETS · HOUSES · TREES · PARKED CARS · CONTINUOUS WALK/RUN</div>
+<div id="loading"><strong>SHANX STREETS · 3D</strong><small id="loadMessage">Building the neighborhood…</small></div>
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+const $=id=>document.getElementById(id);
+try {
+const mobile=/Android|iPhone|iPad|Mobile/i.test(navigator.userAgent);
+const renderer=new THREE.WebGLRenderer({canvas:$('game'),antialias:!mobile,powerPreference:'default'});
+$('game').addEventListener('webglcontextlost',e=>{e.preventDefault();window.__streetsBoot.fail('WebGL context was lost by the device. Try reloading or reducing other GPU-heavy tabs.');});
+
+let lowQuality=mobile;renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,lowQuality?1:1.45));
+renderer.setSize(innerWidth,innerHeight);renderer.outputColorSpace=THREE.SRGBColorSpace;
+renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.4;
+renderer.shadowMap.enabled=!lowQuality;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+const scene=new THREE.Scene();scene.background=new THREE.Color(0xaed2e2);scene.fog=new THREE.FogExp2(0xaed2e2,.0042);
+const camera=new THREE.PerspectiveCamera(68,innerWidth/innerHeight,.08,520);
+const hemi=new THREE.HemisphereLight(0xebf6ff,0x647559,2.5);scene.add(hemi);
+const sun=new THREE.DirectionalLight(0xfff0d5,3.15);sun.position.set(-65,105,35);sun.castShadow=true;
+sun.shadow.mapSize.set(1024,1024);sun.shadow.camera.left=-115;sun.shadow.camera.right=115;sun.shadow.camera.top=115;sun.shadow.camera.bottom=-115;sun.shadow.camera.near=1;sun.shadow.camera.far=270;sun.shadow.bias=-.00025;scene.add(sun,sun.target);
+const clock=new THREE.Clock();
+const sharedGeo=new THREE.BoxGeometry(1,1,1),sphereGeo=new THREE.IcosahedronGeometry(1,1),cylGeo=new THREE.CylinderGeometry(1,1,1,8);
+const mat=(color,roughness=1,metalness=0)=>new THREE.MeshStandardMaterial({color,roughness,metalness});
+const M={
+road:mat(0x363c40), sidewalk:mat(0xb3b0a4),curb:mat(0xd8d1bc),
+stripe:mat(0xf0e0ab),white:mat(0xebeadb),grass:mat(0x55754f),soil:mat(0x654f3a),
+bark:mat(0x5d4738),leaves:[mat(0x426b38),mat(0x527c3e),mat(0x678546)],metal:mat(0x525a5b,.5,.7),
+glass:mat(0x6ca0ac,.22,.2),glassDark:mat(0x304e60,.23,.2),lamp:mat(0xf7e7b9,.25),
+wall:[mat(0x9c6556),mat(0xbfad90),mat(0xa79579),mat(0x8f8f84),mat(0xb77b68),mat(0xc2bcae)],
+trim:[mat(0xf4e7d2),mat(0xd8ddcd),mat(0xe2dbd1)],roof:[mat(0x3b4048),mat(0x5e443d),mat(0x373c3d)],
+door:[mat(0x224b42),mat(0x5e3a31),mat(0x283e55)],
+car:[mat(0x26424c,.5,.3),mat(0xbfc2bc,.4,.4),mat(0x7e3836,.55,.25),mat(0x344132,.55,.3)]
+};
+function box(parent,material,x,y,z,w,h,d,cast=true){
+ const o=new THREE.Mesh(sharedGeo,material);o.position.set(x,y,z);o.scale.set(w,h,d);o.castShadow=cast;o.receiveShadow=true;parent.add(o);return o;
+}
+function ellipsoid(parent,material,x,y,z,a,b,c){const o=new THREE.Mesh(sphereGeo,material);o.position.set(x,y,z);o.scale.set(a,b,c);o.castShadow=true;parent.add(o);return o}
+function rod(parent,material,x,y,z,r,h){const o=new THREE.Mesh(cylGeo,material);o.position.set(x,y,z);o.scale.set(r,h,r);o.castShadow=true;parent.add(o);return o}
+function rng(seed){let t=seed>>>0;return ()=>{t=(Math.imul(1664525,t)+1013904223)>>>0;return t/4294967296}}
+const world=new THREE.Group();scene.add(world);
+box(world,M.grass,0,-.3,0,1520,.5,1520,false);
+const XROADS=[-235,0,240],ZROADS=[-175,0,175];
+const roadWidth=[13,16,13];
+function roadAcrossX(z,width,length=1500){
+ box(world,M.road,0,.002,z,length,.07,width,false);
+ for(let s of [-1,1]){box(world,M.sidewalk,0,.13,z+s*(width/2+3.15),length,.16,4.5,false);
+ box(world,M.curb,0,.18,z+s*(width/2+.54),length,.18,.28,false)}
+ for(let x=-710;x<710;x+=14){box(world,M.stripe,x,.045,z,4,.016,.14,false)}
+}
+function roadAcrossZ(x,width,length=1500){
+ box(world,M.road,x,.025,0,width,.085,length,false);
+ for(let s of [-1,1]){box(world,M.sidewalk,x+s*(width/2+3.15),.18,0,4.5,.16,length,false);
+ box(world,M.curb,x+s*(width/2+.54),.22,0,.28,.17,length,false)}
+ for(let z=-710;z<710;z+=14)box(world,M.stripe,x,.074,z,.14,.015,4,false);
+}
+for(let i=0;i<ZROADS.length;i++)roadAcrossX(ZROADS[i],roadWidth[i]);
+for(let i=0;i<XROADS.length;i++)roadAcrossZ(XROADS[i],roadWidth[i]);
+for(const x of XROADS)for(const z of ZROADS){
+ box(world,M.road,x,.095,z,18,.11,18,false);
+ for(let s of [-1,1])for(let i=0;i<5;i++){
+ box(world,M.white,x-4+i*2,.16,z+s*11,1.15,.012,4,false);
+ box(world,M.white,x+s*11,.17,z-4+i*2,4,.012,1.15,false);
+ }
+}
+const chunks=new Map(),colliders=new Map(),CHUNK=100,ACTIVE=1;
+function nameMat(name){
+ const canvas=document.createElement('canvas');canvas.width=512;canvas.height=128;
+ const ctx=canvas.getContext('2d');ctx.fillStyle='#193e30';ctx.fillRect(0,0,512,128);ctx.strokeStyle='#e6c783';ctx.lineWidth=6;ctx.strokeRect(5,5,502,118);
+ ctx.fillStyle='#f6e7b7';ctx.font='bold 43px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(name,256,64,475);
+ const tex=new THREE.CanvasTexture(canvas);tex.colorSpace=THREE.SRGBColorSpace;
+ return new THREE.MeshStandardMaterial({map:tex,roughness:.7,side:THREE.DoubleSide});
+}
+const signs=['NEIGHBORHOOD MARKET','HOMEWOOD CAFE','BARBER SHOP','COMMUNITY HUB','CORNER STORE'];
+const signMats=signs.map(nameMat);
+function house(parent,x,z,angle,seed,collisionList){
+ const rand=rng(seed),kind=rand(),shop=kind>.78;
+ const g=new THREE.Group();g.position.set(x,0,z);g.rotation.y=angle;parent.add(g);
+ const w=9+rand()*3.2,d=11+rand()*3.5,levels=shop?1:(rand()<.24?3:2),h=levels*2.82+(.22);
+ const wall=M.wall[Math.floor(rand()*M.wall.length)],trim=M.trim[Math.floor(rand()*M.trim.length)],roof=M.roof[Math.floor(rand()*M.roof.length)],door=M.door[Math.floor(rand()*M.door.length)];
+ box(g,wall,0,h/2+.15,0,w,h,d);
+ box(g,trim,0,.38,d/2+.05,w+.3,.13,.27);
+ if(shop){
+  box(g,trim,0,h+.4,0,w+.55,.8,d+.55);
+  box(g,roof,0,h+.83,0,w+.55,.23,d+.55);
+  box(g,M.glass,0,1.75,d/2+.07,w*.67,2.3,.12);
+  box(g,door,w*.28,1.35,d/2+.16,1.25,2.4,.16);
+  const sign=new THREE.Mesh(new THREE.PlaneGeometry(Math.min(8,w*.91),1.25),signMats[Math.floor(rand()*signMats.length)]);
+  sign.position.set(0,h-.38,d/2+.09);g.add(sign);
+  const awning=box(g,roof,0,2.92,d/2+.62,w+.3,.18,1.25);
+ }else{
+  const rise=1.5+rand()*1.3, roofW=w/2+.5, len=Math.hypot(roofW,rise),theta=Math.atan2(rise,roofW);
+  let left=box(g,roof,-w/4,h+rise/2+.18,0,len,.23,d+.85);left.rotation.z=theta;
+  let right=box(g,roof,w/4,h+rise/2+.18,0,len,.23,d+.85);right.rotation.z=-theta;
+  const n=levels===3?3:2;
+  for(let floor=0;floor<n;floor++){
+   let y=1.85+floor*2.75;
+   for(const sx of [-1,1]){
+    const px=sx*w*.31;
+    box(g,trim,px,y,d/2+.105,1.44,1.7,.19);
+    box(g,M.glass,px,y,d/2+.225,1.19,1.44,.075);
+    box(g,trim,px,y,d/2+.27,.075,1.55,.13);
+    box(g,trim,px,y,d/2+.27,1.5,.09,.12);
+   }
+  }
+  box(g,trim,0,1.42,d/2+.14,1.5,2.55,.15);
+  box(g,door,0,1.38,d/2+.26,1.25,2.3,.13);
+  box(g,M.metal,.43,1.2,d/2+.36,.065,.07,.09);
+  const pw=Math.min(6.3,w*.7),pd=2.1;
+  box(g,M.sidewalk,0,.44,d/2+pd/2,pw,.35,pd);
+  for(let s of [-1,1])rod(g,trim,s*(pw/2-.24),1.78,d/2+pd-.25,.09,2.65);
+  box(g,roof,0,3.13,d/2+pd/2,pw+.22,.19,pd+.27);
+  for(let i=0;i<3;i++)box(g,M.sidewalk,0,.26-i*.075,d/2+pd+.2+i*.32,2.3,.14,.38);
+ }
+ // Real geometry collision box, including porch/steps, not a 2D map barrier.
+ const halfW=w/2+.26,halfD=d/2+(shop?.2:2.3);
+ const pts=[[-halfW,-halfD],[halfW,-halfD],[halfW,halfD],[-halfW,halfD]].map(([a,b])=>[x+Math.cos(angle)*a+Math.sin(angle)*b,z-Math.sin(angle)*a+Math.cos(angle)*b]);
+ collisionList.push({minX:Math.min(...pts.map(p=>p[0])),maxX:Math.max(...pts.map(p=>p[0])),minZ:Math.min(...pts.map(p=>p[1])),maxZ:Math.max(...pts.map(p=>p[1]))});
+}
+function tree(parent,x,z,seed){
+ const r=rng(seed),g=new THREE.Group();g.position.set(x,0,z);parent.add(g);
+ let height=3.9+r()*2.5;rod(g,M.bark,0,height*.3,0,.23,height*.6);
+ ellipsoid(g,M.leaves[Math.floor(r()*3)],0,height,0,1.9+r()*.6,2.0+r()*.75,1.9+r()*.55);
+ ellipsoid(g,M.leaves[Math.floor(r()*3)],-.8,height-.35,.5,1.1,1.3,1.2);
+}
+function parkedCar(parent,x,z,angle,seed){
+ const rand=rng(seed),g=new THREE.Group();g.position.set(x,0,z);g.rotation.y=angle;parent.add(g);
+ const color=M.car[Math.floor(rand()*M.car.length)];
+ box(g,color,0,.79,0,1.9,.61,4.55);
+ box(g,color,0,1.33,-.22,1.7,.62,2.42);
+ box(g,M.glassDark,0,1.4,-1.47,1.54,.42,.1);
+ box(g,M.glass,0,1.4,1.03,1.54,.39,.13);
+ for(let ax of [-.94,.94])for(let az of [-1.34,1.34]){
+  const wheel=new THREE.Mesh(new THREE.CylinderGeometry(.39,.39,.2,12),mat(0x1b2425));
+  wheel.rotation.z=Math.PI/2;wheel.position.set(ax,.42,az);g.add(wheel);
+ }
+ for(let ax of [-.7,.7]){box(g,M.lamp,ax,.79,-2.3,.29,.23,.09);box(g,M.door[1],ax,.8,2.3,.31,.22,.09)}
+}
+function lampPost(parent,x,z){
+ const g=new THREE.Group();g.position.set(x,0,z);parent.add(g);
+ rod(g,M.metal,0,3.75,0,.09,7.5);box(g,M.metal,.55,7.4,0,1.15,.11,.1);box(g,M.lamp,1.1,7.32,0,.53,.16,.3,false)
+}
+function nearRoad(x,z,margin=19){return XROADS.some(v=>Math.abs(x-v)<margin)||ZROADS.some(v=>Math.abs(z-v)<margin)}
+function chunkKey(ix,iz){return ix+':'+iz}
+function buildChunk(ix,iz){
+ const g=new THREE.Group(),coll=[],startX=ix*CHUNK,startZ=iz*CHUNK;
+ const lowX=startX-CHUNK/2,highX=startX+CHUNK/2,lowZ=startZ-CHUNK/2,highZ=startZ+CHUNK/2;
+ for(const rz of ZROADS)for(const side of [-1,1]){
+  const hz=rz+side*25;
+  if(hz<lowZ||hz>=highZ)continue;
+  for(let k=Math.ceil(lowX/22);k*22<highX;k++){
+   let hx=k*22+((k*37)%5),seed=(k*928371+Math.round(rz)*727+side*311)>>>0;
+   if(XROADS.some(rx=>Math.abs(hx-rx)<37))continue;
+   house(g,hx,hz,side===1?Math.PI:0,seed,coll);
+   if(k%3===0)tree(g,hx+8,hz+(side===1?8:-8),seed+127);
+   if(k%4===0)parkedCar(g,hx+3,rz+side*8.3,Math.PI/2,seed+42);
+  }
+ }
+ for(const rx of XROADS)for(const side of [-1,1]){
+  const hx=rx+side*25;
+  if(hx<lowX||hx>=highX)continue;
+  for(let k=Math.ceil(lowZ/22);k*22<highZ;k++){
+   const hz=k*22+((k*29)%5),seed=(k*977933+Math.round(rx)*801+side*251)>>>0;
+   if(ZROADS.some(rz=>Math.abs(hz-rz)<37))continue;
+   house(g,hx,hz,side===1?-Math.PI/2:Math.PI/2,seed,coll);
+   if(k%3===1)tree(g,hx+(side===1?9:-9),hz+7,seed+91);
+   if(k%5===0)parkedCar(g,rx+side*8.4,hz,0,seed+15);
+  }
+ }
+ for(const x of XROADS)for(const z of ZROADS){
+  if(x>=lowX&&x<highX&&z>=lowZ&&z<highZ){
+   for(const sx of [-1,1])for(const sz of [-1,1])lampPost(g,x+sx*14,z+sz*14);
+  }
+ }
+ world.add(g);chunks.set(chunkKey(ix,iz),g);colliders.set(chunkKey(ix,iz),coll);
+}
+function streamAround(x,z){
+ const ix=Math.round(x/CHUNK),iz=Math.round(z/CHUNK);
+ for(let i=ix-ACTIVE;i<=ix+ACTIVE;i++)for(let j=iz-ACTIVE;j<=iz+ACTIVE;j++){
+  const k=chunkKey(i,j);if(!chunks.has(k))buildChunk(i,j);
+ }
+ for(const [k,obj] of chunks) {
+  const [i,j]=k.split(':').map(Number);
+  if(Math.abs(i-ix)>ACTIVE||Math.abs(j-iz)>ACTIVE){world.remove(obj);chunks.delete(k);colliders.delete(k);}
+ }
+}
+const player={x:9,z:18,angle:0,walked:0};
+streamAround(player.x,player.z);
+function blocked(x,z){
+ if(x< -720||x>720||z< -720||z>720)return true;
+ for(const areas of colliders.values())for(const p of areas)if(x>p.minX-.48&&x<p.maxX+.48&&z>p.minZ-.48&&z<p.maxZ+.48)return true;
+ return false;
+}
+const actor=new THREE.Group();scene.add(actor);
+const fallback=new THREE.Group();actor.add(fallback);
+const skin=mat(0x9d6c52),shirt=mat(0x246448),pants=mat(0x313e49),shoes=mat(0x262a28);
+box(fallback,shirt,0,1.33,0,.62,.74,.32);
+ellipsoid(fallback,skin,0,1.91,0,.24,.29,.23);
+box(fallback,pants,0,.79,0,.55,.36,.31);
+const arms=[],legs=[];
+for(const s of [-1,1]){
+ const arm=new THREE.Group();arm.position.set(s*.43,1.55,0);fallback.add(arm);
+ box(arm,shirt,0,-.28,0,.22,.55,.23);
+ ellipsoid(arm,skin,0,-.6,0,.11,.17,.12);arms.push(arm);
+ const leg=new THREE.Group();leg.position.set(s*.18,.64,0);fallback.add(leg);
+ box(leg,pants,0,-.28,0,.24,.56,.27);
+ box(leg,shoes,0,-.63,-.08,.3,.17,.45);legs.push(leg);
+}
+let gltfMixer=null,clips={},currentClip=null,actualAvatar=false,loadedStatus='3D character ready';
+const gltfLoader=new GLTFLoader();
+gltfLoader.load('https://threejs.org/examples/models/gltf/Soldier.glb',gltf=>{
+ const obj=gltf.scene;const bounds=new THREE.Box3().setFromObject(obj),sz=new THREE.Vector3();bounds.getSize(sz);
+ let factor=1.82/(sz.y||1.82);obj.scale.setScalar(factor);obj.position.set(0,-bounds.min.y*factor,0);
+ const root=new THREE.Group();root.rotation.y=Math.PI;root.add(obj);actor.add(root);
+ gltfMixer=new THREE.AnimationMixer(obj);
+ for(const clip of gltf.animations)clips[clip.name]=gltfMixer.clipAction(clip);
+ if(clips.Idle&&clips.Walk&&clips.Run){actualAvatar=true;fallback.visible=false;switchClip('Idle');loadedStatus='Rigged avatar loaded'}
+ else {actor.remove(root);loadedStatus='3D avatar fallback';}
+ $('avatarStatus').textContent=loadedStatus;
+},undefined,()=>{$('avatarStatus').textContent='3D avatar fallback';});
+function switchClip(name){
+ if(!actualAvatar||!clips[name]||currentClip===clips[name])return;
+ const next=clips[name];next.enabled=true;next.reset();next.setEffectiveWeight(1);next.play();
+ if(currentClip)currentClip.crossFadeTo(next,.18,false);currentClip=next;
+}
+const cameraRig={yaw:0,pitch:.26,dist:5.5};
+const vTarget=new THREE.Vector3(),vCam=new THREE.Vector3();
+function positionCamera(dt,instant=false){
+ const by=cameraRig.yaw,dist=cameraRig.dist,up=Math.sin(cameraRig.pitch)*dist+2.1;
+ const desired=new THREE.Vector3(player.x+Math.sin(by)*dist,up,player.z+Math.cos(by)*dist);
+ if(instant)camera.position.copy(desired);else camera.position.lerp(desired,Math.min(1,dt*10));
+ vTarget.set(player.x,1.42,player.z);
+ camera.lookAt(vTarget);
+}
+positionCamera(.016,true);
+const joystick={x:0,y:0,held:false,id:null};const joy=$('joystick'),knob=$('knob');
+function updateJoystick(e){
+ const r=joy.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;
+ let dx=e.clientX-cx,dy=e.clientY-cy;const radius=r.width*.35,m=Math.hypot(dx,dy);
+ if(m>radius){dx*=radius/m;dy*=radius/m}
+ joystick.x=dx/radius;joystick.y=-dy/radius;
+ knob.style.transform='translate('+dx+'px,'+dy+'px)';
+}
+joy.addEventListener('pointerdown',e=>{e.preventDefault();joy.setPointerCapture(e.pointerId);joystick.held=true;joystick.id=e.pointerId;updateJoystick(e)});
+joy.addEventListener('pointermove',e=>{if(joystick.held&&joystick.id===e.pointerId){e.preventDefault();updateJoystick(e)}});
+function releaseJoystick(e){if(e&&joystick.id!==e.pointerId)return;joystick.held=false;joystick.id=null;joystick.x=joystick.y=0;knob.style.transform='translate(0,0)'}
+for(const type of ['pointerup','pointercancel','lostpointercapture'])joy.addEventListener(type,releaseJoystick);
+let drag=null;const look=$('look');
+look.addEventListener('pointerdown',e=>{e.preventDefault();look.setPointerCapture(e.pointerId);drag={id:e.pointerId,x:e.clientX,y:e.clientY}});
+look.addEventListener('pointermove',e=>{if(!drag||drag.id!==e.pointerId)return;cameraRig.yaw-=(e.clientX-drag.x)*.006;cameraRig.pitch=THREE.MathUtils.clamp(cameraRig.pitch+(e.clientY-drag.y)*.004,-.04,.86);drag={id:e.pointerId,x:e.clientX,y:e.clientY}});
+for(const type of ['pointerup','pointercancel','lostpointercapture'])look.addEventListener(type,()=>drag=null);
+let sprint=false;const run=$('run');
+run.addEventListener('pointerdown',e=>{e.preventDefault();run.setPointerCapture(e.pointerId);sprint=true;run.classList.add('pressed')});
+for(const type of ['pointerup','pointercancel','lostpointercapture'])run.addEventListener(type,()=>{sprint=false;run.classList.remove('pressed')});
+$('closer').onclick=()=>cameraRig.dist=Math.max(2.25,cameraRig.dist-.9);
+$('farther').onclick=()=>cameraRig.dist=Math.min(12,cameraRig.dist+.9);
+$('reset').onclick=()=>{player.x=9;player.z=18;player.angle=0;player.walked=0;cameraRig.yaw=0;cameraRig.pitch=.26;cameraRig.dist=5.5;streamAround(player.x,player.z);positionCamera(0,true)};
+$('quality').onclick=()=>{lowQuality=!lowQuality;renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,lowQuality?1:1.45));renderer.shadowMap.enabled=!lowQuality;renderer.shadowMap.needsUpdate=true;$('quality').textContent=lowQuality?'⚙ ECO MODE':'⚙ QUALITY'};
+$('proof').onclick=()=>{$('note').hidden=!$('note').hidden};
+const pressed=new Set();
+window.addEventListener('keydown',e=>{if(['KeyW','KeyA','KeyS','KeyD','ShiftLeft','ShiftRight'].includes(e.code)){e.preventDefault();pressed.add(e.code)}});
+window.addEventListener('keyup',e=>pressed.delete(e.code));
+window.addEventListener('blur',()=>{pressed.clear();releaseJoystick();sprint=false});
+window.addEventListener('resize',()=>{renderer.setSize(innerWidth,innerHeight);camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix()});
+$('loading').hidden=true;$('avatarStatus').textContent='3D avatar ready';if(lowQuality)$('quality').textContent='⚙ ECO MODE';
+const meshCounter=()=>world.children.length;
+window.__sxs3d={get ready(){return window.__streetsBoot.ready},get entered(){return window.__streetsBoot.entered},get diagnosis(){return window.__streetsBoot.diagnostics},get position(){return{x:player.x,z:player.z}},get distance(){return player.walked},get joystick(){return {x:joystick.x,y:joystick.y}},get chunks(){return chunks.size},get realGeometry(){return meshCounter()},get skinned(){return actualAvatar},get cameraDistance(){return cameraRig.dist},get quality(){return lowQuality?'eco':'high'},get collisions(){return colliders.size}};
+let stats=0,bootFrames=0,halted=false;
+function verifyVisibleFrame(){
+ const gl=renderer.getContext(),rendered=renderer.info.render;
+ if(!gl||gl.isContextLost())throw Error('WebGL drawing context missing or lost');
+ if(rendered.calls<2||rendered.triangles<50)throw Error('Scene rendered no usable 3D geometry. calls='+rendered.calls+' triangles='+rendered.triangles);
+ const width=gl.drawingBufferWidth,height=gl.drawingBufferHeight;
+ if(width<10||height<10)throw Error('Invalid drawing buffer '+width+'×'+height);
+ const probes=[[.5,.5],[.5,.75],[.22,.55],[.78,.45],[.5,.22]];
+ const c=new Uint8Array(4),samples=[];
+ for(const [u,v] of probes){gl.readPixels(Math.floor(width*u),Math.floor(height*v),1,1,gl.RGBA,gl.UNSIGNED_BYTE,c);samples.push(c[0]+','+c[1]+','+c[2]);}
+ if(new Set(samples).size<2)throw Error('3D pixel proof failed: scene pixels are uniform ('+samples[0]+'). Check renderer/camera/content.');
+ const facing=new THREE.Vector3();camera.getWorldDirection(facing);
+ const toward=actor.position.clone().add(new THREE.Vector3(0,1.2,0)).sub(camera.position).normalize();
+ if(facing.dot(toward)<.65)throw Error('Camera does not face the third-person character.');
+ return {triangles:rendered.triangles,calls:rendered.calls,chunks:chunks.size,framebuffer:width+'x'+height,sampleColors:samples,quality:lowQuality?'eco':'high'};
+}
+function animate(){
+ if(halted)return;
+ try {
+ const dt=Math.min(clock.getDelta(),.05);
+ const kbX=(pressed.has('KeyD')?1:0)-(pressed.has('KeyA')?1:0);
+ const kbY=(pressed.has('KeyW')?1:0)-(pressed.has('KeyS')?1:0);
+ let ix=window.__streetsBoot.entered?(joystick.held?joystick.x:kbX):0,iy=window.__streetsBoot.entered?(joystick.held?joystick.y:kbY):0;
+ let magnitude=Math.min(1,Math.hypot(ix,iy));
+ if(magnitude<.10){ix=iy=0;magnitude=0}
+ else {ix/=magnitude;iy/=magnitude}
+ const forwardX=-Math.sin(cameraRig.yaw),forwardZ=-Math.cos(cameraRig.y);
+ const rightX=Math.cos(cameraRig.yaw),rightZ=-Math.sin(cameraRig.yaw);
+ const vx=forwardX*iy+rightX*ix,vz=forwardZ*iy+rightZ*ix;
+ const runNow=sprint||pressed.has('ShiftLeft')||pressed.has('ShiftRight');
+ const speed=(runNow?6.0:3.25)*magnitude;
+ const beforeX=player.x,beforeZ=player.z;
+ const nx=player.x+vx*speed*dt,nz=player.z+vz*speed*dt;
+ if(!blocked(nx,player.z))player.x=nx;
+ if(!blocked(player.x,nz))player.z=nz;
+ const moved=Math.hypot(player.x-beforeX,player.z-beforeZ);
+ player.walked+=moved;
+ if(moved>.0001){
+  const targetAngle=Math.atan2(-vx,-vz);
+  player.angle+=Math.atan2(Math.sin(targetAngle-player.angle),Math.cos(targetAngle-player.angle))*Math.min(1,dt*11);
+ }
+ actor.position.set(player.x,0,player.z);actor.rotation.y=player.angle;
+ if(actualAvatar){switchClip(moved>.0001?(runNow?'Run':'Walk'):'Idle');gltfMixer.update(dt)}
+ else {
+  const t=clock.elapsedTime,amp=moved>.0001?(runNow?.63:.44):.035,freq=runNow?12:8;
+  legs[0].rotation.x=Math.sin(t*freq)*amp;legs[1].rotation.x=-Math.sin(t*freq)*amp;
+  arms[0].rotation.x=-Math.sin(t*freq)*amp*.75;arms[1].rotation.x=Math.sin(t*freq)*amp*.75;
+  fallback.position.y=moved>.0001?Math.abs(Math.sin(t*freq))*.045:0;
+ }
+ streamAround(player.x,player.z);
+ sun.position.set(player.x-65,105,player.z+35);sun.target.position.set(player.x,0,player.z);sun.target.updateMatrixWorld();
+ positionCamera(dt);
+ renderer.render(scene,camera);
+ if(!window.__streetsBoot.ready&&++bootFrames>=2)window.__streetsBoot.success(verifyVisibleFrame());
+ stats+=dt;if(stats>.3){stats=0;$('meter').textContent=Math.round(player.walked)+' m explored · '+chunks.size+' active blocks';}
+ requestAnimationFrame(animate);
+ }catch(error){halted=true;window.__streetsBoot.fail(error);}
+}
+animate();
+} catch(error){window.__streetsBoot.fail(error);}
+
+</script></body></html>
