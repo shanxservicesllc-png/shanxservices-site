@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"><meta name="theme-color" content="#071124"><title>ShanX Speed and Swing | 3D City Playtest V5</title>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"><meta name="theme-color" content="#071124"><title>ShanX Speed and Swing | 3D City Playtest V6</title>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html,body{height:100%;margin:0;overflow:hidden;touch-action:none;font-family:system-ui,-apple-system,Segoe UI,Arial,sans-serif;background:#071329;color:#f6fcff;user-select:none}body{position:relative}
 #sky{position:absolute;inset:0;background:radial-gradient(ellipse at 73% 18%,#ffe5ad 0%,#fca5a7 15%,#7d8ada 42%,#3e548d 64%,#132c51 92%)}#sky:after{content:"";position:absolute;top:7%;right:18%;width:min(15vw,125px);aspect-ratio:1;border-radius:50%;background:#ffedbe;box-shadow:0 0 75px 22px #ffd4a88e,0 0 160px 70px #ffaf9874}
@@ -62,7 +62,7 @@ canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none}
 <div id="mission">✦ COLLECT LIGHTS · ACTIVATE FOUR SKY GATES</div><div id="gates" role="status" aria-live="polite">SKY GATES <b id="gateCount">0/4</b></div><div id="rightHud"><b id="heroLabel">⚡ VOLT</b><span id="heroSub">SPEED RUNNER</span></div>
 <aside id="radar" aria-label="Navigation mini-map showing nearby city lights and sky gates"><div id="radarHeader">CITY RADAR</div><canvas id="miniMap" width="150" height="150"></canvas><div id="radarText">FINDING LIGHTS...</div></aside><div id="toast" role="status" aria-live="polite"></div>
 <div id="controls"><div id="joystick" aria-label="Move with thumb joystick" role="group"><div id="stick">✦</div></div><div id="buttons"><button id="heroBtn" class="action" aria-label="Change hero"><span class="glyph">⇄</span><span>HERO</span></button><button id="special" class="action" aria-label="Special ability"><span class="glyph">✧</span><span id="specialLabel">DASH</span></button><button id="jump" class="action" aria-label="Jump"><span class="glyph">↑</span><span>JUMP</span></button></div></div>
-<section id="overlay"><div id="panel"><div id="eyebrow">SHANX 3D LAB · CITY ADVENTURE V5</div><h1 id="menuTitle">SPEED <em>&amp;</em><br>SWING</h1><p id="menuText">Explore four shimmering city districts with two original animated heroes. Collect lights, visit sky gates, dash through streets, and fire Skyline’s luminous web toward nearby rooftops.</p><div class="heroCards"><div class="heroCard"><b style="color:#75ecff">⚡ VOLT</b><small>Original blue quill runner with expressive face, animated legs, luminous trails and turbo dash.</small></div><div class="heroCard"><b style="color:#ff8b83">✧ SKYLINE</b><small>Original crimson-and-navy roof runner with articulated limbs, visor and glowing web-swing arcs.</small></div></div><button id="play">▶ EXPLORE THE CITY</button><div id="sub">Left joystick to move · Drag open screen to look around · ↻ reset camera · Keyboard: WASD, Space, E, Q, R</div><button type="button" id="sxsIntroFeedback">💌 Leave player feedback</button></div></section>
+<section id="overlay"><div id="panel"><div id="eyebrow">SHANX 3D LAB · CITY ADVENTURE V6</div><h1 id="menuTitle">SPEED <em>&amp;</em><br>SWING</h1><p id="menuText">Explore four shimmering city districts with two original animated heroes. Collect lights, visit sky gates, dash through streets, and fire Skyline’s luminous web toward nearby rooftops.</p><div class="heroCards"><div class="heroCard"><b style="color:#75ecff">⚡ VOLT</b><small>Original blue quill runner with expressive face, animated legs, luminous trails and turbo dash.</small></div><div class="heroCard"><b style="color:#ff8b83">✧ SKYLINE</b><small>Original crimson-and-navy roof runner with articulated limbs, visor and glowing web-swing arcs.</small></div></div><button id="play">▶ EXPLORE THE CITY</button><div id="sub">Left joystick to move · Drag open screen to look around · ↻ reset camera · Keyboard: WASD, Space, E, Q, R</div><button type="button" id="sxsIntroFeedback">💌 Leave player feedback</button></div></section>
 <div id="unsupported">This device needs a browser with WebGL to display the 3D city.</div>
 <button id="sxsFeedbackOpen" type="button" aria-controls="sxsFeedbackPanel" aria-expanded="false">💌 TESTER FEEDBACK</button>
 <div id="sxsFeedbackBackdrop" hidden aria-hidden="true"></div>
@@ -84,8 +84,9 @@ canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none}
 (()=>{'use strict';
 const cv=document.getElementById('world'),gl=cv.getContext('webgl',{alpha:true,antialias:true,depth:true,premultipliedAlpha:false,powerPreference:'high-performance'});
 if(!gl){document.getElementById('unsupported').style.display='grid';return;}
-const vert=`attribute vec3 aPos;attribute vec3 aNormal;attribute vec3 aColor;uniform mat4 uMVP;uniform vec3 uEye;varying vec3 vColor;varying float vFog;void main(){gl_Position=uMVP*vec4(aPos,1.);float d=max(0.,dot(normalize(aNormal),normalize(vec3(.52,.94,.45))));float lighting=.54+d*.52;vColor=aColor*lighting;vFog=clamp((distance(aPos,uEye)-42.)/135.,0.,.77);}`;
-const frag=`precision mediump float;varying vec3 vColor;varying float vFog;void main(){vec3 c=mix(vColor,vec3(.56,.60,.77),vFog);gl_FragColor=vec4(c,1.);}`;
+// SXS V6 SMOOTH VERTEX NORMALS: interpolate normals, not flat polygon color.
+const vert=`attribute vec3 aPos;attribute vec3 aNormal;attribute vec3 aColor;uniform mat4 uMVP;uniform vec3 uEye;varying vec3 vAlbedo;varying vec3 vNormal;varying vec3 vEye;varying float vFog;void main(){gl_Position=uMVP*vec4(aPos,1.);vAlbedo=aColor;vNormal=aNormal;vEye=uEye-aPos;vFog=clamp((distance(aPos,uEye)-42.)/135.,0.,.77);}`;
+const frag=`precision mediump float;varying vec3 vAlbedo;varying vec3 vNormal;varying vec3 vEye;varying float vFog;void main(){vec3 n=normalize(vNormal);vec3 key=normalize(vec3(.52,.94,.45));float diffuse=max(0.,dot(n,key));float fill=max(0.,dot(n,normalize(vec3(-.58,.43,-.60))));float light=.49+diffuse*.48+fill*.12;vec3 view=normalize(vEye);float gloss=pow(max(0.,dot(n,normalize(key+view))),24.);vec3 c=vAlbedo*light+vec3(.08,.14,.16)*gloss;vec3 outColor=mix(c,vec3(.56,.60,.77),vFog);gl_FragColor=vec4(outColor,1.);}`;
 function shader(type,src){let s=gl.createShader(type);gl.shaderSource(s,src);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw Error(gl.getShaderInfoLog(s));return s;}
 let prog=gl.createProgram();gl.attachShader(prog,shader(gl.VERTEX_SHADER,vert));gl.attachShader(prog,shader(gl.FRAGMENT_SHADER,frag));gl.linkProgram(prog);if(!gl.getProgramParameter(prog,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(prog));gl.useProgram(prog);gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);
 const loc={pos:gl.getAttribLocation(prog,'aPos'),normal:gl.getAttribLocation(prog,'aNormal'),color:gl.getAttribLocation(prog,'aColor'),mvp:gl.getUniformLocation(prog,'uMVP'),eye:gl.getUniformLocation(prog,'uEye')};
@@ -96,16 +97,38 @@ class Mesh{constructor(){this.v=[];this.buffer=null;this.count=0;this.transform=
  p(a){if(!this.transform)return a;let t=this.transform,co=Math.cos(t.yaw),si=Math.sin(t.yaw);return[t.x+a[0]*co+a[2]*si,t.y+a[1],t.z-a[0]*si+a[2]*co]}
  tri(a,b,c,col){a=this.p(a);b=this.p(b);c=this.p(c);let u=b.map((v,i)=>v-a[i]),v=c.map((v,i)=>v-a[i]),n=[u[1]*v[2]-u[2]*v[1],u[2]*v[0]-u[0]*v[2],u[0]*v[1]-u[1]*v[0]],le=Math.hypot(...n)||1;n=n.map(x=>x/le);let cl=hex(col);for(let q of [a,b,c])this.v.push(...q,...n,...cl)}
  quad(a,b,c,d,col){this.tri(a,b,c,col);this.tri(a,c,d,col)}
+
+ // Smooth-shaded triangles carry per-vertex surface normals; geometry remains
+ // ordinary GPU triangles (a standard technique, not non-triangle rendering).
+ smoothTri(a,b,c,col,na,nb,nc){
+  const color=hex(col),transformNormal=n=>{
+   if(!this.transform)return n;
+   const co=Math.cos(this.transform.yaw),si=Math.sin(this.transform.yaw);
+   return[n[0]*co+n[2]*si,n[1],-n[0]*si+n[2]*co];
+  };
+  const points=[a,b,c],normals=[na,nb,nc];
+  for(let i=0;i<3;i++){
+   const pos=this.p(points[i]),normal=transformNormal(normals[i]);
+   const len=Math.hypot(...normal)||1;
+   this.v.push(...pos,normal[0]/len,normal[1]/len,normal[2]/len,...color);
+  }
+ }
+ smoothQuad(a,b,c,d,col,na,nb,nc,nd){
+  this.smoothTri(a,b,c,col,na,nb,nc);
+  this.smoothTri(a,c,d,col,na,nc,nd);
+ }
+
  box(x,y,z,w,h,d,col){let x0=x-w/2,x1=x+w/2,z0=z-d/2,z1=z+d/2,y0=y,y1=y+h;this.quad([x0,y0,z0],[x1,y0,z0],[x1,y1,z0],[x0,y1,z0],tinted(col,1.08));this.quad([x1,y0,z1],[x0,y0,z1],[x0,y1,z1],[x1,y1,z1],tinted(col,.77));this.quad([x1,y0,z0],[x1,y0,z1],[x1,y1,z1],[x1,y1,z0],tinted(col,.88));this.quad([x0,y0,z1],[x0,y0,z0],[x0,y1,z0],[x0,y1,z1],tinted(col,1.0));this.quad([x0,y1,z0],[x1,y1,z0],[x1,y1,z1],[x0,y1,z1],tinted(col,1.25));this.quad([x0,y0,z1],[x1,y0,z1],[x1,y0,z0],[x0,y0,z0],tinted(col,.65))}
  cylinder(x,y,z,r,h,col,segments=9){let N=segments;for(let i=0;i<N;i++){let a=i*2*Math.PI/N,b=(i+1)*2*Math.PI/N,sa=Math.sin(a),ca=Math.cos(a),sb=Math.sin(b),cb=Math.cos(b);this.quad([x+r*sa,y,z+r*ca],[x+r*sb,y,z+r*cb],[x+r*sb,y+h,z+r*cb],[x+r*sa,y+h,z+r*ca],tinted(col,.85+i/N*.3));this.tri([x,y+h,z],[x+r*sa,y+h,z+r*ca],[x+r*sb,y+h,z+r*cb],tinted(col,1.23));}}
- sphere(x,y,z,r,col,seg=10,rings=6){for(let i=0;i<rings;i++){let a=(i/rings-.5)*Math.PI,b=((i+1)/rings-.5)*Math.PI;for(let j=0;j<seg;j++){let p=j/seg*Math.PI*2,q=(j+1)/seg*Math.PI*2;const v=(t,s)=>[x+r*Math.cos(t)*Math.sin(s),y+r*Math.sin(t),z+r*Math.cos(t)*Math.cos(s)];let c=tinted(col,.93+.15*Math.sin(j+1));this.quad(v(a,p),v(a,q),v(b,q),v(b,p),c)}}}
+ sphere(x,y,z,r,col,seg=10,rings=6){for(let i=0;i<rings;i++){let a=(i/rings-.5)*Math.PI,b=((i+1)/rings-.5)*Math.PI;for(let j=0;j<seg;j++){let p=j/seg*Math.PI*2,q=(j+1)/seg*Math.PI*2;const n=(lat,lon)=>[Math.cos(lat)*Math.sin(lon),Math.sin(lat),Math.cos(lat)*Math.cos(lon)],v=(lat,lon)=>[x+r*n(lat,lon)[0],y+r*n(lat,lon)[1],z+r*n(lat,lon)[2]];this.smoothQuad(v(a,p),v(a,q),v(b,q),v(b,p),col,n(a,p),n(a,q),n(b,q),n(b,p))}}}
 
  // Rounded organic forms and tapered articulated body parts.
  ellipsoid(x,y,z,rx,ry,rz,col,seg=11,rings=7){
   for(let i=0;i<rings;i++){const a=(i/rings-.5)*Math.PI,b=((i+1)/rings-.5)*Math.PI;
    for(let j=0;j<seg;j++){const p=j/seg*2*Math.PI,q=(j+1)/seg*2*Math.PI;
     const pt=(lat,lon)=>[x+rx*Math.cos(lat)*Math.sin(lon),y+ry*Math.sin(lat),z+rz*Math.cos(lat)*Math.cos(lon)];
-    this.quad(pt(a,p),pt(a,q),pt(b,q),pt(b,p),tinted(col,.94+.10*Math.sin(j+1)));
+    const n=(lat,lon)=>[Math.cos(lat)*Math.sin(lon)/Math.max(rx,.001),Math.sin(lat)/Math.max(ry,.001),Math.cos(lat)*Math.cos(lon)/Math.max(rz,.001)];
+    this.smoothQuad(pt(a,p),pt(a,q),pt(b,q),pt(b,p),col,n(a,p),n(a,q),n(b,q),n(b,p));
    }
   }
  }
@@ -118,7 +141,8 @@ class Mesh{constructor(){this.v=[];this.buffer=null;this.count=0;this.transform=
   const pt=(c,r,p)=>c.map((x,i)=>x+r*(u[i]*Math.cos(p)+v[i]*Math.sin(p)));
   for(let j=0;j<seg;j++){
    const p=j*2*Math.PI/seg,q=(j+1)*2*Math.PI/seg;
-   this.quad(pt(a,ra,p),pt(a,ra,q),pt(b,rb,q),pt(b,rb,p),tinted(col,.84+.24*j/seg));
+   const faceNormal=angle=>[0,1,2].map(k=>u[k]*Math.cos(angle)+v[k]*Math.sin(angle)+n[k]*(ra-rb)/length);
+   this.smoothQuad(pt(a,ra,p),pt(a,ra,q),pt(b,rb,q),pt(b,rb,p),col,faceNormal(p),faceNormal(q),faceNormal(q),faceNormal(p));
   }
  }
  curve(a,c,b,r,col,steps=7){
@@ -458,7 +482,7 @@ const safeDistance=Math.hypot(safe[0]-tar[0],safe[1]-tar[1],safe[2]-tar[2]);
 cam=safeDistance<7&&Math.hypot(desired[0]-tar[0],desired[1]-tar[1],desired[2]-tar[2])>7?desired:safe;
 let vp=matMul(perspective(66*Math.PI/180,cv.width/cv.height,.2,750),lookAt(cam,tar));gl.uniformMatrix4fv(loc.mvp,false,vp);gl.uniform3fv(loc.eye,new Float32Array(cam));gl.clearColor(0,0,0,0);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);world.draw();dynamic.v=[];fx(dynamic);dynamic.upload(true);dynamic.draw();drawMiniMap(now);requestAnimationFrame(frame)}
 updateHud();requestAnimationFrame(frame);
-window.__SHANX_3D={getState:()=>({mode,hero,score,player:{...player},solidTowers:towers.length,worldVertices:world.count,activeOrbs:orbs.filter(x=>!x.taken).length,activatedGates:gates.filter(g=>g.lit).length,worldSpan:570,visualRevision:5,characterArt:'organic-articulated-v5',districtDetails:true,braidedWeb:true,camera:[...cam],cameraRig:{yaw:cameraRig.yaw,pitch:cameraRig.pitch,distance:cameraRig.distance,dragActive:cameraRig.pointerId!==null},cameraDistance:Math.hypot(cam[0]-player.x,cam[1]-player.y-2.3,cam[2]-player.z),usingWebGL:!!gl})};
+window.__SHANX_3D={getState:()=>({mode,hero,score,player:{...player},solidTowers:towers.length,worldVertices:world.count,activeOrbs:orbs.filter(x=>!x.taken).length,activatedGates:gates.filter(g=>g.lit).length,worldSpan:570,visualRevision:6,smoothShading:true,lighting:'per-fragment-dual-light',characterArt:'organic-articulated-v5',districtDetails:true,braidedWeb:true,camera:[...cam],cameraRig:{yaw:cameraRig.yaw,pitch:cameraRig.pitch,distance:cameraRig.distance,dragActive:cameraRig.pointerId!==null},cameraDistance:Math.hypot(cam[0]-player.x,cam[1]-player.y-2.3,cam[2]-player.z),usingWebGL:!!gl})};
 })();
 </script>
 <script>
