@@ -344,7 +344,12 @@ function message(s){notice.textContent=s;notice.classList.add('show');noticeUnti
 function focus(){look.yaw=driving?car.yaw: p.yaw;look.pitch=.4;}
 function closestCar(){return Math.hypot(p.x-car.x,p.z-car.z);}
 function toggleCar(){
- if(driving){driving=false;p.x=car.x+3;p.z=car.z;p.yaw=car.yaw;message('Out of the car. Explore on foot.');}
+ if(driving){
+  const exits=[car.x+3.9,car.x-3.9];
+  const safe=exits.find(x=>!blocked(x,car.z,.46)&&!carNear(x,car.z,null,3.3));
+  if(safe===undefined){message('CAN’T EXIT HERE · MOVE THE CAR TO A CLEAR SPACE');return;}
+  driving=false;p.x=safe;p.z=car.z;p.yaw=car.yaw;message('Out of the car. Explore on foot.');
+ }
  else if(closestCar()<8){driving=true;car.speed=0;look.yaw=car.yaw;message('Driving! Joystick up to accelerate, left/right to turn.');}
  else message('Walk closer to the blue coupe first.');
  updateUI();
