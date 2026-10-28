@@ -1,0 +1,352 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<meta name="theme-color" content="#071529">
+<meta name="description" content="Invite-link-only ShanX Streets Homewood-inspired 3D neighborhood alpha. Original fictional playable prototype.">
+<title>ShanX Streets 3D | Homewood Test Alpha</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;height:100%;overflow:hidden;background:#071529;color:#f4fcff;font:15px system-ui,sans-serif;touch-action:none}button,textarea,input,select{font:inherit}button{cursor:pointer}
+#game{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+#loading{position:fixed;inset:0;z-index:100;display:grid;place-items:center;background:#081629;color:#dbfff5;text-align:center;padding:28px}
+#skyline{position:fixed;inset:0;pointer-events:none;background:radial-gradient(ellipse at 70% 15%,#70e6c31b,transparent 50%)}
+#hud{position:fixed;left:14px;right:14px;top:max(12px,env(safe-area-inset-top));display:flex;align-items:flex-start;justify-content:space-between;gap:12px;z-index:5;pointer-events:none}
+#brand{background:#06152cdd;border:1px solid #a3ffe370;border-radius:14px;padding:10px 13px;backdrop-filter:blur(8px);box-shadow:0 6px 24px #0007}
+#brand strong{display:block;font-size:clamp(19px,3vw,27px);letter-spacing:-.05em}#brand strong em{color:#91ffe4;font-style:normal}#brand small{display:block;color:#cbede9;font-size:10px;letter-spacing:.12em}
+#stats{text-align:right;display:flex;flex-direction:column;align-items:end;gap:6px;max-width:50%}
+#street,#task{background:#06152cdd;border:1px solid #91eadd6c;border-radius:10px;padding:7px 11px;font-size:11px;font-weight:750;line-height:1.4}
+#task{color:#ffebaa}
+#map{position:fixed;right:13px;top:103px;width:132px;height:132px;background:#06182be6;border:1px solid #8aebdc8c;border-radius:12px;z-index:5;box-shadow:0 5px 18px #0008}
+#actions{position:fixed;bottom:max(22px,env(safe-area-inset-bottom));right:16px;display:flex;gap:8px;align-items:end;z-index:7}
+.action{width:clamp(61px,13vw,87px);height:clamp(61px,13vw,87px);display:flex;flex-direction:column;justify-content:center;align-items:center;border-radius:50%;border:2px solid #fff8;background:linear-gradient(160deg,#2473c0,#19376d);font-weight:900;color:#fff;box-shadow:0 7px 20px #0009;touch-action:none;user-select:none}
+.action span{font-size:24px}.action small{font-size:10px;letter-spacing:.02em}.action:active,.action.pressed{transform:scale(.94)}
+#drive{background:linear-gradient(140deg,#96ffd6,#13999b);color:#062e40}#reset{width:49px;height:49px;border-radius:13px;background:#123b5c}
+#joy{position:fixed;bottom:max(25px,env(safe-area-inset-bottom));left:17px;width:clamp(118px,21vw,154px);height:clamp(118px,21vw,154px);border:2px solid #a5ffe46b;border-radius:50%;background:#08476475;display:grid;place-items:center;z-index:7;touch-action:none;user-select:none}
+#nub{width:53%;height:53%;border-radius:50%;border:3px solid #d7fff3;background:linear-gradient(135deg,#55e8d2,#176d9e);transform:translate(var(--jx,0px),var(--jy,0px));box-shadow:0 0 30px #52e3df77;display:grid;place-items:center;font-weight:900}
+#notice{position:fixed;top:48%;left:50%;transform:translate(-50%,-50%);background:#091b35e9;border:1px solid #95ffdc;border-radius:12px;padding:11px 16px;z-index:8;max-width:85vw;text-align:center;pointer-events:none;opacity:0;transition:opacity .2s}
+#notice.show{opacity:1}
+#footer{position:fixed;left:50%;bottom:max(10px,env(safe-area-inset-bottom));transform:translateX(-50%);font-size:9px;color:#e5fff5;text-shadow:0 2px 6px #001;width:max-content;max-width:55%;text-align:center;z-index:6;pointer-events:none}
+#feedbackOpen{position:fixed;top:251px;right:14px;z-index:8;border:1px solid #9affda;background:#0b355bdc;color:#e4fff5;border-radius:9px;padding:9px 10px;font-size:11px;font-weight:800}
+#curtain{position:fixed;inset:0;background:#050e20ca;z-index:20;display:grid;place-items:center;padding:18px;touch-action:auto}
+#panel{width:min(610px,100%);max-height:95dvh;overflow:auto;background:linear-gradient(140deg,#143452,#101c39);border:1px solid #92fce09c;border-radius:21px;padding:clamp(19px,4vw,32px);box-shadow:0 24px 80px #000c;touch-action:pan-y}
+#panel h1{font-size:clamp(34px,7vw,56px);letter-spacing:-.06em;line-height:1.05;margin:12px 0}#panel h1 em{font-style:normal;color:#82ffdd}
+#panel p{line-height:1.55;color:#cbdfed;font-size:13px}
+#start{width:100%;padding:15px;border:0;border-radius:12px;background:linear-gradient(105deg,#82f4d9,#ffdf9a);color:#092a3b;font-weight:950;font-size:16px;margin-top:15px}
+#panel a{color:#b5ffe7}
+#feedbackBg{position:fixed;inset:0;z-index:30;background:#021123c9}
+#feedback{position:fixed;bottom:0;left:0;right:0;width:min(720px,100%);max-height:82dvh;overflow-y:auto;touch-action:pan-y;margin:auto;z-index:31;padding:22px 21px max(25px,env(safe-area-inset-bottom));border-radius:22px 22px 0 0;border:1px solid #87ffe4aa;background:linear-gradient(135deg,#13324b,#101d32);box-shadow:0 -18px 70px #000a}
+#feedback h2{margin:0 40px 6px 0}#feedback p{color:#c6d8ed;font-size:13px;line-height:1.5}
+#feedback textarea,#feedback select,#feedback input{width:100%;display:block;padding:11px;color:#fff;border:1px solid #7fcabf;background:#081b32;border-radius:10px;margin:7px 0 13px;touch-action:auto;user-select:text}
+#feedback textarea{min-height:110px;resize:vertical}#feedback label{font-size:12px;font-weight:800}
+#feedbackClose{position:absolute;right:18px;top:14px;background:#214865;border:1px solid #a5ffda;color:white;border-radius:50%;font-size:21px;width:36px;height:36px}
+#feedbackSend{display:inline-block;padding:13px 18px;background:#87f5d5;color:#052e3a;font-weight:900;border-radius:11px;text-decoration:none;margin-top:5px}
+#feedbackBg[hidden],#feedback[hidden],#curtain[hidden]{display:none!important}
+@media(max-width:540px){#hud{left:8px;right:8px}#brand{padding:8px}#brand small{font-size:8px}#stats{max-width:48%}#street,#task{font-size:9px;padding:6px}#map{width:100px;height:100px;top:107px;right:8px}#feedbackOpen{top:215px;right:8px;font-size:10px}#actions{right:8px;gap:5px}#joy{left:8px}#footer{bottom:3px;font-size:8px}}
+</style>
+</head>
+<body>
+<canvas id="game" aria-label="Interactive 3D Homewood-inspired city; touch the left joystick to move and drag the scenery to look around"></canvas>
+<div id="skyline" aria-hidden="true"></div>
+<div id="loading" role="status">Building ShanX Streets... ✦</div>
+<div id="hud">
+  <div id="brand"><strong>SHAN<em>X</em> STREETS</strong><small>HOMEWOOD-INSPIRED · 3D ALPHA</small></div>
+  <div id="stats"><div id="street">N HOMEWOOD AVE</div><div id="task">EXPLORE · 0 / 5 CORNERS</div></div>
+</div>
+<canvas id="map" width="220" height="220" aria-label="Neighborhood game mini-map"></canvas>
+<button id="feedbackOpen" type="button">💌 TESTER COMMENTS</button>
+<div id="notice" role="status" aria-live="polite"></div>
+<div id="joy" aria-label="Move or drive steering joystick"><div id="nub">✦</div></div>
+<div id="actions">
+ <button id="reset" class="action" aria-label="Recenter camera"><span>↻</span></button>
+ <button id="drive" class="action" aria-label="Enter or exit car"><span>🚗</span><small>CAR</small></button>
+ <button id="sprint" class="action" aria-label="Run faster"><span>⚡</span><small>RUN</small></button>
+</div>
+<div id="footer">Fictionalized Homewood street study · Not a surveyed replica · Link-only public alpha</div>
+<div id="curtain">
+ <section id="panel"><small style="color:#87ffdd;letter-spacing:.14em;font-weight:900">SHANX SERVICES · PRIVATE INVITATION TEST</small>
+ <h1>Your streets.<br><em>Your playground.</em></h1>
+ <p>Explore a stylized 3D micro-neighborhood inspired by <b>Homewood, Pittsburgh 15208</b>. Walk the blocks, enter the blue coupe, drive, and collect five glowing neighborhood markers. Original buildings and characters, no copied Street View imagery.</p>
+ <p><b>Touch:</b> left joystick to move, drag the open screen to turn your view, CAR to enter or exit, RUN for speed, ↻ to recenter. <b>Keyboard:</b> WASD, mouse drag, E, Shift, R.</p>
+ <p>Street names are authentic local references, but intersections and buildings are an artistic prototype, not an exact real-world map. Google Maps is for <a href="https://www.google.com/maps/search/?api=1&amp;query=North+Homewood+Avenue+and+Frankstown+Avenue+Pittsburgh+PA" rel="noopener" target="_blank">street-level visual research</a>.</p>
+ <button id="start">▶ EXPLORE HOMEWOOD</button>
+ <p style="font-size:11px">Unlisted URL, not password-protected. Do not send payment for this free early tester build. Requires an internet connection to load the Three.js renderer.</p></section>
+</div>
+<div id="feedbackBg" hidden></div>
+<section id="feedback" role="dialog" aria-modal="true" aria-labelledby="feedbackTitle" hidden>
+<button id="feedbackClose" type="button" aria-label="Close feedback">×</button>
+<h2 id="feedbackTitle">Help build ShanX Streets 💌</h2>
+<p>Tell us what the city should look or feel like, where driving goes wrong, or what you want to do next. This opens an email draft for you to review and send. Feedback is not anonymous if sent.</p>
+<label for="tester">Name or nickname (optional)</label><input id="tester" maxlength="60" placeholder="Your name or nickname">
+<label for="category">What are you reviewing?</label><select id="category"><option>Driving and vehicles</option><option>Walking and camera</option><option>Buildings and neighborhood</option><option>Performance or a bug</option><option>Ideas for missions</option><option>Other</option></select>
+<label for="comments">Your comments</label><textarea id="comments" maxlength="1500" placeholder="How can we improve ShanX Streets?"></textarea>
+<a id="feedbackSend" href="mailto:henry.shannon@shanxservices.com?subject=ShanX%20Streets%203D%20Playtest">✉ EMAIL MY COMMENTS ↗</a>
+<p id="feedbackStatus" role="status" aria-live="polite"></p>
+</section>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+'use strict';
+(()=>{
+const el=id=>document.getElementById(id),canvas=el('game'),notice=el('notice'),mcanvas=el('map');
+if(typeof THREE==='undefined'){el('loading').textContent='3D renderer could not load. Check your internet connection and refresh.';return;}
+let renderer;
+try{renderer=new THREE.WebGLRenderer({canvas,antialias:true,powerPreference:'high-performance'});}
+catch(e){el('loading').textContent='Your browser could not start WebGL. Try Chrome or another browser.';return;}
+renderer.setPixelRatio(Math.min(1.5,window.devicePixelRatio||1));
+renderer.setSize(innerWidth,innerHeight,false);
+renderer.outputEncoding=THREE.sRGBEncoding;
+renderer.toneMapping=THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure=1.42;
+const scene=new THREE.Scene();scene.background=new THREE.Color('#7ba5c4');scene.fog=new THREE.FogExp2('#85a8c0',.0068);
+const camera=new THREE.PerspectiveCamera(63,innerWidth/innerHeight,.12,440);
+scene.add(new THREE.HemisphereLight('#d7eeff','#45534a',1.3));
+const sun=new THREE.DirectionalLight('#ffe2b4',2.3);sun.position.set(-50,125,80);scene.add(sun);
+const matCache=new Map();function mat(color,rough=0.82,metal=0){const key=color+':'+rough+':'+metal;if(!matCache.has(key))matCache.set(key,new THREE.MeshStandardMaterial({color,roughness:rough,metalness:metal}));return matCache.get(key);}
+const geo={box:new THREE.BoxGeometry(1,1,1),round:new THREE.SphereGeometry(1,16,12),wheel:new THREE.CylinderGeometry(1,1,1,12)};
+function add(parent,shape,color,x,y,z,sx,sy,sz,rough,metal){const o=new THREE.Mesh(geo[shape],mat(color,rough,metal));o.position.set(x,y,z);o.scale.set(sx,sy,sz);parent.add(o);return o;}
+function box(parent,color,x,y,z,w,h,d){return add(parent,'box',color,x,y,z,w,h,d);}
+const ground=new THREE.Mesh(new THREE.PlaneGeometry(380,380),mat('#426953'));ground.rotation.x=-Math.PI/2;ground.position.y=-.14;scene.add(ground);
+const X=[-90,-45,0,45,90],Z=[-90,-45,0,45,90];
+const streetX=['N LANG AVE','N MURTLAND ST','N HOMEWOOD AVE','COLLIER ST','BRUSHTON AVE'];
+const streetZ=['TIOGA ST','HAMILTON AVE','FRANKSTOWN AVE','KELLY ST','BENNETT ST'];
+for(let i=0;i<X.length;i++){
+ box(scene,'#35434a',X[i],.026,0,12,.12,275);
+ box(scene,'#a4ac9c',X[i]-7,.02,0,1.6,.10,275);
+ box(scene,'#a4ac9c',X[i]+7,.02,0,1.6,.10,275);
+ for(let z=-130;z<135;z+=14)box(scene,'#d4cba8',X[i],.102,z,.20,.018,5.5);
+}
+for(let i=0;i<Z.length;i++){
+ box(scene,'#35434a',0,.030,Z[i],275,.12,12);
+ box(scene,'#a4ac9c',0,.022,Z[i]-7,275,.10,1.6);
+ box(scene,'#a4ac9c',0,.022,Z[i]+7,275,.10,1.6);
+ for(let x=-130;x<135;x+=14)box(scene,'#dfd1aa',x,.105,Z[i],5.5,.018,.20);
+}
+// Explicit crosswalks and storm-drain curb details.
+for(const x of X)for(const z of Z){
+ for(let k=-3;k<=3;k++)box(scene,'#dbdbca',x+k*1.17,.115,z-5.6,.62,.015,1.65);
+ box(scene,'#5a7275',x+6.15,.12,z+6.15,.8,.02,1.2);
+}
+// Artistic lots placed between roads, no scraped imagery or exact addresses.
+let seed=15208;function rand(){seed=(seed*1664525+1013904223)>>>0;return seed/4294967296;}
+const buildings=[],trees=[];const palette=['#ae8468','#c3ae91','#9aadb5','#d3bb9d','#8c8f9b','#a07880','#bdc8b4'];
+function roof(g,w,d,base,h,color){
+ const rg=new THREE.ConeGeometry(Math.max(w,d)*.72,h,4),o=new THREE.Mesh(rg,mat(color));o.rotation.y=Math.PI/4;o.position.y=base+h*.48;g.add(o);
+}
+function house(x,z,w,d,h,color,shop=false){
+ const root=new THREE.Group();root.position.set(x,0,z);scene.add(root);
+ const wall=box(root,color,0,h*.5,0,w,h,d),trim='#f0dfbd',dark='#465669';
+ box(root,'#3d4654',0,h+.20,0,w+1,.36,d+1);
+ if(!shop)roof(root,w,d,h+.28,2.8,'#566474');
+ if(shop){
+  box(root,'#172e42',0,2.65,-d/2-.16,w*.9,1.2,.14);
+  box(root,'#de8b61',0,3.5,-d/2-.36,w*.97,.30,1.4);
+  for(let v=0;v<3;v++)box(root,'#d7b37c',-w*.34+v*w*.34,3.15,-d/2-.38,.14,.10,1.6);
+ }else{
+  box(root,'#e1d6c0',0,1.13,-d/2-1.25,w*.93,.20,2.5);
+  for(const side of [-1,1])box(root,'#e3d6bd',side*w*.39,1.42,-d/2-1.5,.19,2.8,.23);
+  box(root,'#d1c4b2',0,2.85,-d/2-1.5,w*.98,.20,2.65);
+  box(root,'#a8b1ae',0,.38,-d/2-.55,1.55,.73,1.5);
+ }
+ const rows=shop?1:(h>6?2:1);
+ for(let row=0;row<rows;row++)for(let col=-1;col<=1;col++){
+  const wx=col*w*.28,wy=shop?1.55:3.15+row*2.55;
+  box(root,trim,wx,wy,-d/2-.09,1.30,1.75,.19);
+  box(root,'#638fa0',wx,wy,-d/2-.20,1.05,1.48,.1);
+  box(root,trim,wx,wy,-d/2-.26,.10,1.56,.09);
+ }
+ box(root,'#42484d',0,1.1,-d/2-.12,1.34,2.2,.19);
+ box(root,'#d0a674',.45,1.12,-d/2-.25,.11,.11,.10);
+ buildings.push({x,z,r:Math.max(w,d)*.56,kind:shop?'storefront':'rowhouse'});
+}
+for(let gx=-2;gx<2;gx++)for(let gz=-2;gz<2;gz++){
+ const cx=(gx+.5)*45,cz=(gz+.5)*45;
+ if(Math.abs(cx)<9&&Math.abs(cz)<9)continue;
+ const shop=(gz===0&&gx===-1)||(gz===0&&gx===0)||(gz===-1&&gx===0);
+ const count=shop?2:3;
+ for(let n=0;n<count;n++){
+  const w=shop?12:9,d=shop?15:12,ix=cx+(n-(count-1)/2)*12.8,z=cz+(rand()-.5)*4;
+  house(ix,z,w,d,shop?5.5:6.4+rand()*1.5,palette[Math.floor(rand()*palette.length)],shop);
+ }
+}
+function tree(x,z){const g=new THREE.Group();g.position.set(x,0,z);scene.add(g);
+ add(g,'wheel','#73533c',0,1.85,0,.19,3.7,.19).rotation.z=0;
+ for(let i=0;i<3;i++)add(g,'round',i%2?'#6a9770':'#3e875d',Math.sin(i*2)*.72,4.2+i*.31,Math.cos(i*2)*.65,1.5,1.18,1.3);
+ trees.push(g);}
+for(let i=0;i<25;i++){let x=-109+rand()*218,z=-109+rand()*218;const close=X.some(p=>Math.abs(x-p)<8)&&Z.some(p=>Math.abs(z-p)<8);
+ if(!close&&!buildings.some(b=>Math.hypot(x-b.x,z-b.z)<b.r+3))tree(x,z);}
+function lamp(x,z){const g=new THREE.Group();g.position.set(x,0,z);scene.add(g);add(g,'wheel','#6c7778',0,2.9,0,.10,5.8,.10);add(g,'round','#fff0bd',0,5.95,0,.30,.34,.30);box(g,'#a1d8c8',0,5.70,0,.72,.13,.45);}
+for(let x of [-100,-10,80])for(let z of [-76,14,104])lamp(x,z);
+const CARS=[];
+function makeCar(x,z,color,playerCar){
+ const g=new THREE.Group();g.position.set(x,.53,z);scene.add(g);
+ box(g,color,0,.28,0,2.5,.66,4.8);
+ box(g,color,0,.97,-.18,2.15,.83,2.7);
+ box(g,'#84b9d1',0,1.04,-.63,2.16,.60,.10);
+ box(g,'#597f9b',0,1.03,.99,2.16,.60,.10);
+ for(const side of [-1,1])for(const v of [-1.53,1.55]){
+  const wheel=add(g,'wheel','#151a25',side*1.27,-.16,v,.51,.29,.51);wheel.rotation.z=Math.PI/2;
+  add(g,'round','#c8c9c7',side*1.44,-.16,v,.17,.22,.22);
+ }
+ for(const side of [-1,1]){
+ box(g,'#fff3c3',side*.81,.28,-2.46,.57,.22,.10);
+ box(g,'#fa7376',side*.81,.28,2.46,.57,.24,.10);
+ }
+ const c={g,x,z,yaw:0,speed:0,player:!!playerCar,phase:rand()*6.28};
+ CARS.push(c);return c;
+}
+const car=makeCar(3,17,'#2989c3',true);
+for(let k=0;k<6;k++){let c=makeCar((k%2?1:-1)*((k%3)*45+11),((k+1)%3)*36-48,['#c16c4e','#83a89d','#cab579','#8d79ab'][k%4],false);c.yaw=k%2?Math.PI/2:0;c.g.rotation.y=c.yaw;}
+const person=new THREE.Group();scene.add(person);
+const torso=new THREE.Group(),leftArm=new THREE.Group(),rightArm=new THREE.Group(),leftLeg=new THREE.Group(),rightLeg=new THREE.Group();
+person.add(torso,leftArm,rightArm,leftLeg,rightLeg);
+add(torso,'round','#2b7e9d',0,1.75,0,.48,.72,.36);
+add(torso,'round','#b9805a',0,2.66,-.03,.40,.43,.38);
+add(torso,'round','#21475c',0,2.95,.04,.43,.15,.43);
+add(torso,'round','#f2faf5',-.16,2.68,-.33,.075,.090,.035);
+add(torso,'round','#f2faf5',.16,2.68,-.33,.075,.090,.035);
+add(torso,'round','#273448',0,2.48,-.40,.13,.065,.08);
+for(const [side,arm,leg] of [[-1,leftArm,leftLeg],[1,rightArm,rightLeg]]){
+ arm.position.set(side*.55,2.20,0);leg.position.set(side*.25,1.19,0);
+ add(arm,'round','#255f7c',0,-.35,0,.20,.45,.20);
+ add(arm,'round','#b88058',0,-.82,-.01,.15,.17,.16);
+ add(leg,'round','#23375a',0,-.45,0,.22,.50,.24);
+ add(leg,'round','#eddfc4',0,-.98,-.18,.26,.20,.42);
+}
+const markers=[],markerInfo=[
+ {x:2,z:-36,label:'HAMILTON WALK'},
+ {x:-40,z:-6,label:'FRANKSTOWN CORNER'},
+ {x:45,z:45,label:'KELLY BLOCK'},
+ {x:2,z:92,label:'BENNETT CORNER'},
+ {x:90,z:-45,label:'TIOGA CONNECTION'}
+];
+markerInfo.forEach((p,i)=>{const g=new THREE.Group();g.position.set(p.x,0,p.z);scene.add(g);
+ add(g,'wheel','#2a8ca0',0,.52,0,.55,.16,.55);
+ const jewel=add(g,'round',i%2?'#ffcb81':'#b2ffe7',0,2.15,0,.52,.63,.52,.36,.1);
+ markers.push({g,jewel,x:p.x,z:p.z,label:p.label,got:false});});
+let mode='menu',driving=false,p={x:-2,z:17,yaw:Math.PI,speed:0,run:false},keys={},joy={x:0,y:0,id:null},look={yaw:0,pitch:.38,id:null,x:0,y:0},active=0,completed=0,last=performance.now(),noticeUntil=0;
+function message(s){notice.textContent=s;notice.classList.add('show');noticeUntil=performance.now()+2300;}
+function focus(){look.yaw=driving?car.yaw: p.yaw;look.pitch=.4;}
+function closestCar(){return Math.hypot(p.x-car.x,p.z-car.z);}
+function toggleCar(){
+ if(driving){driving=false;p.x=car.x+3;p.z=car.z;p.yaw=car.yaw;message('Out of the car. Explore on foot.');}
+ else if(closestCar()<8){driving=true;car.speed=0;look.yaw=car.yaw;message('Driving! Joystick up to accelerate, left/right to turn.');}
+ else message('Walk closer to the blue coupe first.');
+ updateUI();
+}
+function updateUI(){el('drive').querySelector('small').textContent=driving?'EXIT':'CAR';el('sprint').querySelector('small').textContent=driving?'BRAKE':'RUN';}
+function blocked(x,z,pad){
+ if(Math.abs(x)>130-pad||Math.abs(z)>130-pad)return true;
+ return buildings.some(b=>Math.abs(x-b.x)<b.r+pad&&Math.abs(z-b.z)<b.r+pad);
+}
+function moveActor(dt){
+ const ix=joy.x+(keys.d?1:0)-(keys.a?1:0),iz=joy.y+(keys.s?1:0)-(keys.w?1:0);
+ const speedMode=keys.shift||p.run;
+ if(driving){
+  const throttle=Math.max(-1,Math.min(1,-iz));
+  car.speed+=throttle*25*dt;
+  car.speed*=Math.exp(-1.7*dt);
+  if(Math.abs(throttle)<.09)car.speed*=Math.exp(-.7*dt);
+  car.speed=Math.max(-14,Math.min(speedMode?47:33,car.speed));
+  car.yaw-=ix*dt*(.42+Math.min(1,Math.abs(car.speed)/14)*1.45)*(car.speed<0?-1:1);
+  const nextX=car.x-Math.sin(car.yaw)*car.speed*dt,nextZ=car.z-Math.cos(car.yaw)*car.speed*dt;
+  if(!blocked(nextX,nextZ,2)){car.x=nextX;car.z=nextZ;}else{car.speed=0;}
+  car.g.position.x=car.x;car.g.position.z=car.z;car.g.rotation.y=car.yaw;
+  p.x=car.x;p.z=car.z;p.yaw=car.yaw;
+ }else{
+  const len=Math.max(1,Math.hypot(ix,iz));
+  let dx=(Math.cos(look.yaw)*ix+Math.sin(look.yaw)*iz)/len;
+  let dz=(-Math.sin(look.yaw)*ix+Math.cos(look.yaw)*iz)/len;
+  const sp=speedMode?16:9;
+  const xx=p.x+dx*sp*dt,zz=p.z+dz*sp*dt;
+  if(!blocked(xx,p.z,.46))p.x=xx;
+  if(!blocked(p.x,zz,.46))p.z=zz;
+  if(Math.abs(dx)+Math.abs(dz)>.1)p.yaw=Math.atan2(-dx,-dz);
+  person.position.set(p.x,0,p.z);person.rotation.y=p.yaw;
+  let walking=(Math.abs(dx)+Math.abs(dz)>.12);
+  const sw=walking?Math.sin(performance.now()*.014*(speedMode?1.4:1))*.53:0;
+  leftLeg.rotation.x=sw;rightLeg.rotation.x=-sw;leftArm.rotation.x=-sw;rightArm.rotation.x=sw;
+ }
+ const px=driving?car.x:p.x,pz=driving?car.z:p.z;
+ for(const m of markers){if(!m.got&&Math.hypot(px-m.x,pz-m.z)<5){m.got=true;m.g.visible=false;completed++;el('task').textContent='EXPLORE · '+completed+' / 5 CORNERS';message('✦ '+m.label+' DISCOVERED! '+completed+'/5');}}
+ if(completed===5&&active===0){active=1;message('ALL FIVE CORNERS FOUND! YOU OWN THE TOUR!');}
+ person.visible=!driving;
+}
+function positionCamera(dt){
+ const px=driving?car.x:p.x,pz=driving?car.z:p.z;
+ const baseY=driving?1.6:1.65,back=driving?14:11,high=driving?6:5.1;
+ const origin=new THREE.Vector3(px,baseY,pz);
+ const dir=new THREE.Vector3(Math.sin(look.yaw)*Math.cos(look.pitch),Math.sin(look.pitch),Math.cos(look.yaw)*Math.cos(look.pitch));
+ const dest=origin.clone().addScaledVector(dir,back).add(new THREE.Vector3(0,high-3,0));
+ const dist=dest.distanceTo(origin);
+ const ray=new THREE.Raycaster(origin,dir.normalize(),.2,dist); // camera obstruction approximate via raycast with nearby house walls
+ const obstruct=buildings.some(b=>Math.abs(dest.x-b.x)<b.r&&Math.abs(dest.z-b.z)<b.r);
+ if(obstruct){dest.y+=5;dest.x=px+(dest.x-px)*.6;dest.z=pz+(dest.z-pz)*.6;}
+ camera.position.lerp(dest,Math.min(1,dt*5.5));
+ const target=new THREE.Vector3(px,baseY+(driving?.7:1.0),pz);
+ camera.lookAt(target);
+}
+function streetName(){const px=driving?car.x:p.x,pz=driving?car.z:p.z;
+ let bestX=0,bestZ=0,dd=Infinity,dz=Infinity;
+ X.forEach((v,i)=>{let d=Math.abs(px-v);if(d<dd){dd=d;bestX=i;}});
+ Z.forEach((v,i)=>{let d=Math.abs(pz-v);if(d<dz){dz=d;bestZ=i;}});
+ return dd<dz?streetX[bestX]:streetZ[bestZ];
+}
+function minimap(){
+ const g=mcanvas.getContext('2d'),w=220,h=220,toX=x=>110+x*.65,toY=z=>110+z*.65;
+ g.clearRect(0,0,w,h);g.fillStyle='#0a2330';g.fillRect(0,0,w,h);
+ g.strokeStyle='#779ca2';g.lineWidth=8;for(let x of X){g.beginPath();g.moveTo(toX(x),0);g.lineTo(toX(x),220);g.stroke();}
+ for(let z of Z){g.beginPath();g.moveTo(0,toY(z));g.lineTo(220,toY(z));g.stroke();}
+ for(const m of markers)if(!m.got){g.fillStyle='#ffdf8e';g.beginPath();g.arc(toX(m.x),toY(m.z),5,0,7);g.fill();}
+ g.fillStyle='#5fe5ff';g.beginPath();g.arc(toX(car.x),toY(car.z),4,0,7);g.fill();
+ const px=driving?car.x:p.x,pz=driving?car.z:p.z;
+ g.save();g.translate(toX(px),toY(pz));g.rotate(-p.yaw);g.fillStyle='#d4ffe3';g.beginPath();g.moveTo(0,-8);g.lineTo(-6,6);g.lineTo(6,6);g.fill();g.restore();
+}
+let oldStreet='';
+function frame(now){let dt=Math.min(.05,(now-last)/1000);last=now;if(mode==='play')moveActor(dt);
+ for(let i=0;i<markers.length;i++)if(!markers[i].got){let o=markers[i].jewel;o.rotation.y+=dt*1.7;o.position.y=2.15+Math.sin(now*.002+i)*.22;}
+ positionCamera(dt);
+ if(now-noticeUntil>0)notice.classList.remove('show');
+ if(mode==='play'){let street=streetName();if(street!==oldStreet){oldStreet=street;el('street').textContent=street;}}
+ minimap();renderer.render(scene,camera);requestAnimationFrame(frame);
+}
+function resize(){renderer.setSize(innerWidth,innerHeight,false);camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();}
+window.addEventListener('resize',resize);
+el('start').onclick=()=>{mode='play';el('curtain').hidden=true;el('loading').style.display='none';focus();message('WELCOME TO THE HOMEWOOD TOUR! FIND FIVE GOLD MARKERS.');};
+const joystick=el('joy'),nub=el('nub');
+function moveJoy(e){const r=joystick.getBoundingClientRect();let x=(e.clientX-r.left-r.width/2)/(r.width*.32),y=(e.clientY-r.top-r.height/2)/(r.height*.32),l=Math.max(1,Math.hypot(x,y));joy.x=x/l;joy.y=y/l;nub.style.setProperty('--jx',(joy.x*r.width*.30)+'px');nub.style.setProperty('--jy',(joy.y*r.height*.30)+'px');}
+function clearJoy(){joy.id=null;joy.x=0;joy.y=0;nub.style.setProperty('--jx','0px');nub.style.setProperty('--jy','0px');}
+joystick.addEventListener('pointerdown',e=>{if(joy.id!==null)return;e.preventDefault();joy.id=e.pointerId;joystick.setPointerCapture(e.pointerId);moveJoy(e);});
+joystick.addEventListener('pointermove',e=>{if(e.pointerId===joy.id)moveJoy(e);});
+['pointerup','pointercancel','lostpointercapture'].forEach(n=>joystick.addEventListener(n,e=>{if(e.pointerId===joy.id)clearJoy();}));
+canvas.addEventListener('pointerdown',e=>{if(mode!=='play'||look.id!==null||(e.pointerType==='mouse'&&e.button!==0))return;look.id=e.pointerId;look.x=e.clientX;look.y=e.clientY;canvas.setPointerCapture(e.pointerId);});
+canvas.addEventListener('pointermove',e=>{if(e.pointerId!==look.id)return;look.yaw-=(e.clientX-look.x)*.007;look.pitch=Math.max(.05,Math.min(.88,look.pitch-(e.clientY-look.y)*.004));look.x=e.clientX;look.y=e.clientY;});
+['pointerup','pointercancel','lostpointercapture'].forEach(n=>canvas.addEventListener(n,e=>{if(e.pointerId===look.id)look.id=null;}));
+el('drive').onclick=()=>{if(mode==='play')toggleCar();};
+el('reset').onclick=()=>{focus();message('CAMERA RECENTERED')};
+el('sprint').addEventListener('pointerdown',e=>{e.preventDefault();p.run=true;el('sprint').classList.add('pressed');});
+['pointerup','pointercancel','lostpointercapture'].forEach(n=>el('sprint').addEventListener(n,()=>{p.run=false;el('sprint').classList.remove('pressed');}));
+document.addEventListener('keydown',e=>{if(['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName))return;
+ const k=e.key.toLowerCase();if(['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright',' '].includes(k))e.preventDefault();
+ if(k==='e'&&!e.repeat&&mode==='play')toggleCar();if(k==='r'&&!e.repeat)focus();
+ if(k==='shift')keys.shift=true;
+ if(k==='w'||k==='arrowup')keys.w=true;if(k==='a'||k==='arrowleft')keys.a=true;
+ if(k==='s'||k==='arrowdown')keys.s=true;if(k==='d'||k==='arrowright')keys.d=true;
+});
+document.addEventListener('keyup',e=>{const k=e.key.toLowerCase();if(k==='shift')keys.shift=false;
+ if(k==='w'||k==='arrowup')keys.w=false;if(k==='a'||k==='arrowleft')keys.a=false;
+ if(k==='s'||k==='arrowdown')keys.s=false;if(k==='d'||k==='arrowright')keys.d=false;});
+window.addEventListener('blur',()=>{keys={};clearJoy();look.id=null;p.run=false;});
+const f=el('feedback'),bg=el('feedbackBg'),comment=el('comments'),name=el('tester'),category=el('category'),send=el('feedbackSend'),fbstatus=el('feedbackStatus');
+function showFB(){f.hidden=false;bg.hidden=false;comment.focus();}
+function hideFB(){f.hidden=true;bg.hidden=true;}
+el('feedbackOpen').onclick=showFB;el('feedbackClose').onclick=hideFB;bg.onclick=hideFB;
+f.addEventListener('keydown',e=>{e.stopPropagation();if(e.key==='Escape')hideFB();});
+function updateMail(){send.href='mailto:henry.shannon@shanxservices.com?subject='+encodeURIComponent('ShanX Streets 3D Homewood Alpha feedback')+'&body='+encodeURIComponent('Game: ShanX Streets 3D Homewood Alpha 0.1\nTester: '+(name.value.trim()||'Not provided')+'\nCategory: '+category.value+'\n\nFeedback:\n'+comment.value.trim());}
+[comment,name,category].forEach(v=>{v.addEventListener('input',updateMail);v.addEventListener('change',updateMail);});
+send.onclick=e=>{if(!comment.value.trim()){e.preventDefault();fbstatus.textContent='Write a comment first.';comment.focus();return;}updateMail();fbstatus.textContent='Your email app should open a draft; press Send to deliver.';};
+updateMail();updateUI();positionCamera(.2);renderer.render(scene,camera);requestAnimationFrame(frame);
+window.__SXS_STREETS_QA__={state:()=>({mode,driving,completed,car:{x:car.x,z:car.z,speed:car.speed},player:{...p},buildingCount:buildings.length,street:streetName(),visibleMarkers:markers.filter(x=>!x.got).length,hasFeedback:!!el('comments')})};
+})();
+</script>
+</body></html>
