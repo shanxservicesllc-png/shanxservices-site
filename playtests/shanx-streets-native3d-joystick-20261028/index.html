@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"><meta name="theme-color" content="#102c29">
+<title>ShanX Streets | Homewood | SXS Interactive 3D Play</title>
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@6.16.0/dist/maplibre-gl.css">
+<style>
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#8fb4bf;font-family:system-ui,sans-serif;color:#eefdf5;touch-action:none}
+#map,#viewport{position:fixed;inset:0;width:100%;height:100%}#viewport{z-index:1;display:block;touch-action:none}
+#map{z-index:0;opacity:0;pointer-events:none}body.aerial #map{z-index:2;opacity:1;pointer-events:auto}body.aerial #viewport{display:none}
+#interface{position:fixed;z-index:6;left:0;right:0;top:0;pointer-events:none;display:flex;justify-content:space-between;gap:6px;padding:max(8px,env(safe-area-inset-top)) 8px 0}
+#identity,#status{background:#05211dd9;border:1px solid #6acc9b85;border-radius:12px;padding:9px 12px;backdrop-filter:blur(10px)}
+#identity small{color:#66e0a2;font-size:10px;letter-spacing:.09em;font-weight:700}#identity strong{font-size:clamp(14px,3vw,21px);display:block;white-space:nowrap}
+#status{font-size:11px;max-width:190px;line-height:1.4}
+#nav{position:fixed;z-index:6;top:85px;left:8px;right:8px;display:flex;gap:6px;flex-wrap:wrap;pointer-events:auto}
+button{color:#f0fff5;background:#0b3328dd;border:1px solid #75dbab9e;cursor:pointer;font:700 12px system-ui;border-radius:24px;padding:9px 13px;touch-action:none}
+button.current{background:#138655}button:focus-visible{outline:2px solid white}
+#ui{position:fixed;z-index:5;inset:0;pointer-events:none}body.aerial #ui{display:none}
+#stick{position:absolute;left:clamp(12px,4vw,35px);bottom:max(65px,env(safe-area-inset-bottom) + 46px);width:150px;height:150px;border-radius:100%;pointer-events:auto;touch-action:none;background:radial-gradient(circle,#193e3480,#0a211d89);border:2px solid #a0edc37d;box-shadow:inset 0 0 25px #0005}
+#knob{position:absolute;left:50%;top:50%;width:66px;height:66px;border-radius:50%;transform:translate(-50%,-50%);border:2px solid #b6ffddbb;background:radial-gradient(circle at 40% 35%,#4da579ed,#1c5949ed);box-shadow:0 3px 14px #00190ecb}
+#stick small{position:absolute;left:0;right:0;top:-22px;text-align:center;color:#d9ffe8;font-size:9px;letter-spacing:.12em}
+#run{position:absolute;right:18px;bottom:max(105px,env(safe-area-inset-bottom) + 80px);width:83px;height:83px;border-radius:50%;pointer-events:auto;font-size:15px;background:#21744cdb}
+#run.down{background:#2ab171}
+#camControls{position:absolute;right:14px;bottom:max(214px,env(safe-area-inset-bottom) + 187px);display:flex;flex-direction:column;gap:8px;pointer-events:auto}
+#camControls button{font-size:19px;width:48px;height:45px;border-radius:15px;padding:0}
+#lookHint{position:absolute;top:51%;right:10px;font-size:11px;color:#e6f4ee99;text-shadow:0 2px 6px #0018;pointer-events:none}
+#hud{position:fixed;z-index:7;left:50%;bottom:max(6px,env(safe-area-inset-bottom));transform:translateX(-50%);width:max-content;max-width:96vw;background:#041c18d9;border:1px solid #5db18a8f;border-radius:11px;padding:7px 10px;font-size:11px;line-height:1.35;text-align:center}
+#fault{position:fixed;z-index:8;left:8px;right:8px;top:137px;display:none;background:#301a15eb;border:1px solid #ffab7d;border-radius:10px;padding:10px;font-size:12px;line-height:1.4}
+#fault.show{display:block}body.aerial #hud{color:#e7ffef}
+#intro{position:fixed;z-index:3;left:50%;top:48%;transform:translate(-50%,-50%);background:#092b26ed;border:1px solid #90e2b8a1;border-radius:14px;padding:14px;text-align:center;min-width:220px;max-width:80vw;pointer-events:none}#intro[hidden]{display:none}
+#proof{position:fixed;z-index:9;top:136px;left:8px;width:min(370px,calc(100vw - 16px));max-height:60vh;overflow:auto;background:#052822f5;border:1px solid #85d6aa;border-radius:12px;padding:14px;line-height:1.5;font-size:12px;display:none}
+#proof.show{display:block}#proof h2{margin:0 0 7px;font-size:16px;color:#95edbd}#proof p{margin:7px 0}#proof a{color:#b4ffd3}
+@media(max-width:620px){#identity,#status{padding:7px}#status{font-size:10px;max-width:125px}#nav{top:74px;gap:5px}#nav button{padding:8px 9px;font-size:11px}#stick{width:136px;height:136px}#knob{width:60px;height:60px}#hud{font-size:10px}#proof{top:126px}#fault{top:126px}}
+</style>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.171.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.171.0/examples/jsm/"}}</script>
+</head><body>
+<div id="map" aria-label="Real Homewood map reference"></div><canvas id="viewport" aria-label="3D Homewood gameplay scene"></canvas>
+<div id="intro">SXS INTERACTIVE<br><strong>SHANX STREETS · HOMEWOOD</strong><p style="font-size:12px">Preparing a real 3D scene and mapped roads…</p></div>
+<div id="interface"><div id="identity"><small>SXS INTERACTIVE · GAME ENGINEERING</small><strong>SHANX STREETS <span style="color:#68daa6">/ HOMEWOOD</span></strong></div><div id="status">3D GAME WORLD<br>Loading geography…</div></div>
+<div id="nav"><button id="play" class="current">🎮 3D Play</button><button id="aerial">🛰️ Aerial Overview</button><button id="recenter">↺ Reset Position</button><button id="streetPhoto">📷 Google Street View ↗</button><button id="proofButton">ⓘ Proof</button></div>
+<div id="fault" role="status"></div><div id="proof">
+<h2>Proof Before Next | Native 3D</h2>
+<p><b>Engine:</b> Three.js perspective camera and WebGL-rendered 3D world, independent from the aerial photo map. Thumb joystick handles 360-degree speed/direction; drag anywhere on the right side to look.</p>
+<p><b>World:</b> OSM/OpenFreeMap mapped road and building geometry converted into original 3D mesh roads, houses, porches, trees, storefront forms, sidewalks and lighting. Individual facades are interpretive, not exact replicas.</p>
+<p><b>Still unverified:</b> performance, model appearance, accurate placement of each house and movement/collision on your actual tablet.</p>
+<p><b>Not built:</b> finished character art, vehicles with enter/exit animations, traffic, full physics and missions.</p>
+<p><b>Credits:</b> <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">© OpenStreetMap contributors / ODbL</a>. Aerial reference uses Esri World Imagery with its attribution; do not export those photos as game assets. Soldier character is a Three.js example placeholder.</p>
+</div>
+<div id="ui"><div id="stick"><small>MOVE</small><div id="knob"></div></div><button id="run">RUN</button><div id="camControls"><button id="closer" aria-label="Move camera closer">＋</button><button id="farther" aria-label="Move camera farther">－</button></div><div id="lookHint">Drag to look ↔</div></div>
+<div id="hud">3D scene loading · Actual game camera, not photo zoom</div>
+<script type="module" src="./world.js"></script></body></html>
