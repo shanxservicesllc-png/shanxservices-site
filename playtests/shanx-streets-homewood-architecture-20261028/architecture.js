@@ -150,7 +150,7 @@ export function attachArchitecture(map, maplibre, anchor) {
     for(const obj of [...root.children]){root.remove(obj);obj.traverse(x=>{if(x.geometry)x.geometry.dispose()});}
   }
   function update(){
-    if(!map.isStyleLoaded()||map.getZoom()<16){num=0;clear();return;}
+    if(!map.isStyleLoaded()||map.getZoom()<16){if(num){num=0;clear()}return;}
     const source=map.getSource('openmaptiles')?'openmaptiles':map.getSource('openfreemap')?'openfreemap':null;
     if(!source){warn='No building tile source';return;}
     const center=map.getCenter(),key=center.lng.toFixed(3)+':'+center.lat.toFixed(3);
@@ -177,7 +177,7 @@ export function attachArchitecture(map, maplibre, anchor) {
     onAdd(mp,gl){
       renderer=new THREE.WebGLRenderer({canvas:mp.getCanvas(),context:gl,antialias:true});
       renderer.autoClear=false;renderer.outputColorSpace=THREE.SRGBColorSpace;
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.5));
+      // Shared MapLibre canvas: do not resize it or alter its pixel ratio.
     },
     render(gl,args){
       if(!visible||num===0)return;
