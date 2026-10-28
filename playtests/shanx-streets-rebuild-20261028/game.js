@@ -56,7 +56,7 @@ for(const z of [-49,61])for(let x=-5;x<=5;x+=1.35){cube(scene,'#e9e5d9',x,.11,z+
 const houses=[];
 function roof(parent,width,depth,height){const shape=new THREE.Shape();shape.moveTo(-width/2,0);shape.lineTo(0,height);shape.lineTo(width/2,0);shape.closePath();
 const ext=new THREE.ExtrudeGeometry(shape,{depth:depth+1,bevelEnabled:false});ext.computeVertexNormals();
-const r=new THREE.Mesh(ext,material('#43494f'));r.position.set(0,0,-depth/2-.5);r.castShadow=true;r.receiveShadow=true;parent.add(r);}
+const r=new THREE.Mesh(ext,material('#43494f'));r.position.set(0,height,-depth/2-.5);r.castShadow=true;r.receiveShadow=true;parent.add(r);}
 function house(x,z,w=10,d=13,h=8,style='home',palette=0){
  const root=new THREE.Group();root.position.set(x,0,z);root.rotation.y=x>0?Math.PI/2:-Math.PI/2;scene.add(root);
  const facade=['#aa9b88','#8c938f','#b0a38d','#b5a48b'][palette%4],isShop=style==='shop';
@@ -218,7 +218,7 @@ function move(dt){
   const x=driven.x-Math.sin(driven.yaw)*driven.speed*dt,z=driven.z-Math.cos(driven.yaw)*driven.speed*dt;
   if(!vehicleBlocked(driven,x,z)){driven.x=x;driven.z=z;}else driven.speed=0;
   worldCarPosition(driven);player.x=driven.x;player.z=driven.z;player.yaw=driven.yaw;
-  cameraRig.yaw+=THREE.MathUtils.euclideanModulo(driven.yaw-cameraRig.yaw+Math.PI,Math.PI*2)-Math.PI<0?0:0; // player retains manual camera rotation
+  // Camera can be rotated independently while the driver steers.
   if(playerModel)playerModel.root.visible=false;
  }else{
   const mag=Math.max(1,Math.hypot(ix,iz)),dx=(Math.cos(cameraRig.yaw)*ix+Math.sin(cameraRig.yaw)*iz)/mag,dz=(-Math.sin(cameraRig.yaw)*ix+Math.cos(cameraRig.yaw)*iz)/mag;
@@ -315,7 +315,7 @@ async function assets(){
  catch(e){status('VEHICLE ASSET FAILED: '+String(e.message||e)+'. Reload to retry.');return;}
  driven=vehicle(vehicleAsset,car.x,car.z,'#346f89');worldCarPosition(driven);
  for(let i=0;i<3;i++){
-  const c=vehicle(vehicleAsset,i%2?3:-3,-90+i*60,['#7b7772','#634a45','#7a8a8e'][i]);
+  const c=vehicle(vehicleAsset,i%2?3:-3,-99+i*45,['#7b7772','#634a45','#7a8a8e'][i]);
   c.speed=i%2?-6:7;c.yaw=c.speed>0?Math.PI:0;traffic.push(c);worldCarPosition(c);
  }
  ready=true;status('3D character, vehicle, streets and collision systems ready.');
