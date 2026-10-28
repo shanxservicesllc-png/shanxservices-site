@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
+import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { clone as cloneSkinned } from 'three/addons/utils/SkeletonUtils.js';
 
 /* ShanX Streets · original browser game systems; no earlier Streets game code reused.
@@ -24,6 +25,7 @@ sun.position.set(-55,85,40);sun.castShadow=true;
 sun.shadow.mapSize.set(1024,1024);sun.shadow.camera.left=-90;sun.shadow.camera.right=90;sun.shadow.camera.top=90;sun.shadow.camera.bottom=-90;sun.shadow.camera.far=200;sun.shadow.bias=-.0006;scene.add(sun);
 const clock=new THREE.Clock();
 const loader=new GLTFLoader();
+loader.setMeshoptDecoder(MeshoptDecoder);
 // Ferrari glTF meshes use KHR_draco_mesh_compression; configure before loadAsync.
 const dracoLoader=new DRACOLoader();
 dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.7/');
@@ -170,12 +172,12 @@ function makeCharacter(gltf,x,z,kind='npc'){
  root.add(wrap);root.position.set(x,0,z);
  root.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;o.frustumCulled=false;}});
  const mixer=new THREE.AnimationMixer(model),clips=gltf.animations||[];
- // Use genuine, separate locomotion clips from the seven-clip model.
- // No slowed-down running masquerading as walking or idle.
+ // Rigged adult + matching Biped skeleton motion clips, sourced separately.
+ // Preserve animation tracks from their original skeleton and bind them to each clone.
  const idleSource=findClip(clips,['idle']);
- const walkSource=findClip(clips,['relaxed walk','brisk walk','walk']);
+ const walkSource=findClip(clips,['walk']);
  const runSource=findClip(clips,['run']);
- if(!idleSource||!walkSource||!runSource)throw Error('Civilian model lacks independent idle / walk / run clips. Available: '+clips.map(c=>c.name).join(', '));
+ if(!idleSource||!walkSource||!runSource)throw Error('Civilian animation package is missing idle, walk or run. Clips: '+clips.map(c=>c.name).join(', '));
  const idle=idleSource.clone(),walk=walkSource.clone(),run=runSource.clone();
  const acts={};
  for(const [label,clip] of Object.entries({idle,walk,run})){
@@ -389,18 +391,37 @@ $('send').onclick=e=>{if(!$('message').value.trim()){e.preventDefault();$('formS
 button.onclick=()=>{if(!ready)return;playing=true;$('overlay').hidden=true;mark('WELCOME TO THE BLOCK · WALK OR DRIVE');};
 async function assets(){
  const status=s=>loading.textContent=s;
- status('Loading textured civilian model with idle, walk and run animation (CC0)…');
+ status('Loading textured civilian avatar and Biped animation files…');
  let character;
- const civilianURL='https://www.innerscene.com/api/library/locomotion-collection-sam-3d-person-animated-dc23800f/download';
+ // CORS-enabled public .glb files documented by models.codelove.in/developers/.
+ // MIT license and attribution: models.codelove.in/models/business-male-01/
+ // This is a temporary licensed person model, NOT an owner likeness.
+ const civilianURL='https://models.codelove.in/models/business-male-01.glb';
+ const civilianBackupURL='https://models.codelove.in/models/business-male-02.glb';
+ const animationURLs={
+  idle:'https://models.codelove.in/animations/m_idle_neutral_01.glb',
+  walk:'https://models.codelove.in/animations/m_walk_neutral_01.glb',
+  run:'https://models.codelove.in/animations/m_run_neutral_01.glb'
+ };
  const carURL='https://threejs.org/examples/models/gltf/ferrari.glb';
- // Sam locomotion collection is a textured MakeHuman-derived CC0 civilian GLB
- // with independent idle / walk / run clips per publisher documentation.
- // Independent publisher, no ownership or personal likeness claim.
- // Network/CORS and actual tablet rendering remain acceptance gates.
- try{character=await loader.loadAsync(civilianURL);}
- catch(error){
-  status('CIVILIAN MODEL FAILED TO LOAD. The model host may block cross-origin GLB requests. Detailed cars are preserved in the previous playable version. '+String(error?.message||error));
-  console.error('Civilian GLB unavailable',error);return;
+ try{
+  try{character=await loader.loadAsync(civilianURL);}
+  catch(primaryErr){console.warn('Civilian model primary source failed; trying licensed backup',primaryErr);
+   character=await loader.loadAsync(civilianBackupURL);}
+  status('Civilian loaded · attaching idle, walk and run animations…');
+  const animationParts=await Promise.all(Object.entries(animationURLs).map(async ([motion,url])=>{
+   const glb=await loader.loadAsync(url);
+   if(!glb.animations?.length)throw new Error('No animation clip in '+motion+' source');
+   const clip=glb.animations[0].clone();clip.name=motion;return clip;
+  }));
+  character.animations=animationParts;
+ }catch(error){
+  const message='CIVILIAN ASSET ERROR: '+String(error?.message||error);
+  status(message+' · Check your internet connection and RETRY LOADING.');
+  button.disabled=false;button.textContent='↻ RETRY LOADING';
+  button.onclick=()=>location.reload();
+  console.error(message,error);
+  return;
  }
  playerModel=makeCharacter(character,player.x,player.z,'player');
  playerMixer=playerModel.mixer;animationState(playerModel,'idle');
@@ -421,9 +442,9 @@ async function assets(){
   c.waitTime=0;c.stuckCount=0;
   traffic.push(c);worldCarPosition(c);
  }
- ready=true;status('Rigged civilian, detailed model cars, streets, collision, and enter/drive/exit ready.');
+ ready=true;status('Loaded textured civilian and independent motions. Detailed vehicle and driving systems ready.');
  button.disabled=false;button.textContent='▶ ENTER THE STREETS';
 }
 camera.position.set(0,9,15);clock.getDelta();loop();
 assets().catch(err=>{loading.textContent='GAME INITIALIZATION ERROR: '+String(err.message||err);console.error(err);});
-window.__SHANX_STREETS_REBUILD_QA__={state:()=>({version:'asset-foundation-restored-1.4',civilianSource:'Innerscene Sam locomotion collection CC0 glTF',carsSource:'Three.js detailed Ferrari glTF',vehicleForward:driven?{sign:driven.modelForward,measured:driven.measuredFront}:null,ready,playing,driving:player.driving,characters:walkers.length+(playerModel?1:0),playerVisible:!!(playerModel&&playerModel.root.visible),vehicles:allCars.length,traffic:traffic.map(c=>({x:c.x,z:c.z,velocity:c.cruise,waiting:c.waiting,waitTime:c.waitTime})),houses:houses.length,fps:$('fps').textContent,animated:!!playerMixer}),stop:()=>playing=false};
+window.__SHANX_STREETS_REBUILD_QA__={state:()=>({version:'asset-foundation-restored-1.5',civilianSource:'CodeLove Businessman MIT meshopt + Biped clips',carsSource:'Three.js detailed Ferrari glTF',vehicleForward:driven?{sign:driven.modelForward,measured:driven.measuredFront}:null,ready,playing,driving:player.driving,characters:walkers.length+(playerModel?1:0),playerVisible:!!(playerModel&&playerModel.root.visible),vehicles:allCars.length,traffic:traffic.map(c=>({x:c.x,z:c.z,velocity:c.cruise,waiting:c.waiting,waitTime:c.waitTime})),houses:houses.length,fps:$('fps').textContent,animated:!!playerMixer}),stop:()=>playing=false};
