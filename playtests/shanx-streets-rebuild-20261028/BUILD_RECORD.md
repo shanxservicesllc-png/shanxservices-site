@@ -34,3 +34,17 @@ Current buildings and streets are a fictional scene, not the true Homewood stree
 
 ## Exit criteria for next release
 Get screenshot and test results on an actual phone/tablet. Replace temporary imported soldier and sports car with realistic civilian character and original sedan assets. Compare the visible scene to original San Andreas, update architecture and shading, improve world collision and car handling, and expand to GIS-grounded Homewood only after first believable street passes X's visual acceptance. Do not develop invented missions before visual acceptance.
+
+## Phone test findings and targeted V1.1 repair (2026-10-28)
+Owner recorded a ~31-second portrait-phone session and reported that the streets and cars **look significantly better**, but the player character was not visible, multiple vehicles looked like they drove backward, traffic stopped at crossing areas, and dark geometry flickered across the scene. The current fictional street arrangement was also judged geographically unlike Homewood Avenue, resembling Hamilton Avenue more. **No claim of completed graphics or gameplay acceptance.**
+
+Source changes in `game.js`:
+- Removed an unnecessary 180-degree visual yaw on the imported Ferrari. AI cars now have fixed positive/negative travel lanes with their render yaw aligned to motion, without reversing in response to contact.
+- Moved the player and drivable car starting positions to improve visibility and approach distance.
+- Lowered chase-camera height/pitch, disabled skinned-mesh frustum culling, and added building-volume checks to stop camera transitions into walls and roofs.
+- Replaced intersecting full-length road/sidewalk strips with roadway segments and curb breaks at both east/west crossings, preventing coplanar asphalt and sidewalk slabs over open cross streets.
+- Kept the existing visual assets, models, texture and lighting foundation unchanged. No new game was created.
+
+Evidence: owner video was inspected in this chat but not uploaded to GitHub. Code changes were committed, independently read back, JavaScript syntax and expected-source-marker checks passed. **Not yet verified** on device: visual character actually appearing, road/traffic corrections, all collision behavior, flicker elimination, and FPS.
+
+**NEXT separate geography stage:** obtain genuine Homewood 15208 road centerlines and intersection geometry from Pittsburgh GIS or OSM with provenance; compare to Google Maps/Street View as visual reference only, not an extractable texture/asset source. Rebuild street width, orientation, intersections and parcel placement. Do not call the current fictional block geographically faithful.
