@@ -4,7 +4,7 @@ export function createGameplay(map,ml,originLngLat,avatar,onStats=()=>{}) {
  const origin=ml.MercatorCoordinate.fromLngLat(originLngLat), unit=origin.meterInMercatorCoordinateUnits();
  const ll=(x,y)=>new ml.MercatorCoordinate(origin.x+x*unit,origin.y-y*unit).toLngLat();
  const $=x=>document.getElementById(x);
- let active=false,last=performance.now(),cameraYaw=Math.PI,cameraDistance=2.65,cameraHeight=2.7,drag=null,clipPolys=[],collisionsReady=false,lastCollisionX=Infinity,lastCollisionY=Infinity,lastCollisionAt=-Infinity;
+ let active=false,last=performance.now(),cameraYaw=Math.PI,cameraDistance=2.65,cameraHeight=2.7,drag=null,clipPolys=[],collisionsReady=false,lastCollisionX=Infinity,lastCollisionY=Infinity,lastCollisionAt=-Infinity,lastCollisionAttemptAt=-Infinity;
  let ox=0,oy=0,x=0,y=0,face=Math.PI,running=false,clashes=0,moving=false,viewChanged=false,walked=0;
  const keys=new Set();
  function inside(pt,poly) {
@@ -28,6 +28,7 @@ export function createGameplay(map,ml,originLngLat,avatar,onStats=()=>{}) {
  }
  function toLocal(coord){const m=ml.MercatorCoordinate.fromLngLat(coord);return [(m.x-origin.x)/unit,(origin.y-m.y)/unit];}
  function refreshCollision() {
+   lastCollisionAttemptAt=performance.now();
    const source=map.getSource('openmaptiles')?'openmaptiles':map.getSource('sxs-vector')?'sxs-vector':null;
    if(!source)return;
    let features;try{features=map.querySourceFeatures(source,{sourceLayer:'building'});}catch(e){return;}
@@ -115,7 +116,7 @@ export function createGameplay(map,ml,originLngLat,avatar,onStats=()=>{}) {
      }
      avatar.step({x,y,angle:face,run:sprint,moving},dt);
      if(moving||viewChanged){camera();viewChanged=false;}
-     if(now-lastCollisionAt>1250&&(Math.hypot(x-lastCollisionX,y-lastCollisionY)>20||now-lastCollisionAt>4500))refreshCollision();
+     if(now-lastCollisionAttemptAt>1250&&(Math.hypot(x-lastCollisionX,y-lastCollisionY)>20||now-lastCollisionAt>4500))refreshCollision();
      elapsed+=dt;frames++;
      if(now-lastStats>1000){lastStats=now;const p=ll(x,y);
        $('coords').textContent=p.lat.toFixed(5)+', '+p.lng.toFixed(5)+' · '+Math.round(frames/Math.max(.001,elapsed))+'fps JS · '+walked.toFixed(0)+'m walked';
