@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#111b25"><meta name="robots" content="noindex,nofollow,noarchive">
+<title>ShanX Streets | Homewood Rebuild</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#17232c;color:#ecf1f5;font:14px/1.45 system-ui,Arial,sans-serif;touch-action:none}
+button,textarea,input{font:inherit}button{color:inherit;cursor:pointer}
+#world{width:100%;height:100%;display:block;touch-action:none}
+#tint{position:fixed;inset:0;background:linear-gradient(0deg,#07111b63,transparent 28%,#10253c24 75%);pointer-events:none}
+#hud{position:fixed;top:max(8px,env(safe-area-inset-top));left:10px;right:10px;display:flex;align-items:start;gap:10px;z-index:6;pointer-events:none}
+#logo{background:#081923d6;border:1px solid #c4d5dd5a;border-radius:10px;padding:7px 12px;box-shadow:0 5px 22px #0007}
+#logo b{display:block;font-size:clamp(19px,3vw,29px);letter-spacing:-.06em;line-height:1}
+#logo b em{font-style:normal;color:#a7e0cd}#logo small{font-size:9px;letter-spacing:.12em;color:#d1dbe3}
+#location{margin-left:auto;max-width:49%;background:#091b29d7;border:1px solid #c9dce46a;border-radius:10px;padding:8px 11px;text-align:right;font-weight:800;font-size:11px}
+#location span{display:block;color:#c1d3df;font-size:10px;font-weight:500}
+#stats{position:fixed;top:87px;left:10px;z-index:5;background:#091a27c9;border:1px solid #ffffff35;border-radius:10px;padding:7px 10px;font-size:11px}
+#bar{position:fixed;right:10px;top:101px;z-index:8;display:flex;flex-direction:column;align-items:flex-end;gap:7px}
+.tools{padding:9px 12px;background:#0a2335e3;border:1px solid #c7e8e38a;border-radius:10px;font-size:11px;font-weight:800;box-shadow:0 5px 18px #0005}
+#mini{position:fixed;top:193px;right:11px;width:116px;height:116px;z-index:5;border-radius:9px;background:#122a35d8;border:1px solid #bad0c5a8}
+#thumb{position:fixed;left:13px;bottom:max(25px,env(safe-area-inset-bottom));width:clamp(122px,24vw,160px);height:clamp(122px,24vw,160px);border:2px solid #f4f8f6ae;border-radius:50%;z-index:9;background:#0d263b7a;display:grid;place-items:center;touch-action:none}
+#stick{width:50%;height:50%;border-radius:50%;background:linear-gradient(125deg,#e1eee8,#7291ad);border:2px solid #fff;box-shadow:0 9px 18px #001c2d8d;transform:translate(var(--x,0px),var(--y,0px));display:grid;place-items:center;font-weight:900;font-size:10px}
+#actions{position:fixed;right:11px;bottom:max(26px,env(safe-area-inset-bottom));display:flex;gap:8px;z-index:9}
+.action{width:clamp(62px,14vw,88px);height:clamp(62px,14vw,88px);border-radius:50%;border:2px solid #fff9;background:linear-gradient(150deg,#23435b,#0e2939);font-size:10px;font-weight:900;display:flex;flex-direction:column;align-items:center;justify-content:center;touch-action:none;user-select:none}
+.action strong{font-size:26px;line-height:1.1}.action:active{transform:scale(.95)}
+#use{background:linear-gradient(135deg,#a1d9c8,#437f8c);color:#112c37}
+#toast{position:fixed;top:45%;left:50%;transform:translate(-50%,-50%);max-width:80%;text-align:center;background:#081a28eb;border:1px solid #a1d8bf;border-radius:11px;padding:12px 16px;z-index:20;opacity:0;pointer-events:none;transition:opacity .2s;font-weight:750}
+#toast.visible{opacity:1}
+#overlay{position:fixed;inset:0;z-index:30;display:grid;place-items:center;overflow:auto;touch-action:pan-y;background:#07131fe5;padding:20px;backdrop-filter:blur(9px)}
+#overlay[hidden],#feedback[hidden],#dim[hidden]{display:none!important}
+#panel{width:min(580px,100%);max-height:94dvh;overflow:auto;background:linear-gradient(150deg,#1c3545,#101d2c);border:1px solid #accdb78e;padding:clamp(20px,5vw,34px);border-radius:20px;box-shadow:0 26px 70px #000b;touch-action:pan-y}
+#panel small{color:#b7d4c6;font-weight:900;letter-spacing:.13em}
+#panel h1{font-size:clamp(38px,8vw,60px);letter-spacing:-.07em;line-height:1.03;margin:10px 0}
+#panel h1 em{font-style:normal;color:#b9e8d6}
+#panel p{font-size:13px;line-height:1.62;color:#d2dbe2}
+#play{width:100%;border:0;border-radius:11px;background:linear-gradient(100deg,#a2d7ca,#e6caa2);color:#122c3b;padding:15px;margin-top:14px;font-size:16px;font-weight:950}
+#loading{font-size:11px;color:#f0d6a4;min-height:19px;margin-top:10px}
+#dim{position:fixed;inset:0;background:#06111dc9;z-index:40}
+#feedback{position:fixed;bottom:0;left:0;right:0;z-index:41;max-height:83dvh;overflow:auto;touch-action:pan-y;width:min(720px,100%);margin:auto;background:#122b3b;border:1px solid #c2e0d088;border-radius:21px 21px 0 0;padding:20px 23px max(25px,env(safe-area-inset-bottom))}
+#feedback h2{margin:0 0 7px}#feedback p{font-size:12px;line-height:1.5;color:#c7d7de}
+#feedback label{display:block;font-weight:800;font-size:12px;margin:12px 0 6px}
+#feedback input,#feedback textarea,#feedback select{display:block;width:100%;padding:11px;color:#fff;background:#071924;border:1px solid #93b9b2;border-radius:9px;touch-action:auto;user-select:text}
+#feedback textarea{min-height:105px;resize:vertical}
+#close{float:right;width:35px;height:35px;border-radius:50%;border:1px solid #aec7c5;background:#284454;font-size:20px}
+#send{display:inline-block;text-decoration:none;background:#a2decb;color:#12303b;border-radius:9px;font-weight:900;padding:12px 17px;margin-top:13px}
+#fine{position:fixed;bottom:3px;left:50%;transform:translateX(-50%);z-index:5;color:#ffffffcf;font-size:8px;width:54%;text-align:center;pointer-events:none}
+@media(max-width:540px){#stats{top:69px;font-size:9px}#bar{top:102px;right:6px;gap:4px}.tools{padding:7px;font-size:10px}#mini{top:188px;right:6px;width:95px;height:95px}#logo{padding:7px}#location{padding:6px;font-size:10px}#location span{font-size:8px}#thumb{left:8px}#actions{right:6px;gap:4px}#fine{font-size:7px;width:45%}}
+</style>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}</script>
+</head><body>
+<canvas id="world" aria-label="ShanX Streets original playable three dimensional urban world"></canvas><div id="tint"></div>
+<header id="hud"><div id="logo"><b>SHAN<em>X</em> STREETS</b><small>HOMEWOOD · BROWSER REBUILD</small></div><div id="location">N HOMEWOOD AVENUE<span>Fictionalized Pittsburgh 15208 neighborhood</span></div></header>
+<div id="stats">PLAYER · ON FOOT · <b id="fps">-- FPS</b></div>
+<div id="bar"><button class="tools" id="center">↻ CAMERA</button><button class="tools" id="view">◉ CAMERA VIEW</button><button class="tools" id="commentOpen">💬 REPORT / FEEDBACK</button></div>
+<canvas id="mini" width="220" height="220" aria-label="Interactive world minimap"></canvas>
+<div id="thumb" aria-label="Touch movement controller"><div id="stick">MOVE</div></div>
+<div id="actions"><button class="action" id="run"><strong>⚡</strong>RUN / BRAKE</button><button class="action" id="use"><strong>🚗</strong><span id="useText">ENTER CAR</span></button></div>
+<div id="toast" role="status" aria-live="polite"></div>
+<div id="fine">NEW BUILD · Independent game code · No previous Streets source reused</div>
+<div id="overlay"><section id="panel">
+<small>SHANX SERVICES · ORIGINAL GAME REBUILD</small><h1>HOMEWOOD.<br><em>AFTER HOURS.</em></h1>
+<p>Explore a fictional neighborhood inspired by Homewood, Pittsburgh. Walk around, turn the camera, approach a street car, get behind the wheel, and drive through the block. This build uses <b>actual imported animated 3D character and vehicle models</b> rather than sphere-built people and box cars.</p>
+<p><b>On phone:</b> left joystick to walk or steer. Drag an empty part of the scene to turn the view. Tap ENTER CAR near a parked car; tap again to exit. Hold RUN to sprint or brake. Recenter the camera at any time. <b>Keyboard:</b> WASD, Shift, E, R, V.</p>
+<p>This is a new playable technical build, not a claim of San Andreas-level art quality. Temporary demonstration assets are credited in project notes. Real neighborhood cartography and original final characters are later production stages.</p>
+<button id="play" disabled>LOADING THE 3D GAME…</button><div id="loading">Checking graphics and loading real models…</div>
+</section></div>
+<div id="dim" hidden></div><section id="feedback" role="dialog" aria-modal="true" aria-labelledby="feedbackHeading" hidden>
+<button id="close">×</button><h2 id="feedbackHeading">ShanX Streets feedback</h2><p>Tell us about graphics, characters, handling, or performance. This opens an email draft which you decide to send.</p>
+<label for="person">Tester nickname (optional)</label><input id="person" maxlength="60">
+<label for="subject">Feedback topic</label><select id="subject"><option>Character or NPC visuals</option><option>Car detail and handling</option><option>Street and building realism</option><option>Camera and controls</option><option>Performance or error</option><option>Overall quality</option></select>
+<label for="message">Your comments</label><textarea id="message" maxlength="1600"></textarea><a id="send" href="mailto:henry.shannon@shanxservices.com">✉ OPEN EMAIL DRAFT</a><p id="formStatus" role="status"></p>
+</section>
+<script type="module" src="./game.js"></script></body></html>
