@@ -48,3 +48,21 @@ Source changes in `game.js`:
 Evidence: owner video was inspected in this chat but not uploaded to GitHub. Code changes were committed, independently read back, JavaScript syntax and expected-source-marker checks passed. **Not yet verified** on device: visual character actually appearing, road/traffic corrections, all collision behavior, flicker elimination, and FPS.
 
 **NEXT separate geography stage:** obtain genuine Homewood 15208 road centerlines and intersection geometry from Pittsburgh GIS or OSM with provenance; compare to Google Maps/Street View as visual reference only, not an extractable texture/asset source. Rebuild street width, orientation, intersections and parcel placement. Do not call the current fictional block geographically faithful.
+
+## Owner phone recording #2: rendering and gameplay findings | 2026-10-28
+The owner uploaded a 44.52-second phone screen recording (`1000113310.mp4`). Visual inspection of sampled frames confirmed a large opaque black angular shape obscuring the upper/central viewport at times; at other times several imported Ferraris were visible with no on-foot player model evident. Traffic orientation/locking and moving controls remained problematic to the owner. Some of the owner's narration may be audible in the original clip, but no transcription was obtained; do not invent quoted audio. Owner praised the material/lighting improvements and freely draggable camera, which must be preserved.
+
+**GTA: San Andreas engineering benchmark research:** original 2004/2005 footage/source references and GameSpot original PC preview emphasize third-person readable walking, multiple camera distances, direct vehicle entry, straightforward accelerating/reversing and a traffic-inhabited 3D city. Sources:
+- Original PS2 version playthrough: https://www.youtube.com/watch?v=kcjL0cjmehc (description identifies PS2 gameplay). No claim of frame-by-frame watching this YouTube video.
+- Original PC gameplay/control review: https://www.gamespot.com/articles/grand-theft-auto-san-andreas-hands-on-impressions-pc-first-look/1100-6122561/
+- Original PC control reference: https://www.supercheats.com/guides/grand-theft-auto-san-andreas/pc-controls
+
+**V1.2 code-level changes:**
+- Source Ferrari wheel front/rear names now determine glTF forward axis and visual rotation, rather than guessed 0/180 degrees.
+- Player on foot may always move away from a car even when currently inside the near-contact radius, preventing an overlap trap.
+- Parked player car was moved out of the NPC driving lane, keeping the painted street/car art assets unchanged.
+- Chase camera moved closer/lower, view switch labeled, and imported vehicle volume included in camera obstruction checking to address the reported enormous black geometry.
+- Drag-anywhere camera control remains intact and animation/3D asset imports remain unchanged.
+- V1.2 cache-busted `game.js` for mobile page refresh.
+
+**Verification boundary:** GitHub source and index readbacks plus JavaScript parse/unit checks. Actual phone GPU rendering, player appearance, camera artifact elimination and traffic facing are still **NOT VERIFIED** by the assistant. Future real-device feedback supersedes static checks. Homewood map geometry is still a fictional layout; grounded city GIS alignment is a future independent task.
