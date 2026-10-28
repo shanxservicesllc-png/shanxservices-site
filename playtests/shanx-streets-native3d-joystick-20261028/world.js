@@ -33,7 +33,7 @@ const personRoot=new THREE.Group();scene.add(personRoot);
 const shadow=new THREE.Mesh(new THREE.CircleGeometry(.48,24),new THREE.MeshBasicMaterial({color:0x112e22,transparent:true,opacity:.3,depthWrite:false}));
 shadow.rotation.x=-Math.PI/2;shadow.position.y=.035;scene.add(shadow);
 let modelReady=false,modelError='',clips={},mixer=null,playing=null,spawned=false,roadsLoaded=false,buildingsLoaded=false,worldTiles=0,worldUpdated=0,mapDataError='',lastTileMove=0;
-let changed=false,buildings=[],roadSegments=[],seenBuilding=new Set(),seenRoad=new Set(),placeLabel='Homewood';
+let changed=false,buildings=[],roadSegments=[],seenBuilding=new Set(),seenRoad=new Set(),placeLabel='Homewood',lastTileCenter=[0,0];
 const player={x:0,n:0,heading:0,distance:0,angle:0,walkSpeed:3,runSpeed:6.2,active:true};
 let cameraHeading=.25,cameraDist=4.2,cameraHeight=2.5,verticalLook=.15;
 let lastTime=performance.now(),timeAccumulator=0,frameCount=0,fps=0,wallHits=0;
@@ -214,7 +214,7 @@ function collectFeatures(){
  if(br.length)buildingFeatures(br);if(rr.length)lineFeatures(rr);
  if(buildings.length!==oldB||roadSegments.length!==oldR){
   worldTiles++;worldUpdated=performance.now();buildingsLoaded=buildings.length>0;roadsLoaded=roadSegments.length>0;
-  rebuildNearby();
+  rebuildNearby(true);
  }
  if(!roadsLoaded&&rr.length===0)mapDataError='Road tile data has not arrived; 3D street geometry is incomplete.';
  if(!buildingsLoaded&&br.length===0)mapDataError='Building tile data has not arrived; 3D facades are incomplete.';
@@ -362,8 +362,8 @@ function chooseRoadSpawn(){
 function importTilesTick(){
  if(!roadsLoaded||!buildingsLoaded){collectFeatures();return}
  const now=performance.now();
- if(now-lastTileMove>2400&&Math.hypot(player.x-builtCenter[0],player.n-builtCenter[1])>45){
-  lastTileMove=now;
+ if(now-lastTileMove>2400&&Math.hypot(player.x-lastTileCenter[0],player.n-lastTileCenter[1])>65){
+  lastTileMove=now;lastTileCenter=[player.x,player.n];
   map.jumpTo({center:toGeo(player.x,player.n),zoom:17.4,pitch:0,bearing:0});
  }
  if(now-worldUpdated>1800)collectFeatures();
@@ -484,7 +484,7 @@ function loop(now){
   renderer.render(scene,camera);
   frameCount++;timeAccumulator+=dt;
   if(timeAccumulator>=1){fps=Math.round(frameCount/timeAccumulator);frameCount=0;timeAccumulator=0;updateUI();}
-  if(roadsLoaded&&!spawned)chooseRoadSpawn();
+  if(roadsLoaded&&buildingsLoaded&&!spawned)chooseRoadSpawn();
   if(now-lastFootprintCheck>2400){lastFootprintCheck=now;importTilesTick();}
  }
  requestAnimationFrame(loop);
