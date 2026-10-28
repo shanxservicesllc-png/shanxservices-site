@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"><title>ShanX Streets Homewood | Close Camera & Free Roam Review</title><meta name="theme-color" content="#071c16">
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@6.16.0/dist/maplibre-gl.css">
+<style>
+*{box-sizing:border-box}html,body,#map{margin:0;height:100%;width:100%;overflow:hidden;font:14px system-ui;color:#e5ffef;background:#061813}body{touch-action:none}#map{position:fixed;inset:0}
+#shade{position:fixed;inset:0;pointer-events:none;background:linear-gradient(#041a12b9,transparent 24%,transparent 74%,#03150faf)}
+#head{position:fixed;left:10px;right:10px;top:max(9px,env(safe-area-inset-top));display:flex;justify-content:space-between;gap:8px;pointer-events:none}
+#head>div{background:#061e19dd;border:1px solid #54b98c72;padding:9px 12px;border-radius:11px;backdrop-filter:blur(10px)}#head b{font-size:clamp(15px,4vw,22px)}#head small{display:block;color:#74e8ae;font-weight:700;letter-spacing:.08em;font-size:10px}#mode{font-size:11px;max-width:190px;text-align:right;color:#d5e4de}
+#toolbar{position:fixed;left:10px;top:83px;display:flex;gap:6px;flex-wrap:wrap}button{color:#eaffef;background:#103d2ddd;border:1px solid #65c69a77;touch-action:none;cursor:pointer;-webkit-tap-highlight-color:transparent}button:focus-visible{outline:2px solid white;outline-offset:2px}.pill{border-radius:30px;padding:10px 12px;font-size:12px;font-weight:750}.pill.active{background:#238d61;border-color:#b5ffca}
+#panel{position:fixed;left:10px;top:170px;max-width:min(360px,calc(100vw - 20px));max-height:48vh;overflow:auto;border-radius:11px;background:#071e18f5;border:1px solid #49a67f90;padding:13px;line-height:1.55;display:none;box-shadow:0 16px 30px #0008}#panel.open{display:block}#panel h2{color:#9cf3c7;font-size:16px;margin:0 0 6px}#panel p{margin:6px 0 11px}#panel a{color:#98ffce}#panel small{color:#adccc0}
+#help{position:fixed;bottom:max(11px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);max-width:97vw;width:600px;border-radius:9px;background:#061f1ade;border:1px solid #5eaf88aa;padding:8px;text-align:center;font-size:11px}
+#walk{display:none;position:fixed;inset:0;pointer-events:none}#walk.show{display:block}#look{position:absolute;right:0;top:23%;bottom:20%;width:52%;pointer-events:auto;touch-action:none}#cross{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);color:#e6fff5ba;font-size:22px;text-shadow:0 1px 6px black}
+#dpad{position:absolute;bottom:max(63px,env(safe-area-inset-bottom) + 59px);left:12px;pointer-events:auto;display:grid;grid-template-columns:repeat(3,54px);grid-template-rows:repeat(2,54px);gap:5px}#dpad button{border-radius:13px;font-size:23px;font-weight:850;background:#10372edb}#dpad button.down{background:#2aa375}#dpad button[data-k="KeyW"]{grid-area:1/2}#dpad button[data-k="KeyA"]{grid-area:2/1}#dpad button[data-k="KeyS"]{grid-area:2/2}#dpad button[data-k="KeyD"]{grid-area:2/3}
+#run{position:absolute;right:12px;bottom:max(83px,env(safe-area-inset-bottom) + 68px);width:70px;height:70px;border-radius:50%;pointer-events:auto;font-size:11px;font-weight:800;background:#194b37da}
+#zoomControls{position:absolute;right:13px;bottom:max(167px,env(safe-area-inset-bottom) + 151px);display:flex;gap:8px;pointer-events:auto}
+#zoomControls button{width:51px;height:43px;border-radius:13px;font-size:24px;font-weight:800;background:#0c392dda}
+#coords{position:fixed;bottom:max(10px,env(safe-area-inset-bottom));right:8px;font-size:11px;padding:6px;background:#061b18dc;border-radius:7px;max-width:72%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#loading{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);border:1px solid #68c597;background:#071e19f5;border-radius:13px;padding:18px;text-align:center;line-height:1.5;min-width:220px;max-width:80vw}#loading small{display:block;color:#c4ded0;margin-top:8px}#loading[hidden],#coords[hidden],#help[hidden]{display:none}
+@media(max-width:540px){#head{left:5px;right:5px}#head>div{padding:7px}#head b{font-size:16px}#mode{max-width:120px;font-size:10px}#toolbar{top:76px;left:5px;right:4px}.pill{font-size:11px;padding:8px 9px}#panel{top:166px;left:5px}#help{font-size:10px;padding:6px}}
+</style><script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.171.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.171.0/examples/jsm/"}}</script></head><body>
+<div id="map" aria-label="3D map of real Homewood streets"></div><div id="shade"></div>
+<div id="loading"><b>SHANX STREETS · HOMEWOOD</b><small>Loading mapped streets and buildings…</small></div>
+<div id="head"><div><small>SXS INTERACTIVE · LOCATION LAB</small><b>SHANX STREETS <span style="color:#63e3a4">/ HOMEWOOD</span></b></div><div id="mode">3D NEIGHBORHOOD SURVEY<br>Real street map geometry</div></div>
+<div id="toolbar"><button class="pill" id="skyview">🛰️ Aerial</button><button class="pill active" id="survey">🏘️ 3D Houses</button><button class="pill" id="street">🎮 Walk / Run</button><button class="pill" id="reset">↺ Reset</button><button class="pill" id="missions">◇ Missions</button><button class="pill" id="proof">ⓘ Proof</button><button class="pill" id="streetPhoto">📷 Real Street View ↗</button></div>
+<div id="panel" aria-live="polite"></div>
+<div id="walk"><div id="cross">+</div><div id="look" aria-label="Drag here to look around"></div><div id="dpad"><button data-k="KeyW">↑</button><button data-k="KeyA">←</button><button data-k="KeyS">↓</button><button data-k="KeyD">→</button></div><button id="run">RUN</button><div id="zoomControls"><button id="zoomIn" aria-label="Move camera closer">＋</button><button id="zoomOut" aria-label="Move camera farther">－</button></div></div>
+<div id="help">REAL MAP · Camera zoom controls + walk/run across blocks · Experimental game mode</div><div id="coords" hidden></div>
+<script type="module">
+import * as ml from 'https://unpkg.com/maplibre-gl@6.16.0/dist/maplibre-gl.mjs';
+const ORIGIN=[-79.8929402,40.4568844]; // 7321 Frankstown Avenue per City of Pittsburgh
+const M=ml.MercatorCoordinate.fromLngLat(ORIGIN),scale=M.meterInMercatorCoordinateUnits();
+
+const ll=(x,y)=>new ml.MercatorCoordinate(M.x+x*scale,M.y-y*scale).toLngLat();
+const $=s=>document.getElementById(s);
+let mode='survey',ready=false,architecture=null,houseError='',avatar=null,gameplay=null,avatarStatus={loading:true};
+const map=new ml.Map({container:'map',style:'https://tiles.openfreemap.org/styles/liberty',center:ORIGIN,zoom:17.2,pitch:62,bearing:-22,maxPitch:95,centerClampedToGround:false,canvasContextAttributes:{antialias:true}});
+const texts={
+ missions:'<h2>Optional mission modules</h2><p>Freely explore even if you never start a mission.</p><p><b>Research concepts:</b> neighborhood cleanup, community celebration, a small-business delivery, and crosswalk improvements.</p><p>These are future fictional mission outlines, not playable missions yet. Public events may inspire stories; private residents will not be identified without permission.</p>',
+ proof:'<h2>Proof Before Next · Camera and Roaming Correction</h2><p><b>Changed:</b> The camera is now positioned behind and above the avatar with real-world coordinates rather than using a fixed distant map zoom. Plus and minus change follow distance. The collision and authored-building windows now follow the player as they move into new blocks. Walking speed improved and meters traveled shown.</p><p><b>Unverified:</b> Character visibility, long-range streaming, input handling and performance on Android require real device acceptance.</p><p><b>New experiment:</b> Real skinned 3D human placeholder with idle/walk/run clip blending, mobile third-person camera, WASD/touch and mapped building-boundary collision once vector tiles load. Those conditions require runtime verification; source alone is not proof.</p><p><b>Not yet built:</b> production civilian character, verified road-safe spawn, enterable cars/doors, suspension, traffic AI, NPC routines, missions and address-perfect house facades.</p><p><b>3D Houses:</b> Experimental original roof, porch, window, door, step and storefront geometry fitted to mapped footprints. Roofs and facades are approximations, NOT verified address by address. Android rendering and real-world accuracy require further testing.</p><p><b>Aerial mode:</b> Esri World Imagery. This displays photographs of actual roofs, lots and roads, NOT downloadable or reusable game textures. Street View opens Google Maps for visual comparison. Native map-style block extrusions are hidden; authored house meshes are experimental, not a production-ready city.</p><p><b>Built:</b> Real neighborhood roads, mapped 3D building footprints, overhead 3D inspection, and a movable first-person street camera using a proven MapLibre map engine.</p><p><b>Not built:</b> final civilian model, full rigid-body character physics, doors/seats, drivable cars, AI pedestrians, accurate individual facades, full mission gameplay. The current character is an animated placeholder.</p><p><b>Important:</b> this third-person test checks mapped footprint wall boundaries, not actual dynamic rigid-body simulation. Unreal and the approved architecture reference remain untouched.</p><p><small>Maps: OpenStreetMap / <a href="https://openfreemap.org/" target="_blank" rel="noopener">OpenFreeMap</a>. Building heights are dependent on available map data. No proprietary Google 3D meshes used. Original Unreal project untouched.</small></p>'
+};
+function pane(name){const p=$('panel'),same=p.classList.contains('open')&&p.dataset.name===name;p.classList.toggle('open',!same);p.dataset.name=name;if(!same)p.innerHTML=texts[name];}
+$('missions').onclick=()=>pane('missions');$('proof').onclick=()=>pane('proof');
+function addBuildings(){try{let source='openmaptiles';if(!map.getSource(source)){source='sxs-vector';map.addSource(source,{type:'vector',url:'https://tiles.openfreemap.org/planet'});}const label=map.getStyle().layers.find(x=>x.type==='symbol'&&x.layout?.['text-field'])?.id;
+map.addLayer({id:'sxs-3d-buildings',type:'fill-extrusion',source,'source-layer':'building',minzoom:14.5,filter:['!=',['get','hide_3d'],true],paint:{'fill-extrusion-color':['interpolate',['linear'],['coalesce',['get','render_height'],8],0,'#bca991',15,'#a5aa99',50,'#567a68'],'fill-extrusion-height':['interpolate',['linear'],['zoom'],14.5,0,15.4,['max',4,['coalesce',['get','render_height'],9]]],'fill-extrusion-base':['coalesce',['get','render_min_height'],0],'fill-extrusion-opacity':.92}},label);
+}catch(e){console.warn('3D extrusion issue',e);}}
+
+function setMode(v) {
+ if(!ready)return;mode=v;
+ $('skyview').classList.toggle('active',v==='aerial');
+ $('survey').classList.toggle('active',v==='survey');
+ $('street').classList.toggle('active',v==='walk');
+ $('walk').classList.toggle('show',v==='walk');
+ $('help').hidden=v==='walk';$('coords').hidden=v!=='walk';
+ $('help').textContent=v==='aerial'?'TRUE AERIAL VIEW · Actual roof photos':v==='survey'?'ORIGINAL ARCHITECTURE STUDY · Pitched roofs, porches, windows, doors':'';
+ if(map.getLayer('sxs-aerial'))map.setLayoutProperty('sxs-aerial','visibility','visible');
+ for(const layer of map.getStyle().layers.filter(l=>l.type==='fill-extrusion'))
+  if(map.getLayer(layer.id))map.setLayoutProperty(layer.id,'visibility','none');
+ architecture?.setVisible(v!=='aerial');
+ if(v==='walk'){
+   map.dragPan.disable();map.dragRotate.disable();map.scrollZoom.disable();
+   map.touchZoomRotate.disable();map.doubleClickZoom.disable();map.keyboard.disable();
+   if(gameplay){gameplay.enable();$('mode').innerHTML=avatar?.ready?'CLOSE THIRD-PERSON CAMERA<br>WALK / RUN · + / - to zoom':'THIRD-PERSON WALK<br>Loading character…';}
+   else $('mode').textContent='Loading third-person engine…';
+ } else {
+   gameplay?.disable();
+   map.dragPan.enable();map.dragRotate.enable();map.scrollZoom.enable();
+   map.touchZoomRotate.enable();map.doubleClickZoom.enable();
+   map.jumpTo({center:gameplay?.position||ORIGIN,zoom:v==='aerial'?18.1:17.8,pitch:v==='aerial'?0:62,bearing:-22});
+   $('mode').innerHTML=v==='aerial'?'REAL AERIAL PHOTO<br>Inspect actual rooftops':'3D HOUSE MODELS<br>Original interpretive architecture';
+ }
+}
+$('survey').onclick=()=>setMode('survey');
+$('street').onclick=()=>setMode('walk');
+$('skyview').onclick=()=>setMode('aerial');
+$('streetPhoto').onclick=()=>{const p=gameplay?.position||map.getCenter(),u='https://www.google.com/maps/@?api=1&map_action=pano&viewpoint='+p.lat.toFixed(7)+','+p.lng.toFixed(7);window.open(u,'_blank','noopener,noreferrer');};
+$('reset').onclick=()=>{if(mode==='walk')gameplay?.reset();else map.flyTo({center:ORIGIN,zoom:18,pitch:mode==='aerial'?0:62,bearing:-22});};
+function gameplayStatus(st) {
+ if(mode!=='walk')return;
+ const state=avatarStatus?.error?'CHARACTER LOAD FAILED':avatarStatus?.ready?'CLOSE THIRD-PERSON VIEW':'LOADING ANIMATED CHARACTER';
+ $('mode').innerHTML=state+'<br>'+(st.collisionData?'BUILDING FOOTPRINT BOUNDARIES':'COLLISION DATA NOT YET AVAILABLE');
+}
+map.on('load',()=>{ready=true;addBuildings();map.addSource('sxs-aerial-source',{type:'raster',tiles:['https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],tileSize:256,maxzoom:19,attribution:'Imagery © Esri, Maxar, Earthstar Geographics and the GIS User Community'});const l=map.getStyle().layers.find(x=>x.type==='symbol')?.id;map.addLayer({id:'sxs-aerial',type:'raster',source:'sxs-aerial-source',paint:{'raster-opacity':1}},l);$('loading').hidden=true;setMode('walk');
+import('./architecture.js').then(mod=>{architecture=mod.attachArchitecture(map,ml,ORIGIN);architecture.setVisible(mode!=='aerial');}).catch(e=>{houseError=String(e);console.warn('Architecture integration not loaded',e);});
+Promise.all([import('./avatar.js'),import('./gameplay.js')]).then(([av,gm])=>{
+ avatar=av.attachAvatar(map,ml,ORIGIN,st=>{avatarStatus=st;gameplayStatus({collisionData:gameplay?.collisionData||false});});
+ gameplay=gm.createGameplay(map,ml,ORIGIN,avatar,gameplayStatus);
+ if(mode==='walk')gameplay.enable();
+}).catch(e=>{avatarStatus={error:String(e)};console.error('Gameplay module error',e);$('mode').textContent='GAMEPLAY LOAD ERROR · '+String(e).slice(0,75);});});
+map.on('error',e=>{console.warn('Map loading issue',e.error);if(!ready)$('loading').innerHTML='<b>MAP DATA UNAVAILABLE</b><small>Network access to OpenFreeMap is required. Reconnect and reload.</small>'});
+window.__sxsReview={get ready(){return ready},get mode(){return mode},get threeDBuildings(){return architecture?.count||0},get architectureError(){return houseError||architecture?.error||null},get avatarReady(){return avatar?.ready||false},get avatarError(){return avatar?.error||avatarStatus.error||null},get clips(){return avatar?.clips||[]},get collisionData(){return gameplay?.collisionData||false},get cameraDistance(){return gameplay?.cameraDistance||null},get distanceWalked(){return gameplay?.distanceWalked||0},get position(){return gameplay?.position||map.getCenter()}};
+</script></body></html>
