@@ -345,7 +345,7 @@ f.addEventListener('keydown',e=>{e.stopPropagation();if(e.key==='Escape')hideFB(
 function updateMail(){send.href='mailto:henry.shannon@shanxservices.com?subject='+encodeURIComponent('ShanX Streets 3D Homewood Alpha feedback')+'&body='+encodeURIComponent('Game: ShanX Streets 3D Homewood Alpha 0.1\nTester: '+(name.value.trim()||'Not provided')+'\nCategory: '+category.value+'\n\nFeedback:\n'+comment.value.trim());}
 [comment,name,category].forEach(v=>{v.addEventListener('input',updateMail);v.addEventListener('change',updateMail);});
 send.onclick=e=>{if(!comment.value.trim()){e.preventDefault();fbstatus.textContent='Write a comment first.';comment.focus();return;}updateMail();fbstatus.textContent='Your email app should open a draft; press Send to deliver.';};
-updateMail();updateUI();positionCamera(.2);renderer.render(scene,camera);requestAnimationFrame(frame);
+updateMail();updateUI();positionCamera(.2);renderer.render(scene,camera);el('loading').style.display='none';requestAnimationFrame(frame);
 window.__SXS_STREETS_QA__={state:()=>({mode,driving,completed,car:{x:car.x,z:car.z,speed:car.speed},player:{...p},buildingCount:buildings.length,street:streetName(),visibleMarkers:markers.filter(x=>!x.got).length,hasFeedback:!!el('comments')})};
 })();
 </script>
