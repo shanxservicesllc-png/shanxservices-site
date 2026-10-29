@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#091d27"><meta name="robots" content="noindex,nofollow">
+<title>ShanX Streets | PlayCanvas Engine Preview</title>
+<style>
+:root{font-family:system-ui,Arial,sans-serif;color:#f1f8f5;color-scheme:dark}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;width:100%;margin:0;background:#102630;overflow:hidden;touch-action:none}
+button{font:inherit;font-weight:800;touch-action:manipulation;color:inherit;cursor:pointer}
+#app{width:100%;height:100%;display:block;touch-action:none}
+#vignette{position:fixed;inset:0;pointer-events:none;background:linear-gradient(to bottom,#04151b44,transparent 24%,transparent 62%,#0611165a)}
+#brand{position:fixed;top:max(env(safe-area-inset-top),10px);left:10px;padding:9px 13px;border:1px solid #b9e6c357;background:#06231fdd;border-radius:12px;pointer-events:none;box-shadow:0 5px 20px #0008;z-index:2}
+#brand strong{display:block;font-size:clamp(18px,4vw,27px);letter-spacing:-.04em;line-height:1.04}
+#brand small{font-size:9px;letter-spacing:.16em;color:#b4d6c5}
+#telemetry{position:fixed;top:83px;left:10px;z-index:2;max-width:55vw;padding:6px 9px;border-radius:9px;background:#092b29db;border:1px solid #badcca47;font-size:11px;line-height:1.5;pointer-events:none}
+#tools{position:fixed;top:max(env(safe-area-inset-top),10px);right:10px;z-index:5;display:grid;gap:7px;max-width:46vw}
+.tool{background:#09272bdc;border:1px solid #c0d6d28a;border-radius:10px;padding:10px 11px;font-size:11px;box-shadow:0 5px 15px #0005}
+#zoom{display:flex;justify-content:end;gap:7px}
+#zoom button{font-size:19px;min-width:42px;min-height:42px}
+#status{position:fixed;top:135px;left:10px;right:10px;margin:auto;max-width:530px;z-index:2;text-align:center;font-size:11px;line-height:1.4;background:#0b3031c7;border-radius:10px;padding:7px 10px;pointer-events:none}
+#status:empty{display:none}
+#joy{position:fixed;bottom:max(24px,env(safe-area-inset-bottom));left:15px;width:clamp(128px,24vw,174px);aspect-ratio:1;border:2px solid #cceae0a9;border-radius:50%;background:#0b30336b;display:grid;place-items:center;z-index:5;touch-action:none}
+#knob{width:53%;height:53%;border:2px solid #f8fff8;background:radial-gradient(circle at 35% 25%,#a1ddca,#357a78);border-radius:50%;box-shadow:0 5px 18px #062c24aa;display:grid;place-items:center;font-size:10px;user-select:none;pointer-events:none}
+#actions{position:fixed;right:15px;bottom:max(28px,env(safe-area-inset-bottom));display:flex;gap:8px;z-index:5}
+.action{height:clamp(73px,16vw,95px);width:clamp(73px,16vw,95px);border-radius:50%;background:linear-gradient(140deg,#1e4c54,#052c39);border:2px solid #c0e6ddad;font-size:10px;line-height:1.5;box-shadow:0 8px 20px #0008;user-select:none}
+.action span{display:block;font-size:23px}
+#use{background:linear-gradient(130deg,#a8e4ca,#3c968e);color:#06231e}
+#overlay{position:fixed;inset:0;z-index:20;overflow:auto;display:grid;place-items:center;padding:24px;background:linear-gradient(150deg,#051a1fea,#0d2b33e9);touch-action:pan-y}
+#overlay[hidden]{display:none}
+#panel{max-width:550px;width:100%;padding:clamp(25px,5vw,40px);background:#071d20e9;border:1px solid #b2caba79;border-radius:20px;box-shadow:0 20px 60px #000b;text-align:center}
+#eyebrow{font-size:11px;font-weight:900;letter-spacing:.2em;color:#a2e3bd}
+h1{font-size:clamp(37px,7vw,60px);line-height:.97;letter-spacing:-.055em;margin:15px 0 7px}
+h1 em{color:#a8edbd;font-style:normal}
+#subtitle{color:#e9c98b;font-weight:800;font-size:12px;letter-spacing:.15em;margin-bottom:24px}
+#intro{font-size:13px;color:#bcd3ce;line-height:1.65;margin:0 auto 16px;max-width:440px}
+#bootState{font-size:12px;color:#e7f4ed;line-height:1.4;min-height:38px;margin:17px 0 8px}
+#enter{display:block;width:100%;padding:17px 15px;background:#a0e8c1;border:0;border-radius:12px;color:#073027;letter-spacing:.05em;font-size:14px}
+#enter:disabled{opacity:.47}
+#retry{padding:9px 16px;margin:10px;background:#25433f;color:white;border:1px solid #92b3a1;border-radius:8px}
+#error{margin-top:12px;padding:10px;border-radius:8px;background:#3e1f23;color:#facbcb;white-space:pre-wrap;overflow-wrap:anywhere;text-align:left;font:11px ui-monospace,monospace;max-height:160px;overflow:auto}
+#caption{font-size:10px;line-height:1.6;color:#9fb6ae;margin:14px 0 0}
+#toast{position:fixed;top:48%;left:50%;transform:translate(-50%,-50%);padding:10px 15px;border-radius:10px;border:1px solid #b2e8c3;background:#0a2429ed;pointer-events:none;opacity:0;transition:opacity .15s;z-index:7;text-align:center;max-width:83%}
+#toast.show{opacity:1}
+@media(max-width:500px){#status{top:126px;max-width:74%}#tools{max-width:54vw}#telemetry{top:78px}}
+</style>
+</head><body>
+<canvas id="app" aria-label="ShanX Streets PlayCanvas 3D neighborhood game"></canvas><div id="vignette"></div>
+<div id="brand"><small>SXS INTERACTIVE · PLAYCANVAS</small><strong>SHANX STREETS</strong></div>
+<div id="telemetry">Engine starting…</div>
+<div id="tools"><button class="tool" id="view">◉ CHASE / WIDE / AERIAL</button><div id="zoom"><button class="tool" id="minus" title="Zoom out">−</button><button class="tool" id="plus" title="Zoom in">+</button></div><button class="tool" id="recenter">↻ RECENTER VIEW</button></div>
+<div id="status">Initializing PlayCanvas WebGL2 engine…</div>
+<div id="joy" aria-label="360 degree analog joystick"><div id="knob">MOVE</div></div>
+<div id="actions"><button class="action" id="run"><span>⚡</span>RUN / BRAKE</button><button class="action" id="use"><span>🚗</span><span id="useText" style="font-size:10px">ENTER CAR</span></button></div>
+<div id="toast" role="status"></div>
+<div id="overlay" role="dialog" aria-modal="true" aria-label="ShanX Streets startup"><section id="panel">
+<div id="eyebrow">SXS INTERACTIVE · PLAYCANVAS ENGINE</div>
+<h1>SHANX <em>STREETS</em></h1><div id="subtitle">HOMEWOOD · PITTSBURGH</div>
+<p id="intro">A separate 3D-engine evaluation. Explore the streets at ground level, step into a detailed imported car, or pull the camera out for a GTA-style neighborhood overview. The older builds stay intact.</p>
+<div id="bootState">Loading the PlayCanvas renderer and world…</div>
+<button id="enter" disabled>BUILDING THE STREETS…</button><button id="retry" hidden>RETRY LOADING</button><pre id="error" hidden></pre>
+<p id="caption">PlayCanvas Engine 2.23.3 · Original playable prototype · Third-party car and character are temporary reference assets, not production-ready ShanX art.</p>
+</section></div>
+<script type="module" src="./game.js?v=playcanvas-first-1"></script>
+</body></html>
