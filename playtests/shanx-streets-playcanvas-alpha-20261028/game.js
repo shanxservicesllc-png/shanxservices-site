@@ -185,7 +185,7 @@ function diagnostics(dt){
  state.distance=Math.round(walked);$('telemetry').textContent=state.engine+' · '+state.frameRate+' FPS · '+(driving?'DRIVING':'ON FOOT')+' · '+state.distance+'m · '+state.mode+' · car:'+state.car+' · character:'+state.avatar;}
 }
 async function loadCar(){
- const list=['https://threejs.org/examples/models/gltf/ferrari.glb','https://cdn.jsdelivr.net/gh/mrdoob/three.js@r170/examples/models/gltf/ferrari.glb'];
+ const list=['https://developer.playcanvas.com/assets/porsche-911-carrera-4s.glb','https://threejs.org/examples/models/gltf/ferrari.glb','https://cdn.jsdelivr.net/gh/mrdoob/three.js@r170/examples/models/gltf/ferrari.glb'];
  for(const url of list)try{
    report('Loading the detailed imported vehicle…');
    const asset=await glbAsset(url);car=placeGlb(asset,'Detailed 3D imported car',4.65,'z');
@@ -221,7 +221,7 @@ async function start(){
   light.setEulerAngles(50,30,0);app.root.addChild(light);
   makeWorld();
   if(meshCount<90)throw Error('Scene lacks neighborhood geometry: '+meshCount+' meshes');
-  pc.dracoInitialize({jsUrl:'https://www.gstatic.com/draco/versioned/decoders/1.5.7/draco_wasm_wrapper.js',wasmUrl:'https://www.gstatic.com/draco/versioned/decoders/1.5.7/draco_decoder.wasm',lazyInit:true});
+  pc.dracoInitialize({jsUrl:'https://developer.playcanvas.com/assets/modules/draco/draco.wasm.js',wasmUrl:'https://developer.playcanvas.com/assets/modules/draco/draco.wasm.wasm',lazyInit:true});
   app.on('update',dt=>{const step=clamp(valid(dt)?dt:0,0,.045);if(state.entered)move(step);cameraUpdate(step);diagnostics(step);state.frames++;
     if(state.frames>=5&&!state.ready){state.ready=true;enter.disabled=false;enter.textContent='ENTER THE STREETS';boot.textContent='PlayCanvas is running; neighborhood geometry present ('+meshCount+' meshes). Imported assets load independently.';}
   });
