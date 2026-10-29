@@ -1,0 +1,47 @@
+/* SXS Panic Kitchen | Active Rush shift control surface */
+#ticketArea{padding:7px 10px!important}
+#ticketArea.rushLive>.toppair,#ticketArea.rushLive>.ticket{display:none!important}
+#rushTickets{display:none;gap:6px;overflow-x:auto;scrollbar-width:none;padding:2px 0 5px}
+#ticketArea.rushLive #rushTickets{display:flex}
+.rushOrder{flex:1 0 110px;max-width:185px;border:2px solid #a3d8c9;background:#fff5dc;color:#274858;box-shadow:0 3px 0 #0f2431;border-radius:10px;padding:7px;text-align:left;touch-action:manipulation}
+.rushOrder.selected{border-color:#e5ff8b;box-shadow:0 0 0 2px #d2ec82,0 3px 0 #0f2431}
+.rushOrder.urgent{border-color:#ff7c65;background:#fff0d9}
+.rushOrder .otype{display:flex;align-items:center;gap:4px;font-size:9px;font-weight:1000}
+.rushOrder .otype b{font-size:14px}.rushOrder .dishName{font-size:12px;font-weight:1000;margin:4px 0 6px}
+.rushOrder .orderTimer{margin-left:auto;font-size:11px;font-weight:1000}
+.rushOrder .bar{height:5px;background:#dfc9a8;border-radius:30px;overflow:hidden}
+.rushOrder .bar i{display:block;background:#48b89c;height:100%;width:100%}
+.rushOrder.urgent .bar i{background:#f56e54}
+.rushOrder .phase{color:#6e7c79;font-size:9px;font-weight:900;margin-top:5px}
+#counter.rushOn>.stepHead,#counter.rushOn>.sectionLabel,#counter.rushOn>#actions{display:none!important}
+#counter.rushOn{padding:8px 10px calc(8px + env(safe-area-inset-bottom))!important}
+#rushBoard{display:none}#counter.rushOn #rushBoard{display:block}
+#rushStatus{display:flex;align-items:center;justify-content:space-between;gap:5px;margin-bottom:5px}
+#rushStatus strong{font-size:12px;color:#153c42}
+#rushStatus .hint{font-size:9px;color:#745d49;font-weight:900}
+#rushWork{display:flex;gap:6px;align-items:stretch}
+#rushIngredients{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;flex:1.5}
+.rushItem{border:2px solid #bfd7ce;box-shadow:0 2px 0 #a2afa8;background:#e5ece5;border-radius:8px;min-height:44px;font-size:9px;font-weight:1000;padding:3px;touch-action:none;user-select:none}
+.rushItem span{display:block;font-size:19px}
+.rushItem.used{background:#ccd5cb;color:#8b9a95;opacity:.48}
+.rushItem.picked{border-color:#72bd84;background:#f0ffa8}
+#rushPrep{flex:1;min-width:100px;border:3px dashed #6b9a8c;background:linear-gradient(#e5ffe1,#c2e1cd);border-radius:11px;color:#245144;text-align:center;padding:6px;min-height:90px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px}
+#rushPrep strong{font-size:12px}#rushPrep small{font-size:10px;font-weight:900}#rushPrep.over{border-color:#ff774f;background:#f8fac8}
+#rushHeat{display:none;border-radius:10px;padding:6px;background:#1d4050;color:#fff4df;margin-top:5px}
+#rushHeat.active{display:block}
+#rushHeat .heatHead{display:flex;justify-content:space-between;align-items:center;font-weight:1000;font-size:10px}
+#heatTrack{height:18px;position:relative;overflow:hidden;background:linear-gradient(90deg,#da5749,#f9ab4d,#c2e56a,#54c49a,#c2e56a,#f9ab4d,#da5749);border:2px solid #fff1c1;border-radius:99px;margin:6px 0}
+#heatTarget{position:absolute;top:0;bottom:0;background:#eaff94aa;outline:2px solid #f8ffba;border-inline:2px solid #244e34}
+#heatNeedle{position:absolute;top:-3px;bottom:-3px;width:4px;background:#142638;border:1px solid white;box-shadow:0 0 0 1px #142638}
+#cookAction{width:100%;padding:7px;background:#dfff87;color:#234139;font-size:12px;font-weight:1000;border:0;border-radius:8px}
+#rushPlate{display:none;margin-top:6px;align-items:center;justify-content:space-between;gap:6px;padding:7px;background:#e5f9cd;border-radius:9px;border:2px solid #97b880}
+#rushPlate.active{display:flex}
+#readyPlate{font-weight:1000;background:#fff6df;border:2px solid #b7a581;border-radius:8px;padding:7px;color:#354145;touch-action:none;user-select:none;font-size:11px}
+#serveDrop{border:3px dashed #4e9d73;border-radius:9px;background:#bce7d1;min-height:40px;padding:7px;min-width:105px;text-align:center;font-size:10px;font-weight:1000;color:#234b3c}
+#serveDrop.over{background:#e4ff8f}
+#rushLog{font-size:10px;font-weight:900;margin-top:5px;min-height:13px;color:#9b503b}
+.rushGhost{position:fixed;z-index:9999;pointer-events:none;background:#fff6d5;border:2px solid #53a681;border-radius:10px;padding:8px;color:#26443e;font-size:17px;box-shadow:0 7px 22px #0007}
+#hotspot{display:none!important}
+#rushPaused{display:none;position:absolute;inset:0;background:#101f33c9;z-index:7;align-items:center;justify-content:center;font-size:24px;font-weight:1000}
+#rushPaused.show{display:flex}
+@media(max-width:440px){.rushItem{min-height:41px;font-size:8px}.rushItem span{font-size:17px}#rushPrep{min-width:82px}.rushOrder{flex-basis:104px}.rushOrder .dishName{font-size:10px}#rushWork{gap:5px}}

@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#100d23"><link rel="icon" href="data:,"><title>PALMAGEDDON | REAL HUMAN CHAMPIONSHIP</title>
+<style>
+:root{color-scheme:dark;font-family:system-ui,Segoe UI,Arial,sans-serif;color:white}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#060714;touch-action:none}
+body{display:grid;place-items:center;background:radial-gradient(ellipse at 50% 40%,#303238,#06080a 78%);user-select:none}
+#stage{position:relative;width:min(100vw,56.25dvh,530px);height:min(100dvh,177.777vw);max-height:100dvh;overflow:hidden;background:#1b1d21;isolation:isolate}
+#game{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
+#tone{pointer-events:none;position:absolute;inset:0;background:radial-gradient(ellipse 62% 60% at 50% 47%,transparent 44%,#0806158a 100%);mix-blend-mode:multiply}
+#flash{position:absolute;inset:0;pointer-events:none;opacity:0;background:#fff5bf}
+#hud{position:absolute;inset:0;pointer-events:none;z-index:2}
+#top{position:absolute;top:calc(env(safe-area-inset-top) + 14px);left:5%;right:5%}
+.brand{font-size:clamp(21px,6.6vw,36px);font-weight:1000;font-style:italic;letter-spacing:-1.4px;line-height:.94;text-align:center;color:#ffe6ad;text-shadow:0 3px #6a2184,0 5px 12px #050214}
+.sub{text-align:center;font-weight:900;letter-spacing:3px;font-size:clamp(8px,2.4vw,12px);color:#4affde;margin-top:9px}
+#health{margin-top:21px;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.hname{font-weight:900;display:flex;justify-content:space-between;font-size:clamp(10px,2.65vw,14px);text-shadow:0 2px 4px #000}
+.track{border:1px solid #ffffff65;background:#171127cb;border-radius:99px;padding:3px;margin-top:5px;height:16px;overflow:hidden}
+.fill{height:100%;border-radius:99px;width:100%;transition:width .24s}
+#myHP{background:linear-gradient(90deg,#28d5e4,#9cffe1)}
+#enemyHP{background:linear-gradient(90deg,#bb6d56,#d8bb8a)}
+#callout{position:absolute;top:27%;left:0;right:0;text-align:center;color:#fffbd0;font-size:clamp(16px,4.6vw,27px);font-weight:1000;text-shadow:0 3px 12px #090517,0 0 12px #ad268e;min-height:32px}
+#countdown{position:absolute;top:32%;left:0;right:0;text-align:center;font-size:12px;font-weight:900;color:#f6b9ea;letter-spacing:1px}
+#hudbottom{position:absolute;bottom:calc(136px + env(safe-area-inset-bottom));left:6%;right:6%;pointer-events:none}
+.meterlabel{display:flex;justify-content:space-between;font-size:11px;font-weight:1000;letter-spacing:2px;color:#ffe4b5;text-shadow:0 2px 5px #000}
+#meter{position:relative;height:29px;background:#21142bd9;border:2px solid #ffffff73;box-shadow:inset 0 3px 14px #0009,0 3px 16px #0007;border-radius:9px;overflow:hidden;margin-top:7px}
+#perfect{height:100%;width:15%;background:#33f7c0;position:absolute;left:42.5%;box-shadow:0 0 24px #36fbdc}
+#good{height:100%;width:28%;background:#ffc35a;position:absolute;left:36%;opacity:.66}
+#needle{position:absolute;top:0;bottom:0;width:7px;left:0%;background:#fff;box-shadow:0 0 10px #fff,0 0 18px #ff64be;border-radius:3px;transform:translateX(-50%)}
+.hint{text-align:center;font-size:10px;font-weight:800;color:#ddc6e5;margin-top:8px;text-shadow:0 2px 5px #000}
+#actions{position:absolute;bottom:calc(env(safe-area-inset-bottom) + 15px);left:4%;right:4%;display:grid;grid-template-columns:1fr 1.2fr 1fr;gap:7px;z-index:3}
+button{touch-action:none;cursor:pointer;font-family:inherit;font-weight:1000;user-select:none}
+#actions button{border:2px solid #fffc;border-radius:19px;padding:9px 2px;min-height:80px;color:#fff;box-shadow:0 7px 0 #070818c9,0 10px 20px #0009;text-shadow:0 2px 4px #000c;font-size:clamp(11px,2.8vw,16px);line-height:1.22}
+#actions button:active,#guard.pressed{transform:translateY(5px);box-shadow:0 2px 0 #070818}
+#slap{background:linear-gradient(145deg,#fff3a3,#f99c31);color:#25112e!important;text-shadow:none!important;font-size:clamp(17px,4.4vw,23px)!important}
+#guard{background:linear-gradient(145deg,#7255c9,#34276e)}
+#dodge{background:linear-gradient(145deg,#26cbbb,#126178)}
+#actions button:disabled{filter:grayscale(.7);opacity:.55;cursor:default}#guard.pressed{box-shadow:0 0 15px #c7d7d8,0 2px 0 #101820!important}
+#panel{position:absolute;inset:0;background:linear-gradient(160deg,#16191add,#222123eb);z-index:4;display:grid;align-content:center;justify-items:center;text-align:center;padding:8%;gap:10px}
+#panel.hide{display:none}
+#panel h1{font-size:clamp(37px,10vw,64px);color:#e5dfcf;font-style:italic;letter-spacing:-3px;line-height:.91;text-shadow:0 5px #5b616a,0 9px 22px #000;margin:0}
+#panel h2{font-size:clamp(18px,5vw,28px);margin:0;color:#d4c1a6}
+#panel p{font-size:clamp(12px,3.1vw,17px);line-height:1.45;margin:4px 0;max-width:310px;color:#f4dfef}
+#panel button{background:linear-gradient(145deg,#fff0ad,#ffb65a);border:3px solid #fff;color:#291038;border-radius:17px;padding:15px 24px;font-size:clamp(17px,4vw,23px);margin-top:15px;box-shadow:0 7px 0 #a53b79}
+.micro{font-size:10px!important;color:#c5addb!important}
+#smoke{position:absolute;top:4%;left:3%;color:#d8fff3;font-size:10px;opacity:.8;pointer-events:none;z-index:5}
+#sound{position:absolute;top:calc(env(safe-area-inset-top) + 8px);right:6px;border:1px solid #fff6;border-radius:99px;background:#16132c85;color:white;padding:5px;z-index:3}
+
+/* Realistic fight-night broadcast polish: original synthesizer cues and no heavy textures. */
+.brand{color:#ede4d2;text-shadow:0 2px 1px #43362b,0 5px 18px #07090d}
+.sub{color:#d2c0a0;text-shadow:0 1px 4px #101719;letter-spacing:1.2px}
+#callout{text-shadow:0 2px 10px #080a0e,0 1px 3px #241919;color:#ffefce}
+#countdown{color:#e5d0b1}
+#perfect{background:#70d8ab;box-shadow:0 0 16px #49b889}
+#good{background:#eac27f}
+#needle{box-shadow:0 0 10px #fff}
+#sound{min-width:38px;min-height:34px;border-color:#e0d1af99;background:#121820de;box-shadow:0 2px 10px #0008;backdrop-filter:blur(5px);font-size:17px;cursor:pointer}
+#sound[data-mode="fx"]{border-color:#aacbd499}
+#sound[data-mode="muted"]{opacity:.72}
+#actions button{transition:filter .12s ease,box-shadow .12s ease;box-shadow:0 6px 0 #080b13,0 10px 20px #05060d99}
+#actions #slap{background:linear-gradient(155deg,#f4dda4,#d8a76f);border-color:#f9ecd3;color:#261d15!important}
+#actions #guard{background:linear-gradient(160deg,#5b6570,#29333f)}
+#actions #dodge{background:linear-gradient(160deg,#3b7e85,#1c505e)}
+.hit-number{pointer-events:none;position:absolute;left:62%;top:43%;font-size:clamp(20px,5.2vw,36px);font-weight:1000;color:#f8e3b3;z-index:3;opacity:0;text-shadow:0 1px 8px #14110e;transform:translate(-50%,18px) scale(.72);will-change:opacity,transform}
+.hit-number.incoming{left:37%;color:#eeb8ac}
+.hit-number.perfect{color:#c5f2d8}
+.hit-number.guard{font-size:clamp(14px,3.1vw,23px);color:#c2cfdb}
+.hit-number.show{animation:slapNumber .58s ease-out both}
+@keyframes slapNumber{0%{opacity:0;transform:translate(-50%,14px) scale(.8)}18%{opacity:1;transform:translate(-50%,-8px) scale(1.14)}75%{opacity:.93;transform:translate(-50%,-31px) scale(1)}100%{opacity:0;transform:translate(-50%,-40px) scale(.99)}}
+@media (prefers-reduced-motion:reduce){.hit-number.show{animation:none;opacity:1;transform:translate(-50%,-15px)}}
+
+/* Responsive landscape gameplay. One running WebGL scene; CSS reflows controls only. */
+@media (orientation:landscape), (min-aspect-ratio:11/10){
+ #stage{width:100vw;width:100dvw;height:100vh;height:100dvh;max-height:100dvh;max-width:none;aspect-ratio:auto;border-radius:0}
+ #top{top:calc(env(safe-area-inset-top) + 10px);left:calc(env(safe-area-inset-left) + 14px);right:auto;width:clamp(175px,23vw,290px)}
+ .brand{font-size:clamp(17px,2.7vw,32px);letter-spacing:-.8px;text-shadow:0 2px 5px #111}
+ .sub{font-size:clamp(7px,1.15vw,11px);letter-spacing:1px;margin-top:5px}
+ #health{grid-template-columns:1fr;gap:8px;margin-top:12px}
+ .hname{font-size:clamp(10px,1.28vw,15px)}
+ .track{height:12px;margin-top:4px;padding:2px}
+ #actions{left:auto;right:calc(env(safe-area-inset-right) + 2.4%);top:50%;bottom:auto;transform:translateY(-50%);width:clamp(126px,17.5vw,205px);grid-template-columns:1fr;gap:10px}
+ #actions button{min-height:clamp(47px,16vh,96px);font-size:clamp(12px,2.05vw,20px);border-radius:15px;padding:4px 3px}
+ #slap{font-size:clamp(16px,2.8vw,26px)!important}
+ #hudbottom{left:26%;right:24%;bottom:calc(env(safe-area-inset-bottom) + 3%);max-width:none}
+ .meterlabel{font-size:clamp(9px,1.13vw,14px);letter-spacing:1px}
+ #meter{height:clamp(21px,4.6vh,34px);margin-top:5px}
+ .hint{font-size:clamp(8px,1.1vw,12px);margin-top:6px}
+ #callout{top:9%;left:26%;right:24%;font-size:clamp(14px,2.5vw,28px);overflow-wrap:anywhere}
+ #countdown{top:18%;left:26%;right:24%;font-size:clamp(10px,1.5vw,15px)}
+ #sound{top:calc(env(safe-area-inset-top) + 5px);right:calc(env(safe-area-inset-right) + 6px)}
+ #smoke{top:5px;left:26%;font-size:9px;opacity:.5}
+ #tone{background:radial-gradient(ellipse 77% 92% at 51% 44%,transparent 46%,#08061564 100%)}
+ #panel{padding:3% 24%;gap:6px}
+ #panel h1{font-size:clamp(28px,5vw,58px)}
+ #panel h2{font-size:clamp(15px,2.5vw,24px)}
+ #panel p{font-size:clamp(11px,1.65vw,17px);line-height:1.28;max-width:440px;margin:2px 0}
+ #panel .micro{font-size:clamp(8px,.9vw,11px)!important}
+ #panel button{margin-top:6px;padding:10px 22px;font-size:clamp(13px,2vw,22px)}
+}
+@media (orientation:landscape) and (max-height:440px){
+ #top{top:4px;width:clamp(112px,19vw,175px)}
+ #health{margin-top:7px;gap:4px}
+ #actions{gap:6px}
+ #actions button{min-height:clamp(43px,15vh,65px)}
+ #panel{gap:3px;padding:2% 20%}
+ #panel p{line-height:1.2}
+ #panel .micro{display:none}
+ #panel button{margin-top:2px;padding:6px 17px}
+ #hudbottom{bottom:calc(env(safe-area-inset-bottom) + 1%)}
+ #callout{top:7%}
+}
+@media (orientation:portrait){
+ #stage{margin-inline:auto}
+}
+</style></head><body>
+<div id="stage">
+<canvas id="game" aria-label="Actual PlayCanvas 3D slap-fighting championship"></canvas>
+<div id="tone"></div><div id="flash"></div><div id="impactText" class="hit-number" aria-hidden="true"></div>
+<div id="hud"><div id="top"><div class="brand">PALMAGEDDON</div><div class="sub" id="venueLabel">LEVEL 1 / 4 · BASEMENT GYM</div>
+<div id="health"><div><div class="hname"><span>VOLT VIPER</span><span id="hpMeNum">100</span></div><div class="track"><div id="myHP" class="fill"></div></div></div><div><div class="hname"><span id="enemyLabel">MITTENS McFURY</span><span id="hpThemNum">100</span></div><div class="track"><div id="enemyHP" class="fill"></div></div></div></div>
+</div><div id="callout"></div><div id="countdown"></div>
+<div id="hudbottom"><div class="meterlabel"><span>PRECISION SLAP TIMING</span><span id="combo">STREAK ×0</span></div><div id="meter"><div id="good"></div><div id="perfect"></div><div id="needle"></div></div><div class="hint">ONE SLAP · ONE TIMED DEFENSE PER RIVAL TURN</div></div></div>
+<div id="actions"><button id="guard" aria-label="Tap once to block for 0.36 seconds">🛡️<br>TIMED BLOCK</button><button id="slap" aria-label="Tap to slap">👋<br>SLAP!</button><button id="dodge" aria-label="Tap once to dodge for 0.57 seconds">↪<br>TIMED DODGE</button></div>
+<button id="sound" aria-label="Music and effects on. Tap for effects only." title="MUSIC + EFFECTS">🔊</button><div id="smoke"></div>
+<div id="panel"><h1>PALMAGEDDON</h1><h2>FOUR-VENUE SLAP CHAMPIONSHIP</h2><p>Four original 3D venues, four different adults, faster opponents each level. ONE timed slap per turn. During each rival attack you get ONE attempt to block (0.36s) or dodge (0.57s). Press near the actual impact. Holding block does not help. Turn the tablet anytime without restarting.</p><p class="micro">MAKEHUMAN BODIES · BLENDER TABLE · PLAYCANVAS · FOUR DIFFERENT LEVELS<br>Real human edition · owner review required</p><button id="begin" disabled>LOADING 3D ARENA…</button></div>
+</div><script type="module" src="./game.js?v=timed-defense-v8"></script></body></html>

@@ -1,0 +1,69 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#101b20">
+<meta name="description" content="Playtest PALMAGEDDON and PANIC KITCHEN, two original SXS Interactive browser games, and share feedback.">
+<title>Game Playtests | SXS Interactive · ShanX Services</title>
+<style>
+:root{--bg:#0a121a;--panel:#17232b;--text:#f1f3eb;--muted:#b6c5cb;--green:#93eac0;--gold:#eed09d;--blue:#84bce4}
+*{box-sizing:border-box}
+body{background:radial-gradient(ellipse 75% 60% at 14% 0,#173c32,#0a121a 69%);color:var(--text);font-family:system-ui,Segoe UI,Arial,sans-serif;margin:0;min-height:100dvh}
+a{color:var(--green);text-decoration:none}a:focus-visible,button:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
+header{border-bottom:1px solid #b5ded22d;background:#071018dd;padding:14px 4%;display:flex;justify-content:space-between;align-items:center;gap:12px}
+header strong{letter-spacing:1.2px;color:var(--gold)}header a{font-size:13px;font-weight:800}
+main{width:min(1100px,93%);margin:auto;padding:36px 0 70px}
+.eyebrow{color:var(--green);letter-spacing:.14em;font-size:12px;font-weight:900}
+h1{font-size:clamp(42px,8vw,86px);line-height:.96;letter-spacing:-.07em;margin:12px 0 18px}
+h1 span{color:var(--gold)}
+.lead{color:var(--muted);max-width:660px;line-height:1.65}
+.cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;margin:32px 0 42px}
+article{background:linear-gradient(150deg,#1e3037,#0d1822);border:1px solid #95e8c23f;border-radius:22px;overflow:hidden}
+article img{display:block;width:100%;height:300px;object-fit:cover;object-position:center}
+article .inner{padding:22px}article small{color:var(--green);font-size:11px;letter-spacing:.10em;font-weight:900}
+article h2{font-size:clamp(27px,3vw,40px);margin:8px 0;letter-spacing:-.04em}
+article p{color:var(--muted);font-size:14px;line-height:1.55;min-height:64px}
+.actions{display:flex;gap:10px;flex-wrap:wrap}.button,button{border:1px solid #c4b37b;border-radius:12px;padding:13px 17px;font-size:13px;font-weight:900;cursor:pointer;background:var(--gold);color:#0c1621;text-decoration:none}
+.button.secondary{background:#1c2c34;color:var(--green);border-color:#70b595}
+.feedback{padding:28px;background:#121e27;border:1px solid #e0c9985a;border-radius:20px}
+.feedback h2{margin:0 0 6px;font-size:30px}.feedback p{font-size:13px;color:var(--muted);line-height:1.6}
+form{display:grid;gap:14px;margin-top:20px}
+label{display:grid;gap:6px;font-size:13px;font-weight:800}
+select,textarea,input{padding:12px 13px;color:white;border-radius:11px;background:#0a141d;border:1px solid #7796a15c;font:inherit;width:100%}
+textarea{min-height:125px;resize:vertical}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.note{color:#9fb3ba;font-size:12px;line-height:1.6}
+footer{margin-top:35px;font-size:12px;color:#91a6a7}
+@media(max-width:700px){.cards,.two{grid-template-columns:1fr}article img{height:230px}header{flex-wrap:wrap}}
+</style></head><body>
+<header><strong>SXS INTERACTIVE / PLAYTEST LAB</strong><a href="../">← Back to Arcade Lab</a></header>
+<main><div class="eyebrow">ORIGINAL BROWSER GAMES · WORKS IN PROGRESS</div>
+<h1>Play it. <span>Break it.</span><br>Make it better.</h1>
+<p class="lead">Help us test real games before release. Choose a game below, play on your phone, tablet or computer, and tell us what needs improving. No account or game installation required.</p>
+<section class="cards" aria-label="Games available to playtest">
+<article><img src="../media/palmageddon-playtest.png" alt="Actual PALMAGEDDON gameplay" loading="eager">
+<div class="inner"><small>SLAPJAM · SPEED · FOUR 3D LEVELS</small><h2>👋 PALMAGEDDON</h2>
+<p>Face off across the slap table. Time every strike and react with one block or dodge each turn. Four rivals across four arenas.</p>
+<div class="actions"><a class="button" href="../games/palmageddon/">PLAY FULL GAME ↗</a><a class="button secondary" href="#feedback" data-game="PALMAGEDDON">GIVE FEEDBACK</a></div></div></article>
+<article><img src="../media/panic-kitchen-playtest.png" alt="Actual PANIC KITCHEN gameplay" loading="lazy">
+<div class="inner"><small>SLAPJAM · SPEED · FOOD TRUCK CHALLENGE</small><h2>🍔 PANIC KITCHEN</h2>
+<p>Handle a food truck rush, finish orders against the clock and keep customers happy. Try it and tell us where the cooking gets chaotic.</p>
+<div class="actions"><a class="button" href="../games/panic-kitchen/">PLAY FULL GAME ↗</a><a class="button secondary" href="#feedback" data-game="PANIC KITCHEN">GIVE FEEDBACK</a></div></div></article>
+</section>
+<section class="feedback" id="feedback"><h2>Help improve the game</h2>
+<p>Tell us what was fun, what didn't work, and what you'd change. Feedback currently opens your email app with the details filled in. No forum registration or account is needed.</p>
+<form id="review"><div class="two"><label>Game<select id="game" required><option>PALMAGEDDON</option><option>PANIC KITCHEN</option></select></label>
+<label>Rating<select id="rating"><option>5 / 5 · Loved it</option><option>4 / 5 · Enjoyed it</option><option selected>3 / 5 · Needs work</option><option>2 / 5 · Frustrating</option><option>1 / 5 · Didn't work</option></select></label></div>
+<label>Device / browser (optional)<input id="device" placeholder="For example: Android tablet / Chrome"></label>
+<label>What should we fix or add?<textarea id="message" required maxlength="3000" placeholder="Gameplay, controls, appearance, sound, performance, or a new idea..."></textarea></label>
+<button type="submit">EMAIL MY FEEDBACK ↗</button><div class="note">This opens your email client so you can review and send the message. This site does not automatically collect, store, or submit feedback in the background.</div></form>
+</section><footer>© 2026 ShanX Services LLC · SXS Interactive. Playtest builds may change as feedback arrives.</footer></main>
+<script>
+document.querySelectorAll('[data-game]').forEach(a=>a.addEventListener('click',()=>{document.getElementById('game').value=a.dataset.game}));
+document.getElementById('review').addEventListener('submit',e=>{
+e.preventDefault();
+const get=id=>document.getElementById(id).value.trim();
+if(!get('message'))return;
+const subject='SXS Playtest Feedback: '+get('game');
+const body='Game: '+get('game')+'\nRating: '+get('rating')+'\nDevice: '+(get('device')||'Not provided')+'\n\nFeedback:\n'+get('message')+'\n\nSent voluntarily by a game playtester.';
+location.href='mailto:henry.shannon@shanxservices.com?subject='+encodeURIComponent(subject)+'&body='+encodeURIComponent(body);
+});
+</script></body></html>

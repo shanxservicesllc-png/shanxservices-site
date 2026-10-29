@@ -1,0 +1,81 @@
+{
+  "name": "PALMAGEDDON V8 TIMED DEFENSE",
+  "type": "public-playtest-preview",
+  "files": [
+    {
+      "file": "index.html",
+      "bytes": 12221,
+      "sha256": "fa39c2ba3a57a41104e9c06e92f634715b2ca543eefb1811bb6bd763a4c71649"
+    },
+    {
+      "file": "game.js",
+      "bytes": 19575,
+      "sha256": "091086ef63b6af4f8150c64a12fb8b7295131717c914706146c8294d1c6af01c"
+    },
+    {
+      "file": "audio_v7.js",
+      "bytes": 5473,
+      "sha256": "e220c2579d4004beb138205b47feffd339f83e3cad7907937d796b4e15ef44ea"
+    },
+    {
+      "file": "vendor/playcanvas.mjs",
+      "bytes": 3898188,
+      "sha256": "a06c7ba504e28b47d519e2fd7bc2446e716268297cfb34ced16e23dac6367a55"
+    },
+    {
+      "file": "vendor/LICENSE-playcanvas.txt",
+      "bytes": 1064,
+      "sha256": "42fa51ddd556be151a29f381fb97ee975825dcc454e805ea3ea9c079cca04d34"
+    },
+    {
+      "file": "assets/basement_slap_stage.glb",
+      "bytes": 643512,
+      "sha256": "53678f8c8764de3a8f661c987f7b8a47c84bfd2007254431223d6619c2d4eef6"
+    },
+    {
+      "file": "assets/basketball_slap_stage.glb",
+      "bytes": 409008,
+      "sha256": "c69e4dcbda6a19048a6a8a8401b916f728c9b1982d4bf7b1a59f9906ae98b40b"
+    },
+    {
+      "file": "assets/street_slap_stage.glb",
+      "bytes": 1663040,
+      "sha256": "f44dd15286f057dca00ff0145b74a39a1457e86ecc425d7ecc5de3913a584008"
+    },
+    {
+      "file": "assets/real_slap_stage.glb",
+      "bytes": 1143384,
+      "sha256": "7f7924bab190045eee33ada56aad11ccc86363a82a32e8527957209535a9518e"
+    },
+    {
+      "file": "assets/VOLT_VIPER_REAL.glb",
+      "bytes": 5958868,
+      "sha256": "c7f98401fa296dcec71aadcdea6b275bee658de43b89940e334a4993c8abae29"
+    },
+    {
+      "file": "assets/MITTENS_MCFURY_REAL.glb",
+      "bytes": 7866728,
+      "sha256": "8924cd7ada4d0c20911fc49051d0ac9559d0f93bacb38e7e4b51f25c1b2bd14c"
+    },
+    {
+      "file": "assets/COACH_RIVERA_REAL.glb",
+      "bytes": 4652376,
+      "sha256": "23592dfd983d590125610e7a0f1fbd31ddc7dadb899063731957b704a17d8ea5"
+    },
+    {
+      "file": "assets/IRON_MALIK_REAL.glb",
+      "bytes": 8195840,
+      "sha256": "fdd55dfdbd5c3302529ff56c7673da7e8cbf594d2e39d5864080e2fe23c51a83"
+    },
+    {
+      "file": "assets/VANCE_STONE_REAL.glb",
+      "bytes": 6052692,
+      "sha256": "8590b73a7c0f121f9845791192a532d8af130e31dbaa33bda7fc73189bcb07bc"
+    },
+    {
+      "file": "README_PLAYTEST.txt",
+      "bytes": 1374,
+      "sha256": "37c0e37637e0cf2f97890af4acfa444d6ef119c6ed53ac25dbab4d0bf527841a"
+    }
+  ]
+}

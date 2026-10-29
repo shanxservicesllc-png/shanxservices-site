@@ -1,0 +1,20 @@
+/* SXS Panic Kitchen dine-in interaction overlay on the REAL PlayCanvas scene */
+#diningOverlay{position:absolute;inset:0;pointer-events:none;z-index:5}
+.diningSpot{position:absolute;transform:translate(-50%,-50%);pointer-events:auto;border:2px solid #fff8c6;border-radius:99px;background:#19443edc;color:#f9ffe8;font-size:10px;font-weight:1000;box-shadow:0 3px 0 #102b31,0 0 0 4px #e6ff9366;padding:8px 11px;white-space:nowrap;touch-action:none}
+.diningSpot.available{background:#5ebd68;color:#123d30;border-color:#eeffd0;box-shadow:0 3px 0 #195b3c,0 0 0 6px #9fff8588}
+.diningSpot.eating{background:#7bc2e5;color:#153848;border-color:#ffffff}
+.diningSpot.dirty{background:#e26455;color:white;border-color:#ffdfb5;box-shadow:0 3px 0 #86342e,0 0 0 6px #f6bf6e88}
+.diningSpot.reserved{background:#edb768;color:#422a18;border-color:#fff7c6}
+#diningDock{position:absolute;left:10px;bottom:53px;pointer-events:auto;z-index:6;display:flex;gap:5px}
+#dineSponge{font-size:11px;font-weight:1000;border:2px solid #fff3c5;border-radius:10px;background:#ffda85;color:#3c4144;padding:7px 10px;box-shadow:0 3px 0 #9c7540;touch-action:none;user-select:none}
+#dineSponge:disabled{opacity:.52}
+#diningHint{font-size:10px;font-weight:1000;color:#fff7cc;background:#102c38db;border-radius:8px;padding:7px 8px;max-width:150px}
+#diningGhost{position:fixed;z-index:99999;pointer-events:none;background:#ecffb4;color:#1b4839;border:2px solid #3d9566;border-radius:12px;padding:8px;font-size:14px;font-weight:1000;box-shadow:0 8px 22px #0009}
+#heatTrack{background:linear-gradient(180deg,#273c48,#50606a)!important;border:2px solid #f9f2da!important;overflow:visible!important}
+#heatTarget{background:linear-gradient(180deg,#a6ff68 0%,#34f477 50%,#00bc65 100%)!important;border:2px solid #e9fff7!important;outline:2px solid #0b7b41!important;box-shadow:0 0 0 2px #ddffe8,0 0 14px #30ff80!important;border-radius:6px}
+#heatNeedle{background:#fffcf0!important;border:1px solid #133043!important;width:5px!important;box-shadow:0 0 0 2px #182c35,0 0 7px #ffffff!important;z-index:2}
+#rushHeat{border:2px solid #69eb99}
+#rushHeat .heatHead span{color:#8cff9c;font-size:11px;font-weight:1000;text-shadow:0 1px 1px #102e25}
+#heatTrack::after{content:"";position:absolute;top:-5px;left:0;right:0;height:2px;background:#ecf2ec40;pointer-events:none}
+#rushPlate.active #serveDrop{background:#b8efc3;color:#24593a}
+@media(max-width:440px){#diningDock{bottom:40px}#dineSponge{padding:6px;font-size:10px}#diningHint{font-size:9px;max-width:115px}.diningSpot{font-size:9px;padding:6px}}
