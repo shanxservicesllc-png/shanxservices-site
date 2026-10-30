@@ -1,13 +1,13 @@
 {
   "approval": "owner-approved",
-  "approved_at_utc": "2026-10-30T06:12:50.706903+00:00",
+  "approved_at_utc": "2026-10-30T19:11:27.292530+00:00",
   "browser_qa_passed": true,
-  "content_sha256": "973210dd886ff219e9ee51a50d074b1839eac18aef874b0a828d0737ac032c35",
+  "content_sha256": "97b076a8075c752270992f439a91d1c549e0c6dc0615dbbc217b4eb33bd0bce5",
   "files": [
     {
-      "bytes": 10955,
+      "bytes": 10951,
       "path": "index.html",
-      "sha256": "bce67178e50cba85d466fc2319e6de12b190355a43a5a5f2f65989eb14480d84"
+      "sha256": "61454e3d3acca561c603baa1af8bd892a3914e4c13285dffa121c8aad213f0af"
     },
     {
       "bytes": 16725,
@@ -25,14 +25,14 @@
       "sha256": "dae5ceb248b2257ebd93d45c99989f64172df9ec20432fba5c3eff39d5b8d889"
     },
     {
-      "bytes": 7980,
+      "bytes": 10389,
       "path": "rush.css",
-      "sha256": "46c4a541e3d4fcd72e301c28ae3f37cf4b34004550c6a7b9e9094de7463df90e"
+      "sha256": "187c6efcceedc56a110f4bf32bd44a298748fa3061c3362213d710d8423120f6"
     },
     {
-      "bytes": 32004,
+      "bytes": 39154,
       "path": "rush.js",
-      "sha256": "6951d055dbb38b97936816ad4aa3bbe185544c2160dcc413972e14f7df58873d"
+      "sha256": "c99351aa09e68c692f4fbca57d86ec7e9ffa68977d8954d212470584d93dba25"
     },
     {
       "bytes": 17383,
@@ -61,6 +61,6 @@
     }
   ],
   "game": "panic-kitchen",
-  "release_id": "panic-kitchen-973210dd886ff219",
+  "release_id": "panic-kitchen-97b076a8075c7522",
   "schema": "x13-pbp-1"
 }

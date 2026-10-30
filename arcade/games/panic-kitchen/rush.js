@@ -483,3 +483,108 @@ window.__panicOps={state:O,enterKitchen,exitKitchen,startBatch,stopBatch,consume
 requestAnimationFrame(tick);
 
 })();
+
+/* Explicit, integrated SXS first-play tutorial */
+// SXS PANIC KITCHEN | Built-in first-run tutorial, stage guidance, accessible help.
+// Standalone authoring source, bundled into existing allowlisted rush.js for publishing.
+(function(){
+const R=()=>window.__panicRush?.state;
+const O=()=>window.__panicOps?.state;
+const $=id=>document.getElementById(id);
+const HELP_KEY='sxs-panic-kitchen-help-v1';
+const ingredientNames={bun:'BRIOCHE',patty:'BEEF',cheese:'CHEESE',lettuce:'LETTUCE',potato:'POTATO',salt:'SALT',cup:'CUP',ice:'ICE'};
+const slides=[
+ {icon:'🎟️',title:'1. PICK A CUSTOMER ORDER',body:'Tap one of the order cards above the ingredients. Each customer has a countdown. You can switch between orders whenever you need.'},
+ {icon:'🥣',title:'2. PUT INGREDIENTS ON PREP',body:'Drag the correct ingredients onto the green PREP BOARD. Or tap an ingredient, then tap PREP BOARD. Keep adding ingredients until the cooking meter appears. Just selecting an ingredient does not cook it.'},
+ {icon:'🔥',title:'3. COOK IN THE GREEN',body:'When all required ingredients are on the board, a cooking meter appears. Watch the moving white marker and tap the big cooking button WHEN IT IS INSIDE THE BRIGHT GREEN BAND. Too early or too late costs time.'},
+ {icon:'🍽️',title:'4. DELIVER THE FINISHED FOOD',body:'After cooking, a DRAG PLATE button appears. Drag the plate to SERVE for walk-in/pickup, to a highlighted GREEN TABLE for dine-in, or to the DRIVE-THRU WINDOW when the car is waiting. It is not served until you deliver it.'},
+ {icon:'🧽',title:'5. KEEP THE RESTAURANT RUNNING',body:'Diners eat at tables and leave them dirty. Drag the sponge to a RED dirty table twice to clean it. Your manager can assist depending on difficulty. Earn coins to upgrade the restaurant.'},
+ {icon:'⏱️',title:'6. TRY THE TIMED 3D KITCHEN',body:'In the newest version, tap 3D KITCHEN for a 24-second production sprint. Batch-cook patties, fries, or drinks for the warmer, then return to RESTAURANT and use stored food to assemble orders faster. Customer timers keep ticking.'}
+];
+const button=document.createElement('button');
+button.id='sxsHelpButton';button.type='button';button.textContent='❓ HELP';
+button.setAttribute('aria-label','How to play PANIC KITCHEN');
+$('pause').parentElement.insertBefore(button,$('pause'));
+const introButton=document.createElement('button');
+introButton.id='sxsIntroHelp';introButton.type='button';introButton.textContent='❓ HOW TO PLAY';
+const start=$('start');
+start.parentElement.insertBefore(introButton,start);
+const pausedHelp=document.createElement('button');pausedHelp.id='sxsPauseHelp';pausedHelp.type='button';pausedHelp.className='secondary';pausedHelp.textContent='❓ HOW TO PLAY';
+$('opsQuit').parentElement.insertBefore(pausedHelp,$('opsQuit'));
+const badge=document.createElement('div');badge.id='sxsStepCue';badge.setAttribute('role','status');
+$('rushStatus').insertAdjacentElement('afterend',badge);
+const modal=document.createElement('section');modal.id='sxsHelpModal';
+modal.setAttribute('role','dialog');modal.setAttribute('aria-modal','true');
+modal.setAttribute('aria-label','How to play PANIC KITCHEN');
+modal.hidden=true;
+modal.innerHTML='<div class="sxsHelpPanel"><div class="sxsHelpHeader"><strong>🍔 HOW TO PLAY PANIC KITCHEN</strong><button type="button" id="sxsHelpClose" aria-label="Close instructions">✕</button></div><div class="sxsHelpGraphic" id="sxsHelpGraphic"></div><h2 id="sxsHelpTitle"></h2><p id="sxsHelpText"></p><div class="sxsHelpFooter"><span id="sxsHelpCount"></span><div><button type="button" id="sxsHelpBack">BACK</button><button type="button" id="sxsHelpNext">NEXT</button></div></div></div>';
+$('app').appendChild(modal);
+let slide=0,autoPaused=false,wasOpen=false,lastCue='';
+function renderSlide(){
+ const s=slides[slide];
+ $('sxsHelpGraphic').textContent=s.icon;
+ $('sxsHelpTitle').textContent=s.title;
+ $('sxsHelpText').textContent=s.body;
+ $('sxsHelpCount').textContent=(slide+1)+' OF '+slides.length;
+ $('sxsHelpBack').disabled=slide===0;
+ $('sxsHelpNext').textContent=slide===slides.length-1?'GOT IT ✓':'NEXT →';
+}
+function openHelp(firstRun=false){
+ if(wasOpen)return;
+ wasOpen=true;slide=0;renderSlide();
+ autoPaused=false;
+ if(R()?.mode==='running'&&!R()?.paused){
+  $('pause').click();
+  autoPaused=!!R()?.paused;
+ }
+ modal.hidden=false;
+ if(firstRun)$('sxsHelpNext').focus();else $('sxsHelpClose').focus();
+}
+function closeHelp(){
+ if(!wasOpen)return;
+ wasOpen=false;modal.hidden=true;
+ try{localStorage.setItem(HELP_KEY,'seen')}catch(e){}
+ if(autoPaused&&R()?.paused){
+  // Use the existing pause system; do not resume an already-paused game.
+  if($('opsResume')&&$('opsPause')?.classList.contains('show'))$('opsResume').click();
+  else $('pause').click();
+ }
+ autoPaused=false;
+}
+$('sxsHelpClose').addEventListener('click',closeHelp);
+$('sxsHelpBack').addEventListener('click',()=>{slide=Math.max(0,slide-1);renderSlide()});
+$('sxsHelpNext').addEventListener('click',()=>{if(slide===slides.length-1)closeHelp();else{slide++;renderSlide()}});
+button.addEventListener('click',()=>openHelp(false));
+introButton.addEventListener('click',()=>openHelp(false));
+pausedHelp.addEventListener('click',()=>openHelp(false));
+modal.addEventListener('click',e=>{if(e.target===modal)closeHelp()});
+document.addEventListener('keydown',e=>{if(!wasOpen)return;if(e.key==='Escape'){e.preventDefault();closeHelp()}});
+window.addEventListener('panic:rush-start',()=>{
+ let seen=false;try{seen=localStorage.getItem(HELP_KEY)==='seen'}catch(e){}
+ if(!seen)requestAnimationFrame(()=>{if(R()?.mode==='running')openHelp(true)});
+});
+function stageCue(){
+ const r=R();
+ if(!r||r.mode!=='running'){badge.style.display='none';lastCue='';return}
+ badge.style.display='block';
+ const o=r.orders.find(x=>x.id===r.active)||r.orders[0],ops=O();
+ let text='';
+ if(ops?.tab==='kitchen')text='⏱️ 3D KITCHEN: Choose a batch, then STOP the cooking gauge INSIDE GREEN. You return automatically when time runs out.';
+ else if(!o)text='🧽 NO ORDERS LEFT: Drag the sponge to RED dirty tables twice to finish cleaning.';
+ else if(o.phase==='prep'){
+  const recipe=window.__panicRush.TYPES[o.dish],missing=recipe.needs.filter(k=>!o.collected.includes(k));
+  text='🥣 NEXT: Drag '+missing.map(k=>ingredientNames[k]||k.toUpperCase()).join(' + ')+' onto PREP BOARD. Tap ingredient then PREP also works.';
+ }else if(o.phase==='heat')text='🔥 NEXT: Tap the '+(o.dish==='burger'?'GRILL':o.dish==='fries'?'FRYER':'FILLER')+' button when the WHITE marker is inside BRIGHT GREEN.';
+ else if(o.phase==='plate'){
+  text=o.source==='DINE-IN'?'🍽️ NEXT: Drag the PLATE to a highlighted GREEN dining TABLE.':
+  o.source==='DRIVE-THRU'?'🚗 NEXT: Wait for the car, then drag PLATE to the DRIVE-THRU WINDOW.':
+  '🔔 NEXT: Drag the finished PLATE onto SERVE to deliver this order.';
+ }
+ if(text!==lastCue){badge.textContent=text;lastCue=text;badge.dataset.phase=o?.phase||'none'}
+}
+let last=0;
+function loop(t){if(t-last>170){last=t;stageCue()}requestAnimationFrame(loop)}
+requestAnimationFrame(loop);
+window.__panicHelp={open:openHelp,close:closeHelp,slides,stageCue};
+})();
+
