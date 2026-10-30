@@ -1,0 +1,2 @@
+# PBP: preserve exact bytes of shipped HTML, JS, CSS and GLB files on Windows and Linux.
+/arcade/games/** -text
