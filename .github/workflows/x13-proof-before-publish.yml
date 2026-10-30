@@ -1,0 +1,37 @@
+name: X13 Proof Before Publish
+
+on:
+  pull_request:
+    paths:
+      - 'arcade/games/**'
+      - 'scripts/x13_pbp.py'
+      - 'scripts/qa_release.cjs'
+      - '.github/workflows/x13-proof-before-publish.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'arcade/games/**'
+      - 'scripts/x13_pbp.py'
+      - 'scripts/qa_release.cjs'
+      - '.github/workflows/x13-proof-before-publish.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  prove-published-assets:
+    name: Verify approved games and immutable SHA-256 receipts
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Check publisher Python
+        run: python -m py_compile scripts/x13_pbp.py
+      - name: Run fail-closed release gate tests
+        run: python -m unittest discover -s scripts -p test_pbp.py -v
+      - name: Reject unapproved or modified public game files
+        run: python scripts/x13_pbp.py verify-site

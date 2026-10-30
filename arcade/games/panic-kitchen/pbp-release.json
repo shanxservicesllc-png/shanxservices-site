@@ -1,0 +1,67 @@
+{
+  "approval": "owner-approved",
+  "approved_at_utc": "2026-10-29-owner-directed-original-publish",
+  "browser_qa_passed": true,
+  "content_sha256": "1ef8718e3379869c48471087869b0ffb812774aa8b0ad5b69ced9b7380f393e4",
+  "files": [
+    {
+      "bytes": 10913,
+      "path": "index.html",
+      "sha256": "119756c06e72610097e538d919a52377090baf607f3709057d31b6822c62d8f5"
+    },
+    {
+      "bytes": 16725,
+      "path": "game.js",
+      "sha256": "20cbe9a4c11599176bb137a2db4d1cddf83b6243934f8590dc3d918622ce1f51"
+    },
+    {
+      "bytes": 2550,
+      "path": "dining.css",
+      "sha256": "bfbde318071c249ecb157005e3da9b02dfc29bd076d7402564e73d89c6b5c0e5"
+    },
+    {
+      "bytes": 9017,
+      "path": "dining.js",
+      "sha256": "457b05946da5c13c2f6ecce872552684e5e9061ea36b07041e9e2116c3188a38"
+    },
+    {
+      "bytes": 4725,
+      "path": "rush.css",
+      "sha256": "3e80dcb30c5d54b086dbfd328024cd3a1f28f7103ee0bb5c4c3ad6e853b5308f"
+    },
+    {
+      "bytes": 15390,
+      "path": "rush.js",
+      "sha256": "174180e392c9943fde8b5eab0cffd702f8c6436dc5f8b9dc085ba17f38b71a50"
+    },
+    {
+      "bytes": 9825,
+      "path": "tycoon.js",
+      "sha256": "aaca33bd73143564ac643b655bac0b07c4187ed880c74975c9b50059e9cffbdf"
+    },
+    {
+      "bytes": 3898188,
+      "path": "vendor/playcanvas.mjs",
+      "sha256": "a06c7ba504e28b47d519e2fd7bc2446e716268297cfb34ced16e23dac6367a55"
+    },
+    {
+      "bytes": 1064,
+      "path": "vendor/LICENSE-playcanvas.txt",
+      "sha256": "42fa51ddd556be151a29f381fb97ee975825dcc454e805ea3ea9c079cca04d34"
+    },
+    {
+      "bytes": 1323424,
+      "path": "assets/panic_district.glb",
+      "sha256": "4c12e080942f2e9a447931c66e4ddc7a1c50f76d8e01ddf525a663633d9d75f3"
+    },
+    {
+      "bytes": 3012860,
+      "path": "assets/panic_hero_food_truck.glb",
+      "sha256": "bfbf8740282f0bd7b578bca143c154c21cbdc6a63ff1f8088848b0726d6cb85c"
+    }
+  ],
+  "game": "panic-kitchen",
+  "migration": "Existing public game certified in-place; game bytes unchanged",
+  "release_id": "panic-kitchen-baseline-1ef8718e3379869c",
+  "schema": "x13-pbp-1"
+}
