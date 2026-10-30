@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"><meta name="theme-color" content="#071420">
+<title>Speedline Defense: Overdrive V5.1 · X13</title>
+<style>
+:root{--cyan:#5cf0da;--gold:#ffc468;--text:#edfaff;--muted:#acc5d2;--glass:#071826ed}*{box-sizing:border-box}
+html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#08121e;color:var(--text);font-family:system-ui,-apple-system,'Segoe UI',sans-serif}
+button{font:inherit;color:inherit;touch-action:manipulation;cursor:pointer}
+#viewport{position:absolute;top:108px;bottom:173px;left:0;right:0;overflow:hidden;background:linear-gradient(#102336,#050b14)}
+#app{display:block;width:100%;height:100%;touch-action:none}
+#top{position:absolute;left:0;right:0;top:0;min-height:108px;background:linear-gradient(#06121cfa,#0c2332f1);border-bottom:1px solid #75daca63;padding:calc(7px + env(safe-area-inset-top)) 8px 8px;z-index:3}
+#bar{display:flex;justify-content:space-between;align-items:center;gap:5px}
+.brand{font-size:12px;font-weight:1000;letter-spacing:.05em;line-height:1.17}
+.brand small{display:block;color:#5ffde8;font-size:8px;letter-spacing:.16em;font-weight:850;padding-top:2px}
+.headbuttons{display:flex;gap:4px}.headbuttons button{border:1px solid #72e7e352;border-radius:8px;background:#163249;padding:7px 7px;font-size:10px;font-weight:900;white-space:nowrap}
+#stats{display:grid;grid-template-columns:repeat(6,1fr);gap:3px;margin-top:8px}
+.stat{min-width:0;background:#173042b9;border:1px solid #cceeff22;border-radius:8px;text-align:center;padding:4px 1px}
+.stat label{display:block;font-size:8px;font-weight:750;color:#a7c7d4;letter-spacing:.02em}
+.stat b{display:block;font-size:13px;line-height:1.4;font-variant-numeric:tabular-nums}
+#bottom{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(#0a2231f7,#06111ffb);border-top:1px solid #54dbcd72;padding:6px 8px calc(9px + env(safe-area-inset-bottom));z-index:3}
+#hint{color:#d8f2f3;text-align:center;font-size:10px;min-height:24px;line-height:1.3;padding:1px 0 4px}
+#meters{display:flex;gap:8px;align-items:center}
+#meter{flex:1;height:7px;border:1px solid #6ba39b8b;border-radius:4px;background:#172d38;overflow:hidden}
+#fill{width:0;height:100%;background:linear-gradient(90deg,#13abb8,#56ffe1);box-shadow:0 0 10px #78ffdf8c}
+#combo{font-size:10px;font-weight:900;color:#ffc869;min-width:50px;text-align:right}
+#powers{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin:5px 0}
+.power{min-height:38px;font-size:11px;font-weight:950;background:linear-gradient(145deg,#165764,#123342);border:1px solid #44ead486;border-radius:10px}
+.power small{font-size:9px;color:#c7e0e9}
+button:disabled{opacity:.35}
+#build{display:grid;grid-template-columns:repeat(4,1fr);gap:5px}
+.unit{min-height:53px;min-width:0;background:linear-gradient(155deg,#1a3547,#132332);border:1px solid #78cfcc66;border-radius:9px;padding:4px 1px}
+.unit b{display:block;font-size:11px;white-space:nowrap}.unit small{display:block;font-size:9px;color:#c5d9df;margin-top:3px}
+.unit.chosen{border:1px solid #ffd379;background:linear-gradient(160deg,#75502a,#28374a)}
+#combat{position:absolute;left:8px;right:8px;bottom:8px;z-index:6;display:none;justify-content:space-between;align-items:end;pointer-events:none}
+#combat.active{display:flex}
+#joybase{width:108px;height:108px;border-radius:100%;background:#0b253bbd;border:2px solid #75ecd79c;position:relative;pointer-events:auto;touch-action:none;box-shadow:0 0 20px #34cab53b}
+#joystick{position:absolute;width:43px;height:43px;border-radius:100%;left:30px;top:30px;background:radial-gradient(#69ffea,#14677f);border:2px solid #f1fff4;box-shadow:0 0 10px #40ffe5a2;pointer-events:none}
+#combatRight{display:flex;flex-direction:column;gap:7px;align-items:flex-end;pointer-events:auto}
+#combatStatus{max-width:165px;text-align:right;color:#d6faff;background:#091b2bcc;border:1px solid #75ebda6c;border-radius:9px;padding:5px 7px;font-size:10px;font-weight:900}
+#fire{width:76px;height:76px;border-radius:50%;background:radial-gradient(circle at 34% 30%,#ffa456,#d54238 76%);border:3px solid #ffe5aa;color:#fff;font-size:14px;font-weight:1000;letter-spacing:.04em;text-shadow:0 1px 3px #0008;box-shadow:0 0 23px #fa7055aa;touch-action:none}
+#viewtools{position:absolute;right:8px;top:10px;z-index:2;background:#071d2ce8;display:flex;align-items:center;flex-direction:column;gap:5px;border:1px solid #73e6d574;border-radius:11px;padding:5px;box-shadow:0 5px 18px #0008}
+#viewtools button{width:37px;height:37px;background:#1a4654;border:1px solid #a7fff58b;border-radius:8px;font-size:20px;font-weight:900}
+#zoomStatus{font-size:9px;color:#abfcef;font-weight:850}
+#viewtools #zoomReset{font-size:18px}
+#loader{position:absolute;z-index:6;left:50%;top:48%;transform:translate(-50%,-50%);background:#051927e9;border:1px solid #5df2ca7b;padding:12px 16px;border-radius:12px;font-size:12px;white-space:nowrap}
+#veil{position:absolute;z-index:10;inset:0;display:flex;align-items:center;justify-content:center;padding:17px;background:radial-gradient(circle at 50% 42%,#204e62ef,#050b16f6 72%)}
+#menu{width:min(395px,100%);border:1px solid #54fee075;border-radius:22px;text-align:center;background:#0b1d2aef;padding:24px 19px;box-shadow:0 25px 85px #0009}
+.kicker{font-weight:900;font-size:10px;letter-spacing:.24em;color:#52fae8}
+h1{font-size:clamp(33px,9vw,51px);line-height:1;letter-spacing:-.035em;margin:15px 0;text-shadow:0 0 25px #5effd85c}
+h1 em{font-style:normal;color:#ffbf5c}
+.info{color:#c9e0e9;font-size:13px;line-height:1.55;margin:0 0 16px}
+#start{width:100%;padding:13px;border:0;border-radius:11px;color:#142636;font-weight:950;background:linear-gradient(135deg,#ffe19b,#f4a149);font-size:15px}
+#toast{position:absolute;z-index:8;top:47%;left:50%;transform:translate(-50%,-50%);background:#0a2d3cf2;border:1px solid #68ffe9a8;border-radius:13px;font-size:12px;font-weight:900;white-space:nowrap;padding:11px 14px;opacity:0;transition:opacity .15s;pointer-events:none;box-shadow:0 8px 24px #0008}
+#toast.show{opacity:1}
+#error{display:none;position:absolute;inset:0;z-index:20;background:#081624;align-items:center;justify-content:center;padding:18px;text-align:center;line-height:1.5}
+@media(max-height:705px){#viewport{top:98px;bottom:160px}#top{min-height:98px}#bottom{padding-top:4px}#hint{min-height:17px}.unit{min-height:45px}.headbuttons button{padding:5px 6px}}
+@media(min-width:580px){#top,#bottom{max-width:500px;width:100%;left:50%;right:auto;transform:translateX(-50%)}#viewport{left:50%;width:500px;right:auto;transform:translateX(-50%)}}
+/* X13 V5.1: native landscape canvas and HUD, preserving established portrait UI.
+   Owners' recording showed the original 500px portrait column on a wide tablet. */
+@media (orientation:landscape) and (min-width:580px) {
+ #top,#bottom{max-width:none;width:100%;left:0;right:0;transform:none}
+ #top{height:66px;min-height:0;padding:4px 10px 3px}
+ #bar{height:22px;justify-content:space-between}
+ .brand{font-size:11px;line-height:1}.brand small{font-size:8px;padding-top:2px}
+ .headbuttons button{padding:3px 9px;min-height:22px;font-size:10px}
+ #stats{margin-top:2px;gap:5px}
+ .stat{padding:1px 3px;border-radius:6px}
+ .stat label{font-size:7px}
+ .stat b{font-size:12px;line-height:1.1}
+ #viewport{top:67px;bottom:91px;left:0;right:0;width:100%;transform:none}
+ #bottom{height:91px;min-height:0;padding:4px 10px 4px;display:grid;
+  grid-template-columns:minmax(100px,1fr) minmax(190px,1.4fr) minmax(290px,2fr);
+  grid-template-rows:16px 1fr;column-gap:10px;row-gap:2px;align-items:center}
+ #hint{grid-row:1;grid-column:1/-1;min-height:0;line-height:1.1;
+  padding:0;text-align:left;font-size:9px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+ #meters{grid-row:2;grid-column:1;gap:5px;align-self:center}
+ #combo{min-width:28px;font-size:10px}
+ #powers{grid-row:2;grid-column:2;gap:5px;margin:0}
+ #build{grid-row:2;grid-column:3;gap:5px}
+ .power{min-height:48px;padding:3px;font-size:10px}
+ .power small{font-size:8px}
+ .unit{min-height:48px;padding:3px 1px}
+ .unit b{font-size:10px}.unit small{font-size:8px}
+ #joybase{width:114px;height:114px}
+ #joystick{left:33px;top:33px}
+ #fire{width:87px;height:87px;font-size:15px}
+ #combat{left:14px;right:14px;bottom:10px}
+ #viewtools{top:7px;right:12px}
+ #viewtools button{width:31px;height:30px;font-size:17px}
+ #toast{top:44%}
+}
+@media (orientation:landscape) and (min-width:580px) and (max-height:380px){
+ #top{height:53px}
+ #viewport{top:53px;bottom:74px}
+ #bottom{height:74px;grid-template-rows:10px 1fr}
+ #joybase{width:86px;height:86px}
+ #joystick{left:21px;top:21px}
+ #fire{width:67px;height:67px;font-size:12px}
+ .power,.unit{min-height:36px}
+}
+</style></head>
+<body>
+<div id="viewport"><canvas id="app" aria-label="Real modeled 3D immersive tower defense battlefield with mobile touch controls"></canvas>
+<div id="combat"><div id="joybase" aria-label="Move character virtual joystick"><div id="joystick"></div></div><div id="combatRight"><div id="combatStatus">SHIELD 100%</div><button id="fire" aria-label="Fire plasma blaster">FIRE</button></div></div><div id="viewtools"><button id="zoomPlus" aria-label="Zoom in">+</button><span id="zoomStatus">100%</span><button id="zoomMinus" aria-label="Zoom out">−</button><button id="zoomReset" aria-label="Reset camera">⌖</button></div></div>
+<div id="top">
+<div id="bar"><div class="brand">⚡ SPEEDLINE OVERDRIVE<small id="mapName">NEON DEPOT</small></div>
+<div class="headbuttons"><button id="sound">♫ ON</button><button id="view">◉ ENTER</button><button id="pause">Ⅱ PAUSE</button></div></div>
+<div id="stats">
+<div class="stat"><label>SECTOR</label><b id="sectorNum">1/3</b></div>
+<div class="stat"><label>WAVE</label><b id="wave">1/10</b></div>
+<div class="stat"><label>SPEED</label><b id="speed">1/10</b></div>
+<div class="stat"><label>GOLD</label><b id="gold">195</b></div>
+<div class="stat"><label>CORE</label><b id="health">14</b></div>
+<div class="stat"><label>SCORE</label><b id="score">0</b></div>
+</div></div>
+<div id="bottom">
+<div id="hint">Choose a turret and tap a glowing build pad. Survive 10 waves!</div>
+<div id="meters"><div id="meter"><div id="fill"></div></div><div id="combo">0×</div></div>
+<div id="powers"><button class="power" id="overdrive">⚡ OVERDRIVE <small>45 energy</small></button><button class="power" id="brake">❄ BRAKE PULSE <small>30 energy</small></button></div>
+<div id="build"><button id="pulse" class="unit chosen"><b>◎ PULSE</b><small>45 credits</small></button>
+<button id="rail" class="unit"><b>↗ RAIL</b><small>75 credits</small></button>
+<button id="drag" class="unit"><b>◉ DRAG</b><small>65 credits</small></button>
+<button id="upgrade" class="unit"><b>⬆ UPGRADE</b><small>tap turret</small></button></div></div>
+<div id="toast"></div><div id="loader">Loading original Blender worlds…</div>
+<div id="veil"><div id="menu">
+<div class="kicker">X13 · SLAPJAM · SPEED!</div><h1 id="heading">SPEEDLINE<br><em>OVERDRIVE</em></h1>
+<p id="desc" class="info">THREE REAL 3D WORLDS. THIRTY SPEED WAVES.<br>Build on a bigger battlefield with longer tracks and more tower pads. Reach Speed 10 in each sector, then enter a completely new environment.<br><b>ENTER WORLD for a 25-second combat deployment. Three hits or time running out sends you back to command. Get seven turret kills to recharge. Breaches trigger a timed reactor last stand!</b></p>
+<button id="start">ENTER NEON DEPOT →</button></div></div>
+<div id="error"><div><h2>3D runtime failed</h2><p id="errorText"></p><p>The previous V3 build remains preserved.</p></div></div>
+<script type="module" src="./game.js?v=52-timed-deployment"></script>
+</body></html>
