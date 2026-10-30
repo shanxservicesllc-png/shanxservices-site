@@ -1,0 +1,68 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"><meta name="theme-color" content="#08071b"><title>TIMEBREAKER · REDLINE RIFT</title><link rel="icon" href="data:,">
+<style>
+*{box-sizing:border-box;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+html,body{width:100%;height:100%;margin:0;overflow:hidden;touch-action:none;background:#030713;color:#f0faff;font-family:system-ui,-apple-system,Arial,sans-serif}
+canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;outline:0}
+#vignette{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse,transparent 25%,#000316b0 100%);z-index:2}
+#riftWash{position:absolute;inset:0;pointer-events:none;z-index:3;opacity:0;transition:opacity .22s;background:radial-gradient(ellipse,transparent 25%,#d414af47 70%,#38e0ff88);mix-blend-mode:screen}
+body.timewarp #riftWash{opacity:1}
+#top{position:fixed;top:max(12px,env(safe-area-inset-top));left:13px;right:13px;z-index:8;display:flex;justify-content:space-between;gap:10px;pointer-events:none}
+#logo{font-size:10px;letter-spacing:.24em;color:#ff8d8d;font-weight:950;text-shadow:0 0 14px #ff4949}
+#logo strong{display:block;font-size:19px;letter-spacing:.08em;color:white}
+#timerbox{background:#091627df;border:1px solid #287ca4;border-radius:10px;padding:8px 12px;text-align:center;min-width:88px}
+#timerbox small{display:block;font-size:10px;letter-spacing:.08em;color:#82b9d4}
+#timer{font-size:25px;font-weight:950;font-variant-numeric:tabular-nums}
+#objectiveBox{position:fixed;left:12px;right:12px;top:94px;z-index:8;pointer-events:none;background:linear-gradient(90deg,#091f35c7,#0d182c7a);border:1px solid #1a4e72;border-radius:10px;padding:9px 10px}
+#worldName{color:#ffb0af;letter-spacing:.13em;font-size:10px;font-weight:950}
+#objective{font-size:12px;color:#e4f4ff;margin-top:4px;font-weight:750;max-width:calc(100% - 62px)}
+#progress{height:4px;border-radius:8px;background:#162e46;margin-top:8px;overflow:hidden}
+#bar{height:100%;background:linear-gradient(90deg,#00c5ff,#ed6a7a);width:0}
+#speed{position:absolute;right:10px;top:12px;font-size:13px;font-weight:950;color:#ffe4a2}
+#energyHud{position:fixed;left:15px;top:177px;z-index:8;pointer-events:none;display:flex;gap:10px;align-items:center}
+.pill{font-size:11px;font-weight:900;letter-spacing:.07em;border-radius:7px;border:1px solid #30739a;background:#071b2ddb;padding:7px 9px}
+#energyText{color:#72f0ff}#healthText{color:#ffb3c3}#comboText{color:#ffe391}
+#toast{position:fixed;left:10px;right:10px;top:32%;text-align:center;z-index:11;font-size:clamp(16px,6vw,26px);font-weight:1000;letter-spacing:.04em;color:#fff;text-shadow:0 0 15px #11ccff,0 3px 6px black;pointer-events:none;opacity:0;transition:opacity .15s}
+#toast.show{opacity:1}
+#help{position:fixed;z-index:8;left:15px;bottom:max(16px,env(safe-area-inset-bottom));max-width:50%;pointer-events:none;font-size:11px;color:#b8dce8;line-height:1.6;text-shadow:0 2px 6px #000}
+#runActions{position:fixed;bottom:max(18px,env(safe-area-inset-bottom));right:17px;z-index:9;display:flex;align-items:end;gap:9px}
+.circle{touch-action:none;border-radius:16px;border:2px solid #8eefff;min-width:70px;width:12vw;max-width:88px;height:76px;background:radial-gradient(circle,#186ba0,#051b41);color:#fff;font-size:11px;letter-spacing:.07em;font-weight:950;box-shadow:0 0 16px #33befe80;cursor:pointer}
+.circle:disabled{opacity:.45;filter:grayscale(1)}
+#timeBreak{background:radial-gradient(circle,#5634b3,#151144);border-color:#e5bfff;box-shadow:0 0 19px #b853ff8c}
+#runWarp{background:radial-gradient(circle,#21a6b5,#063e59)}
+#arenaControls{position:fixed;inset:0;z-index:9;display:none;pointer-events:none}
+#arenaControls.active{display:block}
+#joy{position:absolute;bottom:max(20px,env(safe-area-inset-bottom));left:16px;width:126px;height:126px;border-radius:50%;border:2px solid #4fbadc88;background:#03203899;pointer-events:auto;touch-action:none;display:grid;place-items:center}
+#nub{width:53px;height:53px;border-radius:50%;border:1px solid #9eefff;background:radial-gradient(circle,#40abcb,#173765);box-shadow:0 0 18px #20c5ff77;transform:translate(0,0)}
+#arenaButtons{position:absolute;bottom:max(20px,env(safe-area-inset-bottom));right:10px;display:grid;grid-template-columns:repeat(2,minmax(65px,80px));gap:9px;pointer-events:auto}
+.action{height:64px;min-width:65px;touch-action:manipulation;border:1px solid #92d5e9;border-radius:13px;background:linear-gradient(135deg,#133856e9,#0b1a3adf);color:#fff;font-size:11px;font-weight:950;letter-spacing:.06em}
+.action.primary{background:linear-gradient(135deg,#b83058,#4a1f67);border-color:#ffafba;font-size:14px}
+.action:disabled{opacity:.43}
+#interact{position:fixed;z-index:9;bottom:204px;right:13px;padding:14px 16px;border-radius:10px;border:1px solid #b8eafa;background:#145680;color:white;font-weight:900;display:none}
+#pause{position:fixed;right:14px;top:173px;z-index:10;border:1px solid #2c6a91;background:#0b2a43dc;color:white;border-radius:7px;width:40px;height:40px;font-size:17px}
+#overlay{position:fixed;z-index:20;inset:0;display:flex;align-items:center;justify-content:center;padding:20px;background:linear-gradient(#020714ed,#090b29ec);backdrop-filter:blur(7px)}
+#overlay.hidden{display:none}
+#panel{border:1px solid #b04b6a;background:linear-gradient(150deg,#24152a,#071a31);border-radius:17px;max-width:425px;width:100%;padding:30px 23px;text-align:center;box-shadow:0 0 40px #fa366025}
+#eyebrow{font-size:10px;color:#ff9c99;letter-spacing:.2em;font-weight:950}
+h1{font-size:clamp(35px,11vw,58px);line-height:.96;margin:14px 0;font-weight:1000;letter-spacing:-.04em;text-shadow:0 0 25px #ed588c77}
+#description{font-size:14px;color:#bbd6e4;line-height:1.75;margin:18px 0 24px}
+#play{width:100%;min-height:55px;border:1px solid #acf8ff;border-radius:9px;background:linear-gradient(90deg,#4fe7ff,#ffe1d6);font-weight:1000;color:#05283c;letter-spacing:.09em;font-size:15px}
+#play:disabled{opacity:.45}
+#transition{position:fixed;inset:0;z-index:16;pointer-events:none;opacity:0;background:radial-gradient(ellipse,#ebfcff,#36c3fd 38%,#832abb 72%,#020114);transition:opacity .35s}
+#transition.flash{opacity:1}
+@media(max-height:660px){#energyHud{top:149px}#pause{top:151px}.circle{min-width:64px;width:66px}#joy{width:110px;height:110px}#arenaButtons{gap:5px}.action{height:53px}}
+</style></head><body>
+<canvas id="game" aria-label="3D speed action adventure"></canvas>
+<div id="vignette"></div><div id="riftWash"></div><div id="transition"></div>
+<div id="top"><div id="logo">X13 ORIGINAL ADVENTURE<strong>TIMEBREAKER</strong></div><div id="timerbox"><small>TIME LEFT</small><span id="timer">72.0</span></div></div>
+<div id="objectiveBox"><div id="worldName">NEON VELOCITY LAB</div><div id="objective">Run, slash enemies and reach the temporal rift</div><div id="progress"><div id="bar"></div></div><div id="speed">0 KM/H</div></div>
+<div id="energyHud"><div class="pill" id="energyText">TIME 100%</div><div class="pill" id="healthText">HP 100</div><div class="pill" id="comboText">COMBO ×1</div></div>
+<button id="pause" aria-label="Pause game">Ⅱ</button>
+<div id="help">Slide to steer · Tap to shoot<br>Swipe UP: ELECTRO-CHAIN · Hold TIME BREAK</div>
+<div id="runActions"><button id="runWarp" class="circle" disabled>WARP<br>BUBBLE</button><button id="timeBreak" class="circle" disabled>TIME<br>BREAK</button></div>
+<div id="arenaControls"><div id="joy" aria-label="movement joystick"><div id="nub"></div></div>
+<div id="arenaButtons"><button id="slash" class="action primary">CHAIN<br>WHIP</button><button id="dash" class="action">DASH</button><button id="blink" class="action">BLINK</button><button id="warp" class="action">WARP<br>BUBBLE</button></div></div>
+<button id="interact">SLASH PORTAL</button>
+<div id="toast"></div>
+<div id="overlay"><div id="panel"><div id="eyebrow">RUN THROUGH TIME · SLASH THROUGH REALITY</div><h1 id="title">TIME<br>BREAKER</h1><p id="description">The corridor is only the beginning.<br>Build speed, cut open a time rift, enter a shattered city, defeat temporal marauders, and slash through another gate.<br><b>Original 3D Redline adventure · First connected playable slice.</b></p><button id="play" disabled>BUILDING THE WORLDS…</button></div></div>
+<script type="module" src="./adventure.js?v=7"></script>
+</body></html>

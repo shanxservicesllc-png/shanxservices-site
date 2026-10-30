@@ -1,0 +1,120 @@
+{
+  "version": "redline-rift-v4-slice-1",
+  "project": "TIMEBREAKER",
+  "owner": "X13",
+  "status": "first connected vertical slice; remaining distinct worlds not yet built",
+  "start": "neon-run",
+  "stages": [
+    {
+      "id": "neon-run",
+      "type": "runner",
+      "title": "REDLINE APPROACH",
+      "world": "NEON VELOCITY LAB",
+      "scene": "lab_segment",
+      "hero": "riftwalker",
+      "distance": 1040,
+      "timeLimit": 72,
+      "baseSpeed": 25.5,
+      "maxSpeed": 58,
+      "enemyFrequency": 1.8,
+      "energyPickups": 0.82,
+      "portalEnergy": 20,
+      "portal": "time_rift_gateway",
+      "next": "ruin-arena",
+      "checkpoint": "run-start",
+      "lighting": "#102946",
+      "music": "original ambient pending"
+    },
+    {
+      "id": "ruin-arena",
+      "type": "arena",
+      "title": "FALLEN HOUR",
+      "world": "SHATTERED CITY",
+      "scene": "ruined_city_arena",
+      "hero": "riftwalker",
+      "playerStart": {
+        "x": 0,
+        "z": 8
+      },
+      "enemies": {
+        "type": "temporal_marauder",
+        "count": 4,
+        "spawn": [
+          [
+            5,
+            -7
+          ],
+          [
+            -5,
+            -10
+          ],
+          [
+            8,
+            -11
+          ],
+          [
+            -7,
+            -16
+          ]
+        ],
+        "health": 2
+      },
+      "objective": {
+        "type": "defeat-all",
+        "count": 4,
+        "description": "Defeat the four temporal marauders"
+      },
+      "portalEnergy": 30,
+      "portal": "time_rift_gateway",
+      "exitAt": {
+        "x": 0,
+        "z": -12
+      },
+      "next": "next-run",
+      "checkpoint": "arena-start",
+      "lighting": "#50304b",
+      "music": "original combat ambience pending",
+      "timeLimit": 120
+    },
+    {
+      "id": "next-run",
+      "type": "runner",
+      "title": "AFTERSHOCK HIGHWAY",
+      "world": "REDLINE AFTERSHOCK",
+      "scene": "lab_segment",
+      "hero": "riftwalker",
+      "distance": 1220,
+      "timeLimit": 75,
+      "baseSpeed": 34,
+      "maxSpeed": 63,
+      "enemyFrequency": 1.15,
+      "energyPickups": 0.77,
+      "portalEnergy": 25,
+      "portal": "time_rift_gateway",
+      "next": null,
+      "checkpoint": "next-run",
+      "lighting": "#3b1648",
+      "music": "original ambient pending"
+    }
+  ],
+  "futureWorlds": [
+    {
+      "id": "temporal-battlefield",
+      "type": "arena",
+      "design": "ancient temporal battlefield",
+      "status": "planned"
+    },
+    {
+      "id": "industrial-time-factory",
+      "type": "arena",
+      "design": "moving machine hazards and reactor objectives",
+      "status": "planned"
+    },
+    {
+      "id": "collapsing-dimension",
+      "type": "arena",
+      "design": "floating ruins and boss",
+      "status": "planned"
+    }
+  ]
+}
