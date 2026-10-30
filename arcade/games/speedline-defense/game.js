@@ -428,7 +428,8 @@ function ensureGuardian(){
   const entity=new pc.Entity('X13 actual playable third person soldier');
   world.addChild(entity);
   const visual=addModel('field_guardian',entity,[0,0,0],.92);
-  guardian={entity,visual,x:0,z:3.5,hp:100,cooldown:0,walk:0,facing:0,targetYaw:0};
+  guardian={entity,visual,x:0,z:3.5,hp:100,cooldown:0,walk:0,facing:180,targetYaw:180};
+ visual.setLocalEulerAngles(0,180,0);
  }
  guardian.entity.enabled=true;return guardian;
 }
@@ -539,7 +540,7 @@ function firePlayer(){
  const steering= Math.hypot(joystick.x,joystick.y)>.12 ||
   keys.has('KeyW')||keys.has('KeyA')||keys.has('KeyS')||keys.has('KeyD')||
   keys.has('ArrowUp')||keys.has('ArrowDown')||keys.has('ArrowLeft')||keys.has('ArrowRight');
- if(!steering)guardian.targetYaw=Math.atan2(dx,dz)*180/Math.PI+180;
+ if(!steering)guardian.targetYaw=facingYaw(dx,dz);
  const from=new pc.Vec3(guardian.x,1.15,guardian.z-.24),to=new pc.Vec3(e.x,.95,e.z);
  const center=from.clone().add(to).mulScalar(.5);
  const beamParent=viewMode==='interior'?interiorRoot:root;
@@ -571,6 +572,11 @@ function fieldTakeHit(enemy){
  }else{toast('⚠ HIT '+fieldHits+'/3 · DODGE NEXT DRONE');updateHUD()}
  return true;
 }
+// Blender's forward axis is -Y. GLB export_yup maps that to PlayCanvas +Z.
+// A positive Y rotation of local +Z points (sin(yaw),0,cos(yaw)).
+// Old code added 180° TWICE in effect, so the soldier looked backward
+// while walking forward. Movement and auto-aim now use one model-aware yaw.
+function facingYaw(dx,dz){return Math.atan2(dx,dz)*180/Math.PI}
 function updateCombat(dt){
  if(!guardian)return;
  guardian.cooldown=Math.max(0,guardian.cooldown-dt);
@@ -598,7 +604,7 @@ function updateCombat(dt){
   const nx=clamp(guardian.x+mx*speed*dt,viewMode==='interior'?-4.8:-10,viewMode==='interior'?4.8:10);
   const nz=clamp(guardian.z+mz*speed*dt,viewMode==='interior'?-7.5:-16.3,viewMode==='interior'?7.5:16.3);
   guardian.x=nx;guardian.z=nz;guardian.walk+=dt*12;
-  guardian.targetYaw=Math.atan2(mx,mz)*180/Math.PI+180;
+  guardian.targetYaw=facingYaw(mx,mz);
  }
  guardian.entity.setPosition(guardian.x,.20+Math.sin(guardian.walk)*.017,guardian.z);
  if(firing||keys.has('Space')||keys.has('Enter'))firePlayer();
@@ -738,7 +744,7 @@ function status(){
   credits,core,score,kills,spawned,shots,hits,abilityUses,energy,enemyCount:enemies.length,
   models:modelCount(),worlds:MAPS.map(x=>x.name),pads:pads.length,pathLength:+path.slice(1).reduce((s,p,i)=>s+Math.hypot(p[0]-path[i][0],p[1]-path[i][1]),0).toFixed(1),
   towerCount:towers.length,towerLevels:towers.map(t=>t.level),camera:viewMode,fieldHits,fieldIFrames,fieldKnockouts,reentryKillsNeeded,lastFieldHit,fieldTimeLeft:+fieldTimeLeft.toFixed(2),fieldExpirations,fieldDeployments,fieldDuration:FIELD_SECONDS,
-  interaction:{...interaction},controls:{cameraYaw:+cameraAngle.toFixed(3),cameraSwipes,joystickX:+joystick.x.toFixed(3),joystickY:+joystick.y.toFixed(3),aimLockSwitches,hasLock:!!aimLockTarget?.live},player:guardian?{x:+guardian.x.toFixed(2),z:+guardian.z.toFixed(2),hp:guardian.hp,yaw:+guardian.facing.toFixed(2),targetYaw:+guardian.targetYaw.toFixed(2)}:null,fireCount,hitCount,breachesWon,breachesLost,breach:breach?{...breach}:null,audio:soundOn?'enabled':'muted',proof:'PlayCanvas+Blender+original GLSL+25sec-field-deployment'};
+  interaction:{...interaction},controls:{modelForward:'GLB+Z',cameraYaw:+cameraAngle.toFixed(3),cameraSwipes,joystickX:+joystick.x.toFixed(3),joystickY:+joystick.y.toFixed(3),aimLockSwitches,hasLock:!!aimLockTarget?.live},player:guardian?{x:+guardian.x.toFixed(2),z:+guardian.z.toFixed(2),hp:guardian.hp,yaw:+guardian.facing.toFixed(2),targetYaw:+guardian.targetYaw.toFixed(2)}:null,fireCount,hitCount,breachesWon,breachesLost,breach:breach?{...breach}:null,audio:soundOn?'enabled':'muted',proof:'PlayCanvas+Blender+original GLSL+25sec-field-deployment'};
 }
 async function init(){
  try{
