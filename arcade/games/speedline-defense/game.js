@@ -24,6 +24,9 @@ let guardian=null,interiorRoot=null,breach=null,breachers=[],breachCooldown=0,be
 let joystick={x:0,y:0,id:null},firing=false,fireCount=0,hitCount=0,breachesWon=0,breachesLost=0;
 let aimLockTarget=null,aimLockSwitches=0,cameraSwipes=0;
 let fieldHits=0,fieldIFrames=0,fieldKnockouts=0,reentryKillsNeeded=0,lastFieldHit='none';
+// Free Roam has its own state, not a hidden bypass of the timed SPEED campaign.
+let gameMode='campaign',freeWave=0,freeRoamKills=0,freeRoamRespawns=0,freeWorldVisits=0;
+let roamInteriorActive=false,roamRaiderClock=0;
 let fieldTimeLeft=0,fieldExpirations=0,fieldDeployments=0;
 const FIELD_SECONDS=25,REENTRY_KILLS=7,MAX_FIELD_HITS=3;
 const keys=new Set();
@@ -88,8 +91,9 @@ function sfx(label){
 }
 function setState(s){state=s;updateHUD()}
 function updateHUD(){
- $('wave').textContent=wave+'/10';$('sectorNum').textContent=(scene+1)+'/3';
- $('speed').textContent=wave+'/10';$('gold').textContent=credits;$('health').textContent=core;
+ $('wave').textContent=gameMode==='explore'?'--':gameMode==='assault'?freeWave+'∞':wave+'/10';
+ $('sectorNum').textContent=(scene+1)+'/3';
+ $('speed').textContent=gameMode==='explore'?'ROAM':wave+'/10';$('gold').textContent=credits;$('health').textContent=core;
  $('combo').textContent=combo+'×';$('score').textContent=score;$('fill').style.width=energy+'%';
  $('mapName').textContent=MAPS[scene].name;
  for(const k of Object.keys(SPECS)){$(k).disabled=state!=='running'||credits<SPECS[k].cost;$(k).classList.toggle('chosen',chosen===k)}
@@ -98,13 +102,17 @@ function updateHUD(){
  $('brake').disabled=state!=='running'||energy<30||brakeTimer>0;
  $('pause').textContent=state==='paused'?'▶ RESUME':'Ⅱ PAUSE';
  $('sound').textContent=soundOn?'♫ ON':'♫ OFF';
- $('view').textContent=viewMode==='tactical'?(reentryKillsNeeded>0?'🔒 '+reentryKillsNeeded+' KOs':'◉ ENTER'):viewMode==='interior'?'⚠ BREACH':'⌖ MAP';
- $('view').disabled=state!=='running'||(viewMode==='tactical'&&reentryKillsNeeded>0);
+ $('view').textContent=viewMode==='tactical'?(gameMode!=='campaign'?'◉ ENTER':reentryKillsNeeded>0?'🔒 '+reentryKillsNeeded+' KOs':'◉ ENTER'):
+ viewMode==='interior'?(roamInteriorActive?'↩ FIELD':'⚠ BREACH'):'⌖ MAP';
+ $('view').disabled=state!=='running'||(gameMode==='campaign'&&viewMode==='tactical'&&reentryKillsNeeded>0);
+ $('roamTools').hidden=gameMode==='campaign'||state==='loading'||state==='menu';
  $('combat').classList.toggle('active',viewMode!=='tactical');
  if(guardian&&viewMode!=='tactical')
   $('combatStatus').textContent=viewMode==='interior'
    ?'BREACH '+(breach?.down||0)+'/'+(breach?.total||0)+' · SHIELD '+Math.ceil(guardian.hp)
-   :'⏱ '+Math.ceil(fieldTimeLeft)+'s · HITS '+fieldHits+'/3 · HP '+Math.ceil(guardian.hp);
+   :gameMode==='campaign'?'⏱ '+Math.ceil(fieldTimeLeft)+'s · HITS '+fieldHits+'/3 · HP '+Math.ceil(guardian.hp)
+   :gameMode==='explore'?'FREE EXPLORATION · NO TIMER'
+   :'ENDLESS · KILLS '+freeRoamKills+' · HP '+Math.ceil(guardian.hp);
 }
 function banner(t,d,b){$('heading').innerHTML=t;$('desc').innerHTML=d;$('start').textContent=b;$('veil').style.display='flex'}
 function glsl(){
@@ -178,6 +186,7 @@ function destroyScene(){
 }
 function loadScene(next){
  resetCombatWorld();
+ if(gameMode!=='campaign')freeWorldVisits++;
  destroyScene();scene=next;path=MAPS[scene].path;wave=1;
  core=Math.min(14,core+2);credits=next===0?165:Math.min(390,Math.max(205,Math.floor(credits*.43)+150));
  energy=next===0?0:Math.min(60,energy);
@@ -234,6 +243,7 @@ function spawn(){
 function kill(e,cause='turret'){
  if(!e.live)return;
  e.live=false;kills++;combo=comboTimer>0?combo+1:1;comboTimer=2.7;
+ if(gameMode!=='campaign'&&cause==='player')freeRoamKills++;
  if(reentryKillsNeeded>0&&cause!=='player'){
   reentryKillsNeeded=Math.max(0,reentryKillsNeeded-1);
   if(reentryKillsNeeded===0){toast('⚡ FIELD ACCESS RECHARGED · ENTER WORLD UNLOCKED');sound(650,.13,'triangle',.07)}
@@ -281,6 +291,12 @@ function activateBrake(){
  updateHUD();return true;
 }
 function nextWave(){
+ if(gameMode==='assault'){
+  freeWave++;wave=wave===10?1:wave+1;spawned=0;spawnTimer=-1.1;
+  credits+=Math.min(85,15+wave*4);
+  toast('⚡ ENDLESS ASSAULT WAVE '+freeWave+' · SPEED '+wave);
+  updateHUD();return;
+ }
  if(wave<10){
   wave++;spawned=0;spawnTimer=-3.0;
   toast('SPEED '+wave+'/10 · FASTER ASSAULT INCOMING');updateHUD();
@@ -301,6 +317,12 @@ function mainUpdate(dt){
  music();
  if(state!=='running')return;
  dt=clamp(dt,0,.055);elapsed+=dt;
+ if(gameMode==='explore'){
+  shader.setParameter('uTime',elapsed);
+  if(toastTimer>0){toastTimer-=dt;if(toastTimer<=0)$('toast').classList.remove('show')}
+  if(viewMode==='battlefield'||viewMode==='interior')updateCombat(dt);
+  return;
+ }
  if(viewMode==='interior'){
   updateCombat(dt);if(toastTimer>0){toastTimer-=dt;if(toastTimer<=0)$('toast').classList.remove('show')}
   return;
@@ -319,7 +341,7 @@ function mainUpdate(dt){
   const next=path[e.next];
   if(!next){
    e.live=false;e.entity.destroy();emit(e.x,.8,e.z,MAT.red,4);
-   if(breachCooldown<=0){enterBreach();return}
+   if(gameMode==='campaign'&&breachCooldown<=0){enterBreach();return}
    core--;updateHUD();
    if(core<=0){setState('loss');sfx('power');banner('REACTOR<br><em>OVERRUN!</em>',
     'Sector '+(scene+1)+' · Wave '+wave+'/10<br>Speed defeated your defenses.<br>Score '+score,'RETRY THIS SECTOR ↻');}
@@ -384,7 +406,10 @@ function cinemaCamera(){
 }
 function switchView(){
  if(state!=='running')return;
- if(viewMode==='interior'){toast('REACTOR BREACHED · DEFEAT ALL RAIDERS');return}
+ if(viewMode==='interior'){
+  if(roamInteriorActive){exitRoamInterior();return}
+  toast('REACTOR BREACHED · DEFEAT ALL RAIDERS');return
+ }
  if(viewMode==='tactical')enterBattlefield();else returnMap();
 }
 function projectPad(i){
@@ -405,6 +430,77 @@ function activatePad(i){
  if(chosen==='upgrade'){toast('Tap a built turret to upgrade');return false}
  return place(i,chosen);
 }
+
+function startFreeRoam(mode){
+ if(mode!=='explore'&&mode!=='assault')return false;
+ gameMode=mode;freeWave=1;freeRoamKills=0;freeRoamRespawns=0;freeWorldVisits=0;
+ fieldTimeLeft=0;reentryKillsNeeded=0;fieldHits=0;
+ loadScene(0);setState('running');$('veil').style.display='none';unlockAudio();
+ enterBattlefield();
+ toast(mode==='explore'?'🌎 FREE EXPLORATION · NO TIMER':'⚡ ENDLESS ASSAULT · NO 3D TIME LIMIT');
+ updateHUD();return true;
+}
+function cycleRoamWorld(){
+ if(gameMode==='campaign'||state!=='running')return false;
+ loadScene((scene+1)%3);setState('running');enterBattlefield();
+ toast('WORLD '+(scene+1)+'/3 · '+MAPS[scene].name);return true;
+}
+function enterRoamInterior(){
+ if(gameMode==='campaign'||state!=='running'||viewMode==='interior')return false;
+ if(viewMode==='tactical'&&!enterBattlefield())return false;
+ ensureGuardian();root.enabled=false;roamInteriorActive=true;
+ interiorRoot=new pc.Entity('Free Roam Reactor Interior');world.addChild(interiorRoot);
+ addModel('reactor_interior',interiorRoot,[0,0,0],1);
+ guardian.x=0;guardian.z=5;guardian.hp=100;
+ guardian.entity.setPosition(0,.2,5);guardian.entity.enabled=true;
+ breachers=[];roamRaiderClock=0;aimLockTarget=null;firing=false;
+ viewMode='interior';fieldProjection();sfx('power');
+ toast(gameMode==='explore'?'REACTOR TOUR · NO TIME LIMIT':'REACTOR ARENA · ENDLESS RAIDERS');
+ updateHUD();return true;
+}
+function exitRoamInterior(){
+ if(!roamInteriorActive||gameMode==='campaign')return false;
+ if(interiorRoot){interiorRoot.destroy();interiorRoot=null}
+ for(const b of beams.splice(0))if(b.entity?.parent)b.entity.destroy();
+ breachers=[];aimLockTarget=null;roamInteriorActive=false;roamRaiderClock=0;
+ root.enabled=true;viewMode='battlefield';breach=null;
+ guardian.x=0;guardian.z=3.5;guardian.hp=100;
+ guardian.entity.setPosition(0,.2,3.5);
+ fieldProjection();toast('BACK OUTSIDE · NO TIMER');updateHUD();return true;
+}
+function endFreeRoam(){
+ if(gameMode==='campaign')return false;
+ gameMode='campaign';freeWave=0;roamInteriorActive=false;freeRoamKills=0;
+ loadScene(0);setState('menu');
+ banner('SPEEDLINE<br><em>OVERDRIVE</em>',
+ 'THREE 3D WORLDS · THREE WAYS TO PLAY.<br>Choose the timed SPEED campaign or one of the two unlimited 3D Free Roam modes below.',
+ '▶ SPEED CAMPAIGN');
+ updateHUD();return true;
+}
+function updateRoamInterior(dt){
+ if(!roamInteriorActive)return;
+ if(gameMode==='assault'){
+  roamRaiderClock-=dt;
+  if(roamRaiderClock<=0&&breachers.filter(e=>e.live).length<7){spawnRaider();roamRaiderClock=2.4}
+  for(const e of breachers)if(e.live){
+   const dx=guardian.x-e.x,dz=guardian.z-e.z,d=Math.hypot(dx,dz)||1;
+   if(d>1.45){
+    const v=Math.min(e.speed*dt,d-1.4);
+    e.x+=dx/d*v;e.z+=dz/d*v;
+    e.entity.setPosition(e.x,.2+Math.sin(elapsed*6+e.x)*.03,e.z);
+    e.visual.setLocalEulerAngles(0,facingYaw(dx,dz),0);
+   }else{e.attack-=dt;if(e.attack<=0){e.attack=1.45;guardian.hp-=12;sfx('hit')}}
+  }
+  breachers=breachers.filter(e=>e.live);
+  if(guardian.hp<=0){
+   freeRoamRespawns++;guardian.hp=100;guardian.x=0;guardian.z=5;
+   guardian.entity.setPosition(0,.2,5);toast('REACTOR ARMOR RESTORED · KEEP FIGHTING');
+  }
+ }
+ $('combatStatus').textContent=gameMode==='explore'?'REACTOR TOUR · NO TIMER':
+ 'RAIDER ARENA · KILLS '+freeRoamKills+' · HP '+Math.ceil(guardian.hp);
+}
+
 function begin(){
  if(state==='won'){location.reload();return}
  if(state==='loss'){loadScene(scene);setState('running');$('veil').style.display='none';unlockAudio();return}
@@ -419,6 +515,7 @@ function resetCombatWorld(){
  if(interiorRoot){interiorRoot.destroy();interiorRoot=null}
  for(const b of beams)if(b.entity?.parent)b.entity.destroy();
  beams=[];breachers=[];breach=null;breachCooldown=0;firing=false;aimLockTarget=null;
+ roamInteriorActive=false;roamRaiderClock=0;
  fieldTimeLeft=0;fieldHits=0;fieldIFrames=0;reentryKillsNeeded=0;
  joystick.x=0;joystick.y=0;joystick.id=null;keys.clear();
  const stick=$('joystick');if(stick)stick.style.transform='translate(-50%,-50%)';
@@ -451,27 +548,30 @@ function chaseCamera(dt=1){
 }
 function enterBattlefield(){
  if(state!=='running'||viewMode==='interior')return false;
- if(reentryKillsNeeded>0){toast('🔒 EARN '+reentryKillsNeeded+' MORE TURRET KILLS TO RE-ENTER');return false}
+ if(gameMode==='campaign'&&reentryKillsNeeded>0){toast('🔒 EARN '+reentryKillsNeeded+' MORE TURRET KILLS TO RE-ENTER');return false}
  if(viewMode==='battlefield')return true;
  ensureGuardian();
  // Redeploy near the middle of the board. The old lower-left corner spawn
  // pinned the player against both movement clamps after a single joystick push.
  guardian.x=0;guardian.z=3.5;guardian.entity.setPosition(0,.20,3.5);
- fieldHits=0;fieldTimeLeft=FIELD_SECONDS;fieldDeployments++;fieldIFrames=1.3;guardian.hp=100;
+ fieldHits=0;fieldTimeLeft=gameMode==='campaign'?FIELD_SECONDS:0;fieldDeployments++;fieldIFrames=1.3;guardian.hp=100;
  viewMode='battlefield';root.enabled=true;fieldProjection();
- message('YOU ARE ON THE FIELD · Left stick / WASD moves · FIRE shoots the nearest drone · MAP returns to command');
+ message(gameMode==='campaign'?'25-SECOND FIELD DEPLOYMENT · Dodge 3 hits · FIRE auto-locks':
+ gameMode==='explore'?'FREE EXPLORATION · Tour all three 3D worlds and the reactor interior · No countdown':
+ 'ENDLESS ASSAULT · Unlimited deployment · Survive faster waves and defend your reactor');
  sfx('power');updateHUD();return true;
 }
 function returnMap(){
  if(viewMode==='interior')return false;
  if(viewMode==='tactical')return true;
  const wasOnField=viewMode==='battlefield';
- if(wasOnField&&reentryKillsNeeded===0)reentryKillsNeeded=REENTRY_KILLS;
+ if(gameMode==='campaign'&&wasOnField&&reentryKillsNeeded===0)reentryKillsNeeded=REENTRY_KILLS;
  fieldTimeLeft=0;
  viewMode='tactical';firing=false;aimLockTarget=null;joystick.x=0;joystick.y=0;if(guardian)guardian.entity.enabled=false;
  cam.camera.projection=pc.PROJECTION_ORTHOGRAPHIC;cam.camera.orthoHeight=tacticalHeight();
  focus.set(0,0,0);setCamera();$('zoomStatus').textContent='100%';
- message(reentryKillsNeeded>0?'FIELD LOCKED · Destroy '+reentryKillsNeeded+' drones with towers to earn entry again':'COMMAND DEFENSE · Build turrets · ENTER WORLD when ready');
+ message(gameMode!=='campaign'?'FREE ROAM · Build turrets or re-enter 3D whenever you want':
+ reentryKillsNeeded>0?'FIELD LOCKED · Destroy '+reentryKillsNeeded+' drones with towers to earn entry again':'COMMAND DEFENSE · Build turrets · ENTER WORLD when ready');
  updateHUD();return true;
 }
 function enterBreach(){
@@ -488,13 +588,13 @@ function enterBreach(){
  updateHUD();return true;
 }
 function spawnRaider(){
- if(!interiorRoot||!breach)return;
+ if(!interiorRoot||(!breach&&!roamInteriorActive))return;
  const x=rng(-4.0,4.0),z=-7.5;
  const entity=new pc.Entity('Reactor breach hostile raider');interiorRoot.addChild(entity);
  entity.setPosition(x,.22,z);
  const visual=addModel('breach_raider',entity,[0,0,0],.86);
  breachers.push({entity,visual,x,z,hp:5.5+scene*2.6,speed:1.0+scene*.2,attack:1.25,live:true});
- breach.spawned++;
+ if(breach)breach.spawned++;
 }
 function finishBreach(won){
  if(!breach)return;
@@ -551,18 +651,30 @@ function firePlayer(){
  if(viewMode==='interior'){
   e.hp-=3.25;hitCount++;
   emit(e.x,1.03,e.z,MAT.gold,3);
-  if(e.hp<=0){e.live=false;e.entity.destroy();breach.down++;score+=150+wave*35;sfx('hit')}
+  if(e.hp<=0){
+   e.live=false;e.entity.destroy();
+   if(breach)breach.down++;
+   if(roamInteriorActive)freeRoamKills++;
+   score+=150+wave*35;sfx('hit')
+  }
  }else{
   hitCount++;damage(e,2.45+wave*.16,'player');
  }
  updateHUD();return true;
 }
 function fieldTakeHit(enemy){
- if(viewMode!=='battlefield'||fieldIFrames>0||!guardian)return false;
+ if(viewMode!=='battlefield'||fieldIFrames>0||!guardian||gameMode==='explore')return false;
  fieldHits++;guardian.hp=Math.max(0,guardian.hp-34);fieldIFrames=1.2;
  lastFieldHit=enemy?.heavy?'armored drone collision':'velocity drone collision';
  emit(guardian.x,1.0,guardian.z,MAT.red,9);sfx('hit');
  if(fieldHits>=MAX_FIELD_HITS){
+  if(gameMode==='assault'){
+   freeRoamRespawns++;fieldHits=0;guardian.hp=100;fieldIFrames=2;
+   guardian.x=0;guardian.z=3.5;
+   guardian.entity.setPosition(0,.20,3.5);
+   toast('💥 FIELD ARMOR REBUILT · STAY IN THE FIGHT');
+   updateHUD();return true;
+  }
   fieldKnockouts++;core=Math.max(0,core-1);reentryKillsNeeded=REENTRY_KILLS;fieldIFrames=0;guardian.hp=100;
   returnMap();
   if(core<=0){setState('loss');banner('REACTOR<br><em>OVERWHELMED</em>',
@@ -580,7 +692,7 @@ function facingYaw(dx,dz){return Math.atan2(dx,dz)*180/Math.PI}
 function updateCombat(dt){
  if(!guardian)return;
  guardian.cooldown=Math.max(0,guardian.cooldown-dt);
- if(viewMode==='battlefield'){
+ if(viewMode==='battlefield'&&gameMode==='campaign'){
   fieldTimeLeft=Math.max(0,fieldTimeLeft-dt);
   if(fieldTimeLeft<=0){
    fieldExpirations++;reentryKillsNeeded=REENTRY_KILLS;returnMap();
@@ -636,13 +748,17 @@ function updateCombat(dt){
   if(breach.spawned>=breach.total&&!breachers.length){finishBreach(true);return}
   if(breach.time<=0||guardian.hp<=0||core<=0){finishBreach(false);return}
   $('combatStatus').textContent='BREACH '+breach.down+'/'+breach.total+' · '+Math.ceil(breach.time)+'s · HP '+Math.ceil(guardian.hp);
+ }else if(roamInteriorActive){
+  updateRoamInterior(dt);
  }else if(viewMode==='battlefield'){
   fieldIFrames=Math.max(0,fieldIFrames-dt);
   if(fieldIFrames<=0){
    const collision=enemies.find(e=>e.live&&Math.hypot(e.x-guardian.x,e.z-guardian.z)<1.35);
    if(collision){fieldTakeHit(collision);if(viewMode==='tactical')return;}
   }
-  $('combatStatus').textContent='⏱ '+Math.ceil(fieldTimeLeft)+'s · HITS '+fieldHits+'/3 · HP '+Math.ceil(guardian.hp);
+  $('combatStatus').textContent=gameMode==='campaign'?'⏱ '+Math.ceil(fieldTimeLeft)+'s · HITS '+fieldHits+'/3 · HP '+Math.ceil(guardian.hp)
+   :gameMode==='explore'?'FREE ROAM · EXPLORE THE WORLD'
+   :'ENDLESS WAVE '+freeWave+' · KILLS '+freeRoamKills+' · HP '+Math.ceil(guardian.hp);
  }
  chaseCamera(dt);
 }
@@ -684,6 +800,11 @@ function bindCombatInputs(){
 
 function input(){
  bindCombatInputs();
+ $('explore').addEventListener('click',()=>startFreeRoam('explore'));
+ $('assault').addEventListener('click',()=>startFreeRoam('assault'));
+ $('nextWorld').addEventListener('click',cycleRoamWorld);
+ $('reactorVisit').addEventListener('click',()=>roamInteriorActive?exitRoamInterior():enterRoamInterior());
+ $('endRoam').addEventListener('click',endFreeRoam);
  for(const name of Object.keys(SPECS))$(name).addEventListener('click',()=>{chosen=name;updateHUD();sfx('tap');message(SPECS[name].name+' SELECTED · Tap a glowing pad')});
  $('upgrade').addEventListener('click',()=>{chosen='upgrade';updateHUD();sfx('tap');message('Tap a turret to upgrade it')});
  $('overdrive').addEventListener('click',activateOverdrive);$('brake').addEventListener('click',activateBrake);
@@ -743,7 +864,7 @@ function status(){
   speedLevel:wave,brakeFactor:+slowFactor().toFixed(3),dragFactor:+dragFactor().toFixed(3),
   credits,core,score,kills,spawned,shots,hits,abilityUses,energy,enemyCount:enemies.length,
   models:modelCount(),worlds:MAPS.map(x=>x.name),pads:pads.length,pathLength:+path.slice(1).reduce((s,p,i)=>s+Math.hypot(p[0]-path[i][0],p[1]-path[i][1]),0).toFixed(1),
-  towerCount:towers.length,towerLevels:towers.map(t=>t.level),camera:viewMode,fieldHits,fieldIFrames,fieldKnockouts,reentryKillsNeeded,lastFieldHit,fieldTimeLeft:+fieldTimeLeft.toFixed(2),fieldExpirations,fieldDeployments,fieldDuration:FIELD_SECONDS,
+  towerCount:towers.length,towerLevels:towers.map(t=>t.level),camera:viewMode,gameMode,freeWave,freeRoamKills,freeRoamRespawns,freeWorldVisits,roamInteriorActive,fieldHits,fieldIFrames,fieldKnockouts,reentryKillsNeeded,lastFieldHit,fieldTimeLeft:+fieldTimeLeft.toFixed(2),fieldExpirations,fieldDeployments,fieldDuration:FIELD_SECONDS,
   interaction:{...interaction},controls:{modelForward:'GLB+Z',cameraYaw:+cameraAngle.toFixed(3),cameraSwipes,joystickX:+joystick.x.toFixed(3),joystickY:+joystick.y.toFixed(3),aimLockSwitches,hasLock:!!aimLockTarget?.live},player:guardian?{x:+guardian.x.toFixed(2),z:+guardian.z.toFixed(2),hp:guardian.hp,yaw:+guardian.facing.toFixed(2),targetYaw:+guardian.targetYaw.toFixed(2)}:null,fireCount,hitCount,breachesWon,breachesLost,breach:breach?{...breach}:null,audio:soundOn?'enabled':'muted',proof:'PlayCanvas+Blender+original GLSL+25sec-field-deployment'};
 }
 async function init(){
@@ -778,6 +899,7 @@ async function init(){
   setState('menu');$('loader').style.display='none';
   window.__X13_SPEEDLINE_V4__={
    status,begin,place,activatePad,projectPad,switchView,enterBattlefield,returnMap,firePlayer,enterBreach,updateCombat,overdrive:activateOverdrive,brake:activateBrake,
+   startFreeRoam,cycleRoamWorld,enterRoamInterior,exitRoamInterior,endFreeRoam,
    qaCollisionSetup:()=>{
     if(viewMode!=='battlefield')return false;
     let e=enemies.find(x=>x.live);

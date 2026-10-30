@@ -43,12 +43,26 @@ button:disabled{opacity:.35}
 #viewtools #zoomReset{font-size:18px}
 #loader{position:absolute;z-index:6;left:50%;top:48%;transform:translate(-50%,-50%);background:#051927e9;border:1px solid #5df2ca7b;padding:12px 16px;border-radius:12px;font-size:12px;white-space:nowrap}
 #veil{position:absolute;z-index:10;inset:0;display:flex;align-items:center;justify-content:center;padding:17px;background:radial-gradient(circle at 50% 42%,#204e62ef,#050b16f6 72%)}
-#menu{width:min(395px,100%);border:1px solid #54fee075;border-radius:22px;text-align:center;background:#0b1d2aef;padding:24px 19px;box-shadow:0 25px 85px #0009}
+#menu{max-height:94dvh;overflow-y:auto;width:min(395px,100%);border:1px solid #54fee075;border-radius:22px;text-align:center;background:#0b1d2aef;padding:24px 19px;box-shadow:0 25px 85px #0009}
 .kicker{font-weight:900;font-size:10px;letter-spacing:.24em;color:#52fae8}
 h1{font-size:clamp(33px,9vw,51px);line-height:1;letter-spacing:-.035em;margin:15px 0;text-shadow:0 0 25px #5effd85c}
 h1 em{font-style:normal;color:#ffbf5c}
 .info{color:#c9e0e9;font-size:13px;line-height:1.55;margin:0 0 16px}
 #start{width:100%;padding:13px;border:0;border-radius:11px;color:#142636;font-weight:950;background:linear-gradient(135deg,#ffe19b,#f4a149);font-size:15px}
+#freeChoice{margin-top:12px;border-top:1px solid #5cead44f;padding-top:12px;text-align:left}
+#freeChoice h2{margin:0 0 8px;color:#5ffce8;text-transform:uppercase;font-size:12px;letter-spacing:.12em}
+#freeChoice p{color:#c8dee8;font-size:11px;line-height:1.35;margin:3px 0 8px}
+#freeChoice button{display:block;width:100%;padding:11px;border:1px solid #57e7d69e;border-radius:10px;
+ background:linear-gradient(130deg,#143d50,#112331);color:#eafff9;text-align:left;font-weight:900;margin-bottom:7px}
+#freeChoice button small{display:block;font-size:10px;color:#b6e2e7;font-weight:600;padding-top:2px}
+#freeChoice #assault{border-color:#ffb35e9e;background:linear-gradient(130deg,#57331b,#192a32)}
+#roamTools{position:absolute;z-index:7;top:7px;left:50%;transform:translateX(-50%);display:flex;gap:5px;align-items:center}
+#roamTools[hidden]{display:none}
+#roamTools button{padding:7px 9px;border-radius:9px;border:1px solid #7defdc8c;color:#efffff;font-weight:900;
+ background:#092b3ce9;font-size:10px;white-space:nowrap;box-shadow:0 3px 12px #000a}
+#roamTools #endRoam{border-color:#ffcb889c;color:#fff0d7}
+@media(max-width:440px){#roamTools{top:6px}#roamTools button{font-size:9px;padding:6px 6px}}
+
 #toast{position:absolute;z-index:8;top:47%;left:50%;transform:translate(-50%,-50%);background:#0a2d3cf2;border:1px solid #68ffe9a8;border-radius:13px;font-size:12px;font-weight:900;white-space:nowrap;padding:11px 14px;opacity:0;transition:opacity .15s;pointer-events:none;box-shadow:0 8px 24px #0008}
 #toast.show{opacity:1}
 #error{display:none;position:absolute;inset:0;z-index:20;background:#081624;align-items:center;justify-content:center;padding:18px;text-align:center;line-height:1.5}
@@ -88,6 +102,19 @@ h1 em{font-style:normal;color:#ffbf5c}
  #viewtools button{width:31px;height:30px;font-size:17px}
  #toast{top:44%}
 }
+@media (orientation:landscape) and (min-width:580px){
+ #menu{width:min(610px,97%);padding:12px 16px;max-height:95dvh}
+ #menu h1{font-size:clamp(25px,4vw,35px);margin:6px 0 8px}
+ #menu .kicker{font-size:9px}
+ #menu .info{font-size:11px;line-height:1.34;margin-bottom:9px}
+ #menu #start{padding:9px;font-size:13px}
+ #freeChoice{display:grid;grid-template-columns:1fr 1fr;column-gap:8px;row-gap:4px;margin-top:8px;padding-top:7px}
+ #freeChoice h2,#freeChoice p{grid-column:1/-1;margin:0}
+ #freeChoice h2{font-size:10px}
+ #freeChoice p{font-size:10px}
+ #freeChoice button{margin:0;min-height:50px;padding:7px;font-size:11px}
+ #freeChoice button small{font-size:9px}
+}
 @media (orientation:landscape) and (min-width:580px) and (max-height:380px){
  #top{height:53px}
  #viewport{top:53px;bottom:74px}
@@ -99,7 +126,7 @@ h1 em{font-style:normal;color:#ffbf5c}
 }
 </style></head>
 <body>
-<div id="viewport"><canvas id="app" aria-label="Real modeled 3D immersive tower defense battlefield with mobile touch controls"></canvas>
+<div id="viewport"><div id="roamTools" hidden><button id="nextWorld">🌎 NEXT WORLD</button><button id="reactorVisit">◈ REACTOR</button><button id="endRoam">⌂ MENU</button></div><canvas id="app" aria-label="Real modeled 3D immersive tower defense battlefield with mobile touch controls"></canvas>
 <div id="combat"><div id="joybase" aria-label="Move character virtual joystick"><div id="joystick"></div></div><div id="combatRight"><div id="combatStatus">SHIELD 100%</div><button id="fire" aria-label="Fire plasma blaster">FIRE</button></div></div><div id="viewtools"><button id="zoomPlus" aria-label="Zoom in">+</button><span id="zoomStatus">100%</span><button id="zoomMinus" aria-label="Zoom out">−</button><button id="zoomReset" aria-label="Reset camera">⌖</button></div></div>
 <div id="top">
 <div id="bar"><div class="brand">⚡ SPEEDLINE OVERDRIVE<small id="mapName">NEON DEPOT</small></div>
@@ -123,8 +150,11 @@ h1 em{font-style:normal;color:#ffbf5c}
 <div id="toast"></div><div id="loader">Loading original Blender worlds…</div>
 <div id="veil"><div id="menu">
 <div class="kicker">X13 · SLAPJAM · SPEED!</div><h1 id="heading">SPEEDLINE<br><em>OVERDRIVE</em></h1>
-<p id="desc" class="info">THREE REAL 3D WORLDS. THIRTY SPEED WAVES.<br>Build on a bigger battlefield with longer tracks and more tower pads. Reach Speed 10 in each sector, then enter a completely new environment.<br><b>ENTER WORLD for 25 seconds. Left stick moves, swipe the 3D scene to turn the camera, FIRE locks on. Three hits or timeout sends you back to command. Seven turret kills recharge.</b></p>
-<button id="start">ENTER NEON DEPOT →</button></div></div>
+<p id="desc" class="info">THREE REAL 3D WORLDS. THIRTY SPEED WAVES.<br><b>Campaign:</b> build towers and survive the original 30 speed waves. Enter the battlefield for 25-second missions, with three-hit knockouts and seven-turret-kill recharge.</p>
+<button id="start">▶ SPEED CAMPAIGN</button>
+<div id="freeChoice"><h2>⚡ FREE ROAM MODES</h2><p>No deployment timer. Choose your 3D experience. Free Roam never changes campaign progress.</p>
+<button id="explore">🌎 FREE EXPLORATION<small>Walk all 3 worlds and the reactor interior. No enemies. No countdown.</small></button>
+<button id="assault">⚔ ENDLESS ASSAULT<small>Fight increasingly fast waves, keep your turrets active, and survive for as long as you can.</small></button></div></div></div>
 <div id="error"><div><h2>3D runtime failed</h2><p id="errorText"></p><p>The previous V3 build remains preserved.</p></div></div>
-<script type="module" src="./game.js?v=54-correct-avatar-facing"></script>
+<script type="module" src="./game.js?v=55-free-roam-two-modes"></script>
 </body></html>
