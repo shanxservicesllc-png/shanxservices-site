@@ -1,18 +1,18 @@
 {
   "approval": "owner-approved",
-  "approved_at_utc": "2026-10-29-owner-directed-original-publish",
+  "approved_at_utc": "2026-10-30T02:42:15.918793+00:00",
   "browser_qa_passed": true,
-  "content_sha256": "5b9ffd1e4ce8ce9944ddd52a24193453bb8f7e8f52d63a08e6ce38d66b611990",
+  "content_sha256": "56a85cbc6a94b74256b60dccd728242a7ea6816d48f553598399abb47ffddaf9",
   "files": [
     {
-      "bytes": 12096,
+      "bytes": 11634,
       "path": "index.html",
-      "sha256": "221a6d99389eda81aeea6da7f2b118e75013cba2a198c04364f5755c2744e096"
+      "sha256": "73a495ce302a673d22910c3e3affaf0fd0d0e28a461abcb7cc8f94ca93a1bd53"
     },
     {
-      "bytes": 19200,
+      "bytes": 18841,
       "path": "game.js",
-      "sha256": "19288e20ed71e41e0c8665381c4d3abfdf3bce6cb9f0679bd9a3169a64975ae5"
+      "sha256": "4b518efc414d3d24e67f5f01d96baab71b71222176d7650ee9a9d32021f28fd7"
     },
     {
       "bytes": 5473,
@@ -75,13 +75,12 @@
       "sha256": "8590b73a7c0f121f9845791192a532d8af130e31dbaa33bda7fc73189bcb07bc"
     },
     {
-      "bytes": 1351,
+      "bytes": 1374,
       "path": "README_PLAYTEST.txt",
-      "sha256": "0eb5d37d6cf29739ba6151573364112d0d33eb7c3e8f330998c09640fa3fbf69"
+      "sha256": "37c0e37637e0cf2f97890af4acfa444d6ef119c6ed53ac25dbab4d0bf527841a"
     }
   ],
   "game": "palmageddon",
-  "migration": "Existing owner-published, browser-verified canonical Git bytes; only CRLF checkout readback corrected",
-  "release_id": "palmageddon-baseline-5b9ffd1e4ce8ce99",
+  "release_id": "palmageddon-56a85cbc6a94b742",
   "schema": "x13-pbp-1"
 }

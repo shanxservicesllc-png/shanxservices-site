@@ -21,8 +21,8 @@ try{
  qa.booted=true;
 }catch(e){
  qa.errors.push('WebGL initialization: '+e.message);
- panel.querySelector('h2').textContent='WEBGL ERROR';
- begin.textContent='3D ENGINE UNAVAILABLE';
+ panel.querySelector('h2').textContent='GAME UNAVAILABLE';
+ begin.textContent='TRY ANOTHER BROWSER';
  throw e;
 }
 const rgb=hex=>new pc.Color(((hex>>16)&255)/255,((hex>>8)&255)/255,(hex&255)/255);
@@ -193,17 +193,16 @@ function reset(){
  panel.classList.add('hide');
  $('guard').classList.remove('pressed');
  setTurn('player_ready');
- shout('YOUR TURN: ONE SLAP!',1100);updateHP();audioFx(660,.23,'sine',.1);
+ shout('YOUR TURN!',1100);updateHP();audioFx(660,.23,'sine',.1);
 }
 function end(won){
  mode=won?'won':'lost';qa.mode=mode;qa.win=won;qa.loss=!won;setTurn('finished');
  panel.classList.remove('hide');
  panel.querySelector('h1').textContent='PALMAGEDDON';
- panel.querySelector('h2').textContent=won?(levelIndex===LEVELS.length-1?'👑 CHAMPIONSHIP WON!':'🏆 VENUE CLEARED!'):'💥 REMATCH REQUIRED';
+ panel.querySelector('h2').textContent=won?(levelIndex===LEVELS.length-1?'👑 CHAMPION!':'🏆 YOU WIN!'):'💥 YOU LOSE';
  panel.querySelector('p').textContent=won?
- ('You beat '+LEVELS[levelIndex].rival+' in '+LEVELS[levelIndex].venue+'! '+perfects+' perfect slaps. '+(levelIndex===LEVELS.length-1?'All four venues conquered!':'Next: '+LEVELS[levelIndex+1].venue+'.')):
- ('You lost to '+LEVELS[levelIndex].rival+'. Read the faster windup, guard or dodge and time your next slap.');
- panel.querySelector('p.micro').textContent='REALISTIC ADULT FIGHTERS · FOUR ORIGINAL 3D VENUES · NO LEVEL RESTART ON ROTATION';
+  (levelIndex===LEVELS.length-1?'The crown is yours!':'Next up: '+LEVELS[levelIndex+1].rival+'.'):
+  'Ready for another round?';
  begin.textContent=won?(levelIndex===LEVELS.length-1?'RESTART CHAMPIONSHIP 👋':'NEXT VENUE ⚡'):'RETRY THIS VENUE ⚡';
  if(won)qa.levelsCleared=Math.max(qa.levelsCleared,levelIndex+1);
  begin.disabled=false;audioFx(won?850:180,.35,won?'sine':'sawtooth',.12);soundEngine.stinger(won);
@@ -218,9 +217,9 @@ function playerSlap(){
  const perfect=offset<=.045,good=offset<=.17;
  qa.lastAccuracy=Math.round(closeness*100);
  qa.lastDamage=dmg;
- if(perfect){streak++;perfects++;shout('⚡ PERFECT SLAP! -'+dmg+' HP',1050);audioFx(530,.18,'sawtooth',.12);}
- else if(good){streak++;shout('GOOD HIT! -'+dmg+' HP',950);audioFx(345,.15,'triangle',.11);}
- else{streak=0;shout('OFF-TIMING: -'+dmg+' HP',950);audioFx(215,.1,'square',.07);}
+ if(perfect){streak++;perfects++;shout('⚡ PERFECT!',800);audioFx(530,.18,'sawtooth',.12);}
+ else if(good){streak++;shout('GOOD HIT!',750);audioFx(345,.15,'triangle',.11);}
+ else{streak=0;shout('GLANCING HIT!',700);audioFx(215,.1,'square',.07);}
  maxStreak=Math.max(maxStreak,streak);
  enemyHP=clamp(enemyHP-dmg,0,maxEnemyHP);
  soundEngine.slap(dmg,false);
@@ -241,13 +240,13 @@ function useDefense(kind){
   // A 360ms timed shield. Holding the button cannot extend this window.
   guardUntil=elapsed+360;guard=true;
   $('guard').classList.add('pressed');
-  shout('🛡️ BLOCK! 0.36s WINDOW',510);
+  shout('🛡️ BLOCK!',510);
   audioFx(440,.080,'triangle',.05);
  }else{
   // A longer evasion window, balanced by its one-try-per-opponent-turn rule.
   dodgeEnd=elapsed+570;
   dodgeCooldown=enemyAttackAt+1000;
-  shout('↪️ DODGE! 0.57s WINDOW',550);audioFx(640,.09,'sine',.06);
+  shout('↪️ DODGE!',550);audioFx(640,.09,'sine',.06);
  }
 }
 function dodge(){useDefense('dodge');}
@@ -264,9 +263,9 @@ function enemySlap(){
  soundEngine.slap(damage,true,defended,evaded);
  if(!evaded)animateImpact(defended?'BLOCK':'-'+damage,defended?'guard':'normal',true);
  swingE=elapsed+420;impactP=elapsed+520;baseShake=damage/12;
- if(evaded){streak++;maxStreak=Math.max(maxStreak,streak);shout('💫 CLEAN TIMED DODGE!',900);audioFx(700,.12,'sine',.1);}
- else if(defended){shout('🛡️ GUARDED! YOUR TURN NEXT!',850);audioFx(165,.19,'triangle',.08);}
- else{streak=0;shout((defenseUsed?'⏱️ DEFENSE TOO EARLY! ':'💥 ')+'-'+damage+' HP',950);audioFx(115,.21,'sawtooth',.13);if(navigator.vibrate)navigator.vibrate(55);}
+ if(evaded){streak++;maxStreak=Math.max(maxStreak,streak);shout('💫 DODGED!',800);audioFx(700,.12,'sine',.1);}
+ else if(defended){shout('🛡️ BLOCKED!',700);audioFx(165,.19,'triangle',.08);}
+ else{streak=0;shout(defenseUsed?'TOO EARLY!':'💥 HIT!',800);audioFx(115,.21,'sawtooth',.13);if(navigator.vibrate)navigator.vibrate(55);}
  setTurn('enemy_recover');
  turnUntil=elapsed+700;
  updateHP();if(myHP<=0)end(false);
@@ -302,23 +301,23 @@ app.on('update',dt=>{
   if(turn==='player_anim'&&elapsed>=turnUntil){
    setTurn('enemy_windup');
    enemyAttackAt=elapsed+Math.max(580,LEVELS[levelIndex].windup-(round-1)*75);
-   shout('RIVAL TURN: ONE TIMED DEFENSE!',1050);
+   shout('THEIR TURN!',900);
   }
   if(turn==='enemy_windup'){
    const until=enemyAttackAt-elapsed;
    if(defenseType==='guard'&&guard&&elapsed>guardUntil){guard=false;$('guard').classList.remove('pressed');}
    if(until<=0)enemySlap();
-   else if(until<360)countdown.textContent='⚠ BLOCK NOW! '+(until/1000).toFixed(1)+'s';
-   else if(until<570)countdown.textContent='⚠ DODGE NOW! '+(until/1000).toFixed(1)+'s';
-   else countdown.textContent='OPPONENT WINDUP · '+(until/1000).toFixed(1)+'s';
+   else if(until<360)countdown.textContent='BLOCK!';
+   else if(until<570)countdown.textContent='DODGE!';
+   else countdown.textContent='INCOMING…';
   }else if(turn==='enemy_recover'&&elapsed>=turnUntil){
    round++;
    setTurn('player_ready');
-   shout('YOUR TURN: ONE TIMED SLAP!',1000);
+   shout('YOUR TURN!',850);
   }
-  if(turn==='player_ready')countdown.textContent='YOUR TURN · ONE SLAP';
-  else if(turn==='player_anim')countdown.textContent='WAIT · OPPONENT TURN NEXT';
-  else if(turn==='enemy_recover')countdown.textContent='WAIT · NEXT TURN INCOMING';
+  if(turn==='player_ready')countdown.textContent='YOUR TURN';
+  else if(turn==='player_anim')countdown.textContent='THEIR TURN';
+  else if(turn==='enemy_recover')countdown.textContent='GET READY';
   needle.style.left=(meter()*100)+'%';
   if(elapsed>announceUntil)callout.textContent='';
  }
@@ -365,11 +364,11 @@ objects.then((entities)=>{
  enemy.setEulerAngles(0,-90,0);
  qa.ready=true;qa.mode=mode='menu';
  begin.disabled=false;begin.textContent='ENTER THE BASEMENT ⚡';
- $('smoke').textContent='FOUR 3D VENUES LOADED';
+ $('smoke').textContent='';
  setTimeout(()=>{$('smoke').textContent='';},5000);
 }).catch(e=>{
  qa.errors.push(String(e));console.error('PALMAGEDDON 3D ASSET FAILURE',e);
- panel.querySelector('h2').textContent='3D IMPORT FAILED';
- begin.textContent='ASSET ERROR · UNVERIFIED';
- $('smoke').textContent='ERROR: '+String(e).slice(0,70);
+ panel.querySelector('h2').textContent='UNABLE TO LOAD';
+ begin.textContent='TRY AGAIN';
+ $('smoke').textContent='';
 });
