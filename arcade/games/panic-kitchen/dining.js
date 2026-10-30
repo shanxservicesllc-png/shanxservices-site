@@ -51,17 +51,18 @@ function dropAt(x,y){
  }
  return false;
 }
-function wipe(i){
+function wipe(i,manager=false){
  const t=D.tables[i];if(!t||t.status!=='dirty')return false;
  t.scrubs++;
- if(t.scrubs>=2){
+ if(t.scrubs>=Math.max(1,2-Math.floor(((T()?.levels?.patio||1)-1)/1))){
   t.scrubs=0;t.status='free';D.cleaned++;D.spongeSelected=false;
-  message('✨ TABLE '+(i+1)+' CLEAN! READY FOR ANOTHER DINER');
+  message((manager?'👨‍💼 MANAGER CLEANED ':'✨ TABLE ')+(i+1)+' CLEAN! READY FOR ANOTHER DINER');
  }else message('🧽 WIPE AGAIN! 1 / 2');
  render();
  window.__panicRush?.checkCleanCompletion?.();
  return true;
 }
+function managerWipe(){const i=D.tables.findIndex((t,n)=>enabled(n)&&t.status==='dirty');return i>=0?wipe(i,true):false}
 function spongeAt(x,y){
  for(let i=0;i<spotButtons.length;i++){
   const r=spotButtons[i].getBoundingClientRect();
@@ -96,20 +97,57 @@ function addJob(detail){
  const actor=T().walkers.findIndex((e,i)=>e&&!used.has(i));
  if(actor<0){D.queue.push(detail);return}
  const start={x:-10.9,z:6.3},ent=T().walkers[actor];
- const job={actor,ent,detail,phase:'enter',x:start.x,z:start.z,wait:0};
+ const job={actor,ent,detail,phase:'enter',x:start.x,z:start.z,wait:0,routeIndex:0,face:0,waypoints:[[-10.9,6.45],[-6.15,6.45],[-5.0,5.65],[-4.75,4.6]]};
  ent.enabled=true;ent.setLocalPosition(start.x,0,start.z);D.jobs.push(job);
  D.arrivals++;
 }
+function poseGuest(job,walking,seated=false){
+ if(!job.limbs){
+  const n=job.ent.name,find=(part,side)=>job.ent.findByName(n+' '+part+' '+side);
+  job.limbs={arm:[find('arm',-1),find('arm',1)],leg:[find('trouser',-1),find('trouser',1)],shoe:[find('shoe',-1),find('shoe',1)],hand:[find('palm',-1),find('palm',1)]};
+ }
+ const swing=walking?Math.sin(D.elapsed*8.4+job.actor*.5)*13:seated?Math.sin(D.elapsed*2.6+job.actor)*3:0;
+ for(let i=0;i<2;i++){
+  const sign=i===0?-1:1,a=sign*swing;
+  job.limbs.arm[i]?.setLocalEulerAngles(a,0,0);
+  job.limbs.leg[i]?.setLocalEulerAngles(-a*.65,0,0);
+  job.limbs.shoe[i]?.setLocalPosition(sign*.17,.13,-.12+a*.004);
+  job.limbs.hand[i]?.setLocalPosition(sign*.5,.98,.17-a*.005);
+ }
+}
 function move(job,tx,tz,dt){
  const dx=tx-job.x,dz=tz-job.z,dist=Math.hypot(dx,dz);
- const speed=3.9,step=Math.min(dist,speed*dt);
+ const speed=2.95,step=Math.min(dist,speed*dt);
  if(dist>.001){job.x+=dx/dist*step;job.z+=dz/dist*step}
- job.ent.setLocalPosition(job.x,Math.abs(Math.sin(D.elapsed*10+job.actor))*.025,job.z);
- job.ent.setLocalEulerAngles(0,Math.atan2(dx,-dz)*180/Math.PI,0);
+ const target=Math.atan2(dx,-dz)*180/Math.PI;
+ const diff=((target-job.face+540)%360)-180;
+ job.face+=diff*Math.min(1,dt*8.5);
+ job.ent.setLocalScale(1,1,1);
+ job.ent.setLocalPosition(job.x,Math.abs(Math.sin(D.elapsed*8+job.actor))*.025,job.z);
+ job.ent.setLocalEulerAngles(0,job.face,0);
+ poseGuest(job,true);
  return dist<.10;
+}
+function route(job,points){job.waypoints=points.map(([x,z])=>[x,z]);job.routeIndex=0}
+function follow(job,dt){
+ if(!job.waypoints?.length)return true;
+ const point=job.waypoints[job.routeIndex];
+ if(!point)return true;
+ if(move(job,point[0],point[1],dt))job.routeIndex++;
+ return job.routeIndex>=job.waypoints.length;
+}
+function diningRoute(table){
+ // Service aisle x=-6.1 stays clear of patio furniture; approach the chair from its outside.
+ return [[-5.3,5.6],[-6.08,5.9],[-6.08,table.z+.25],[-7.38,table.z+.25]];
+}
+function exitRoute(job){
+ const table=job.detail.source==='DINE-IN'?D.tables[job.detail.table]:null;
+ if(table)return [[-6.08,table.z+.25],[-6.08,6.45],[-10.9,6.45]];
+ return [[-5.3,5.65],[-6.15,6.45],[-10.9,6.45]];
 }
 function onServed(event){
  const detail=event.detail||{};
+ if(detail.source==='DRIVE-THRU')return;
  if(detail.source==='DINE-IN'){
   const i=Number.isInteger(detail.table)?detail.table:D.selectedTable;
   const table=D.tables[i];
@@ -123,23 +161,39 @@ function tickNPCs(dt){
  if(!D.initialized)return;
  if(R()?.paused||document.getElementById('shop')?.classList.contains('show'))return;
  D.elapsed+=dt;
- if(D.queue.length&&D.jobs.length<4){const job=D.queue.shift();addJob(job)}
+ if(D.queue.length&&D.jobs.length<4){const queued=D.queue.shift();addJob(queued)}
  for(const job of [...D.jobs]){
-  const i=job.actor,table=D.tables[job.detail.table],dine=job.detail.source==='DINE-IN';
+  const table=Number.isInteger(job.detail.table)?D.tables[job.detail.table]:null;
+  const dine=job.detail.source==='DINE-IN';
   if(job.phase==='enter'){
-   if(move(job,-4.3,2.3,dt)){job.phase='pickup';job.wait=.7}
+   if(follow(job,dt)){job.phase='pickup';job.wait=.7;job.ent.setLocalScale(1,1,1);poseGuest(job,false)}
   }else if(job.phase==='pickup'){
    job.wait-=dt;
-   if(job.wait<=0)job.phase=dine?'table':'exit';
+   if(job.wait<=0){
+    job.phase=dine?'table':'exit';
+    route(job,dine&&table?diningRoute(table):exitRoute(job));
+   }
   }else if(job.phase==='table'){
-   if(!table){job.phase='exit';continue}
-   if(move(job,table.x,table.z+.65,dt)){job.phase='eating';job.wait=5.8;table.status='eating';table.guest=i;render()}
+   if(!table){job.phase='exit';route(job,exitRoute(job));continue}
+   if(follow(job,dt)){
+    job.phase='eating';job.wait=Math.max(3.2,5.8-1.2*Math.max(0,(T()?.levels?.patio||1)-1));
+    table.status='eating';table.guest=job.actor;render();
+   }
   }else if(job.phase==='eating'){
-   job.wait-=dt;job.ent.setLocalPosition(job.x,-.45,job.z);
-   if(job.wait<=0){table.status='dirty';table.guest=null;job.phase='exit';render();message('🧽 TABLE '+(job.detail.table+1)+' IS DIRTY. CLEAN IT!')}
+   job.wait-=dt;
+   // Seated guest stays beside the actual chair. Never sink into or walk through the table.
+   job.ent.setLocalScale(1,.84,1);
+   job.ent.setLocalPosition(job.x,.05,job.z);
+   job.ent.setLocalEulerAngles(0,-90,0);
+   poseGuest(job,false,true);
+   if(job.wait<=0){
+    if(table){table.status='dirty';table.guest=null;render();message('🧽 TABLE '+(job.detail.table+1)+' IS DIRTY. CLEAN IT!')}
+    job.ent.setLocalScale(1,1,1);
+    job.phase='exit';route(job,exitRoute(job));
+   }
   }else if(job.phase==='exit'){
-   if(move(job,-11.1,6.3,dt)){
-    job.ent.enabled=false;
+   if(follow(job,dt)){
+    job.ent.setLocalScale(1,1,1);poseGuest(job,false);job.ent.enabled=false;
     D.jobs.splice(D.jobs.indexOf(job),1);
    }
   }
@@ -171,7 +225,7 @@ window.addEventListener('panic:rush-start',reset);
 window.addEventListener('panic:order-served',onServed);
 function initialize(){
  if(!T()?.districtReady||!G()?.rendering)return requestAnimationFrame(initialize);
- D.initialized=true;reset();window.__panicDining={state:D,tickNPCs,dropAt,deliverToTable,wipe,needsCleanup,render,reset};
+ D.initialized=true;reset();window.__panicDining={state:D,tickNPCs,dropAt,deliverToTable,wipe,managerWipe,needsCleanup,render,reset};
  // Markers also update on open/close of upgrades and camera changes even when idle.
  let last=performance.now();
  function raf(t){if(!D.initialized)return;const dt=Math.min(.12,(t-last)/1000);last=t;render();requestAnimationFrame(raf)}

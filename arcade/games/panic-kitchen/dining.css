@@ -18,3 +18,8 @@
 #heatTrack::after{content:"";position:absolute;top:-5px;left:0;right:0;height:2px;background:#ecf2ec40;pointer-events:none}
 #rushPlate.active #serveDrop{background:#b8efc3;color:#24593a}
 @media(max-width:440px){#diningDock{bottom:40px}#dineSponge{padding:6px;font-size:10px}#diningHint{font-size:9px;max-width:115px}.diningSpot{font-size:9px;padding:6px}}
+
+/* Drive-thru interaction */
+#driveState{position:absolute;z-index:6;top:83px;right:10px;background:#102b3de6;border:1px solid #82daccaa;color:#eaffed;border-radius:9px;padding:6px 9px;font-size:10px;font-weight:1000;pointer-events:none}
+#driveWindow{position:absolute;z-index:7;transform:translate(-50%,-50%);background:#deff8c;border:3px solid #fff5d2;border-radius:14px;padding:9px 10px;color:#254332;font-size:10px;font-weight:1000;box-shadow:0 4px 0 #668845,0 0 0 6px #77ff9699;touch-action:manipulation;white-space:nowrap}
+@media(max-width:480px){#driveState{top:71px;right:6px;font-size:9px;padding:5px 7px}#driveWindow{font-size:9px;padding:8px}}

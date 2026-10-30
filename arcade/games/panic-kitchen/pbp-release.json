@@ -1,13 +1,13 @@
 {
   "approval": "owner-approved",
-  "approved_at_utc": "2026-10-29-owner-directed-original-publish",
+  "approved_at_utc": "2026-10-30T02:59:46.487933+00:00",
   "browser_qa_passed": true,
-  "content_sha256": "1ef8718e3379869c48471087869b0ffb812774aa8b0ad5b69ced9b7380f393e4",
+  "content_sha256": "85f1b4feecff012539092860420afea50c0ac2f1c42ee70d9992127b553ad47c",
   "files": [
     {
-      "bytes": 10913,
+      "bytes": 10947,
       "path": "index.html",
-      "sha256": "119756c06e72610097e538d919a52377090baf607f3709057d31b6822c62d8f5"
+      "sha256": "3888f2ed7775dec16e28cce49300c2f14d3bd3ea39e9534158fa5e89bc7fb326"
     },
     {
       "bytes": 16725,
@@ -15,14 +15,14 @@
       "sha256": "20cbe9a4c11599176bb137a2db4d1cddf83b6243934f8590dc3d918622ce1f51"
     },
     {
-      "bytes": 2550,
+      "bytes": 3206,
       "path": "dining.css",
-      "sha256": "bfbde318071c249ecb157005e3da9b02dfc29bd076d7402564e73d89c6b5c0e5"
+      "sha256": "a8185aea34da546a3da4dda2c093f4ea826bed9555f71bf12ab7c1448917cefe"
     },
     {
-      "bytes": 9017,
+      "bytes": 11571,
       "path": "dining.js",
-      "sha256": "457b05946da5c13c2f6ecce872552684e5e9061ea36b07041e9e2116c3188a38"
+      "sha256": "dae5ceb248b2257ebd93d45c99989f64172df9ec20432fba5c3eff39d5b8d889"
     },
     {
       "bytes": 4725,
@@ -30,14 +30,14 @@
       "sha256": "3e80dcb30c5d54b086dbfd328024cd3a1f28f7103ee0bb5c4c3ad6e853b5308f"
     },
     {
-      "bytes": 15390,
+      "bytes": 20696,
       "path": "rush.js",
-      "sha256": "174180e392c9943fde8b5eab0cffd702f8c6436dc5f8b9dc085ba17f38b71a50"
+      "sha256": "7a45d47859b35081f5078a6d3bc3726bda04d3cdb5fc64e28f075280c7fe41b5"
     },
     {
-      "bytes": 9825,
+      "bytes": 17383,
       "path": "tycoon.js",
-      "sha256": "aaca33bd73143564ac643b655bac0b07c4187ed880c74975c9b50059e9cffbdf"
+      "sha256": "81bff9ec3896e8d359d851d605dc8ee3c83ea17df560d60b8dc6c832c1ea0e39"
     },
     {
       "bytes": 3898188,
@@ -61,7 +61,6 @@
     }
   ],
   "game": "panic-kitchen",
-  "migration": "Existing public game certified in-place; game bytes unchanged",
-  "release_id": "panic-kitchen-baseline-1ef8718e3379869c",
+  "release_id": "panic-kitchen-85f1b4feecff0125",
   "schema": "x13-pbp-1"
 }

@@ -1,13 +1,22 @@
 import * as pc from './vendor/playcanvas.mjs';
 // SXS PANIC KITCHEN. Independent original tycoon slice on existing PlayCanvas world.
 const G=()=>window.__panic;
-const T={money:100,patio:false,drive:false,manager:false,view:'town',districtReady:false,visitorCount:0,carsServed:0,walkers:[],cars:[],scene:null,managerNode:null,patioNode:null,anim:0,lastMode:'intro',nextAuto:0};
-const prices={patio:220,drive:350,manager:520};
-const names={patio:'DINING EXPANSION',drive:'DRIVE-THRU',manager:'HIRE MANAGER'};
-const captions={patio:'Adds two modeled dining tables; +60 coins per completed order.',drive:'Make drive-through cars paying customers; +120 coins per order.',manager:'Your manager automatically handles the burger steps during the rush.'};
+const T={money:100,patio:false,drive:false,manager:false,view:'town',districtReady:false,visitorCount:0,carsServed:0,levels:{patio:0,drive:0,manager:0,kitchen:0,hospitality:0},walkers:[],cars:[],scene:null,managerNode:null,patioNode:null,anim:0,lastMode:'intro',nextAuto:0};
+const prices={patio:220,drive:350,manager:520,kitchen:180,hospitality:240};
+const maxLevels={patio:4,drive:4,manager:4,kitchen:5,hospitality:5};
+function upgradeCost(kind){return Math.round(prices[kind]*Math.pow(1.65,T.levels[kind]))}
+const names={patio:'DINING EXPANSION',drive:'DRIVE-THRU',manager:'MANAGER TRAINING',kitchen:'KITCHEN EQUIPMENT',hospitality:'CUSTOMER COMFORT'};
+const captions={patio:'Level 1 unlocks two more tables. Higher levels improve tips, eating speed and cleanup.',drive:'Higher levels boost earnings and speed cars through the restaurant lane.',manager:'Higher levels train the manager to prep ingredients more frequently.',kitchen:'Better equipment slows the timing needle, giving you more control.',hospitality:'Better customer service grants longer patience per order and shift.'};
 const DB='sxs-panic-kitchen-tycoon-v1';
-try{const saved=JSON.parse(localStorage.getItem(DB)||'{}');for(const n of ['money','patio','drive','manager','carsServed'])if(Object.hasOwn(saved,n))T[n]=saved[n]}catch(e){}
-function save(){try{localStorage.setItem(DB,JSON.stringify({money:T.money,patio:T.patio,drive:T.drive,manager:T.manager,carsServed:T.carsServed}))}catch(e){}}
+try{const saved=JSON.parse(localStorage.getItem(DB)||'{}');
+ for(const n of ['money','carsServed'])if(Number.isFinite(saved[n]))T[n]=Math.max(0,Math.round(saved[n]));
+ for(const kind of Object.keys(maxLevels)){
+  const fromLevels=Number(saved.levels?.[kind]);const migrated=Number.isInteger(fromLevels)&&fromLevels>=0?fromLevels:(saved[kind]?1:0);
+  T.levels[kind]=Math.min(maxLevels[kind],migrated);
+ }
+ T.patio=T.levels.patio>0;T.drive=T.levels.drive>0;T.manager=T.levels.manager>0;
+}catch(e){}
+function save(){try{localStorage.setItem(DB,JSON.stringify({money:T.money,patio:T.patio,drive:T.drive,manager:T.manager,carsServed:T.carsServed,levels:T.levels}))}catch(e){}}
 const css=document.createElement('style');
 css.textContent='#tycoonHud{position:absolute;top:12px;right:10px;z-index:6;display:flex;align-items:center;gap:5px;flex-wrap:wrap;justify-content:flex-end;max-width:58%}'
 +' .tycoonBtn{background:#103542ef;color:#e4ffd2;border:1px solid #c5eeb0a0;border-radius:10px;font-size:10px;font-weight:1000;padding:8px;box-shadow:0 3px 0 #062333;touch-action:manipulation}'
@@ -52,19 +61,23 @@ function renderHUD(){
 function renderShop(){
  renderHUD();document.getElementById('shopMoney').textContent='🪙 '+T.money;
  const root=document.getElementById('shopItems');root.replaceChildren();
- for(const kind of ['patio','drive','manager']){
+ for(const kind of ['patio','drive','manager','kitchen','hospitality']){
   const row=document.createElement('div');row.className='shopCard';
   const body=document.createElement('div');body.className='meta';
-  const title=document.createElement('strong');title.textContent=(kind==='patio'?'🪑 ':kind==='drive'?'🚗 ':'👨‍💼 ')+names[kind];
+  const title=document.createElement('strong');title.textContent=(kind==='patio'?'🪑 ':kind==='drive'?'🚗 ':kind==='manager'?'👨‍💼 ':kind==='kitchen'?'🔥 ':'💖 ')+names[kind]+' · LV '+T.levels[kind]+'/'+maxLevels[kind];
   const p=document.createElement('p');p.textContent=captions[kind];body.append(title,p);
-  const b=document.createElement('button');b.textContent=T[kind]?'✓ OWNED':'🪙 '+prices[kind];b.disabled=T[kind]||T.money<prices[kind];
+  const b=document.createElement('button');const finished=T.levels[kind]>=maxLevels[kind],cost=upgradeCost(kind);
+  b.textContent=finished?'✓ MAXED':'⬆ 🪙 '+cost;b.disabled=finished||T.money<cost;
   b.addEventListener('click',()=>buy(kind));row.append(body,b);root.appendChild(row)
  }
 }
 function buy(kind){
- if(T[kind]||T.money<prices[kind])return;
- T.money-=prices[kind];T[kind]=true;save();applyUpgrades();
- renderShop();document.getElementById('shopToast').textContent='✅ '+names[kind]+' NOW ACTIVE'
+ if(!Object.hasOwn(maxLevels,kind)||T.levels[kind]>=maxLevels[kind])return;
+ const cost=upgradeCost(kind);if(T.money<cost)return;
+ T.money-=cost;T.levels[kind]++;
+ if(kind==='patio'||kind==='drive'||kind==='manager')T[kind]=true;
+ save();applyUpgrades();
+ renderShop();document.getElementById('shopToast').textContent='✅ '+names[kind]+' LEVEL '+T.levels[kind]+' UNLOCKED'
 }
 function applyUpgrades(){
  if(T.patioNode)T.patioNode.enabled=!!T.patio;
@@ -82,11 +95,11 @@ function animate(dt){
  cam.lookAt(tx,ty,tz);cam.camera.fov=T.view==='town'?51:48;
  window.__panicDining?.tickNPCs(dt);
  T.visitorCount=window.__panicDining?.state?.jobs?.length||0;
-  T.cars.forEach((car,i)=>{const p=(T.anim*.045+i*.5)%1;const phase=T.drive?(p>.64?(p<.78?.64:p-.14):p):p;car.setLocalPosition(10.45,0,11.7-phase*20)});
+  window.__panicDrive?.tick(dt);
  if(T.managerNode&&T.manager)T.managerNode.setLocalEulerAngles(0,Math.sin(T.anim*2)*14,0);
  const st=G()?.state;
  if(st&&st.mode==='won'&&T.lastMode!=='won'){
-  const earned=Math.max(75,Math.round(st.score*.36))+(T.patio?60:0)+(T.drive?120:0);
+  const earned=Math.max(75,Math.round(st.score*.36))+(60*T.levels.patio)+(120*T.levels.drive);
   T.money+=earned;if(T.drive)T.carsServed++;
   save();document.getElementById('shopToast').textContent='🪙 Shift payout +'+earned;renderHUD();
  }
@@ -114,7 +127,7 @@ function init(){
    for(let i=0;i<4;i++)T.walkers.push(district.findByName('ANIM_WALKER_'+i));
    for(let i=0;i<2;i++)T.cars.push(district.findByName('ANIM_CAR_'+i));
    if(!T.patioNode||!T.managerNode||T.walkers.some(x=>!x)||T.cars.some(x=>!x))throw Error('Blender district missing required animated actor hierarchy');
-   T.districtReady=true;T.walkers.forEach(e=>e.enabled=false);T.visitorCount=0;document.getElementById('location').textContent='🏙️ SXS PANIC KITCHEN • RESTAURANT DISTRICT';applyUpgrades();renderHUD();
+   T.districtReady=true;T.upgradeCost=upgradeCost;T.maxLevels=maxLevels;T.walkers.forEach(e=>e.enabled=false);T.visitorCount=0;document.getElementById('location').textContent='🏙️ SXS PANIC KITCHEN • RESTAURANT DISTRICT';applyUpgrades();renderHUD();
    G().tycoon=T;G().metrics.tycoonDistrictLoaded=true;
    app.on('update',dt=>animate(Math.min(dt,.1)))
   }catch(e){console.error('PANIC_DISTRICT_SCENE_ERROR',e);document.getElementById('tycoonInfo').textContent='⚠️ TYCOON SCENE ERROR'}
@@ -122,3 +135,141 @@ function init(){
 }
 function poll(){init();if(!started)requestAnimationFrame(poll)}
 renderHUD();requestAnimationFrame(poll);
+
+// Bundled into the approved web distributor allowlist; same PlayCanvas engine, no new runtime files.
+(()=>{
+
+// SXS PANIC KITCHEN: orders must be placed by an actual approaching car.
+// This module does not run its own renderer or server. Only the existing PlayCanvas actors.
+const G=()=>window.__panic, R=()=>window.__panicRush?.state, T=()=>G()?.tycoon;
+const S={ready:false,phase:'idle',index:0,z:11.8,orderId:null,ordered:0,delivered:0,missed:0,selectedOrder:null,wait:0,carReady:false,done:false,last:'DRIVE-THRU CLOSED'};
+const view=document.getElementById('view'),button=document.createElement('button'),info=document.createElement('span');
+button.id='driveWindow';button.type='button';button.textContent='🚗 DELIVER TO CAR';button.setAttribute('aria-label','Deliver the selected drive through meal at the window');
+button.style.display='none';view.appendChild(button);
+info.id='driveState';info.textContent='🚗 DRIVE-THRU CLOSED';view.appendChild(info);
+const present=()=>T()?.drive&&S.ready;
+function current(){return R()?.orders?.find(o=>o.id===S.orderId)||null}
+function chosen(){return R()?.orders?.find(o=>o.id===R()?.active)||null}
+function reset(){
+ S.phase='idle';S.index=0;S.z=11.8;S.orderId=null;S.ordered=0;S.delivered=0;S.missed=0;S.selectedOrder=null;S.wait=0;S.done=false;
+ for(const car of T()?.cars||[])car.enabled=false;
+ info.textContent=T()?.drive?'🚗 DRIVE-THRU OPENS WITH THE RUSH':'🚗 UPGRADE TO OPEN DRIVE-THRU';
+ button.style.display='none';
+ if(present()&&R()?.mode==='running')startCar();
+}
+function showCar(i,z){
+ const actors=T()?.cars||[];
+ actors.forEach((car,j)=>{car.enabled=j===i;if(j===i)car.setLocalPosition(10.45,0,z)});
+}
+function startCar(){
+ if(!present()||R()?.mode!=='running'||S.index>=2||R().served>=R().goal){S.phase='idle';button.style.display='none';return}
+ S.z=11.8;S.wait=0;S.orderId=null;S.selectedOrder=null;S.phase='approach';
+ showCar(S.index,S.z);update();
+}
+function order(){
+ if(S.phase!=='approach')return;
+ const rush=window.__panicRush;
+ if(!rush||R()?.mode!=='running'){S.phase='idle';return}
+ if(R().spawned>=R().goal+2){S.phase='depart';return}
+ // Actual order is made NOW at the car-side menu, not when the rush begins.
+ const dish=S.index===0?'fries':'burger';
+ const ticket=rush.spawn(dish,'DRIVE-THRU');
+ if(!ticket){S.phase='depart';return}
+ S.orderId=ticket.id;S.ordered++;S.wait=.8;S.phase='ordering';
+ info.textContent='📢 CAR #'+(S.index+1)+' ORDERED '+dish.toUpperCase()+' • TICKET #'+ticket.id;
+ update();
+}
+function release(){
+ const car=T()?.cars?.[S.index];
+ if(car)car.enabled=false;
+ S.index++;
+ if(R()?.mode==='running'&&S.index<2){startCar()}
+ else{S.phase='idle';S.orderId=null;button.style.display='none';update()}
+}
+function update(){
+ if(!S.ready)return;
+ const active=current(),food=chosen();
+ const atWindow=S.phase==='pickup'&&active?.id===food?.id&&food?.phase==='plate';
+ const cam=G()?.rendering?.camera,canvas=document.getElementById('world');
+ let visible=false;
+ if(atWindow&&cam?.camera&&canvas){
+  const point=cam.camera.worldToScreen(new pc.Vec3(8.0,1.8,-1.55));
+  const bounds=canvas.getBoundingClientRect();
+  const x=point.x*bounds.width/canvas.width,y=point.y*bounds.height/canvas.height;
+  visible=x>=45&&x<=bounds.width-45&&y>=30&&y<=bounds.height-30;
+  if(visible){button.style.left=x+'px';button.style.top=y+'px'}
+ }
+ button.style.display=visible?'block':'none';
+ const states={idle:'🚗 DRIVE-THRU READY',approach:'🚗 CAR APPROACHING MENU',ordering:'📢 CAR PLACING ORDER',toWindow:'🚗 CAR HEADING TO PICKUP',pickup:'🚗 CAR WAITING FOR TICKET #'+S.orderId,depart:'🚗 CAR LEAVING'};
+ info.textContent=present()?states[S.phase]||states.idle:'🚗 DRIVE-THRU LOCKED';
+ if(food?.source==='DRIVE-THRU'&&food.phase==='plate'&&S.phase==='pickup')info.textContent='🍟 DRAG PLATE TO THE DRIVE WINDOW';
+}
+function tick(dt){
+ if(!S.ready)return;
+ const rush=R();
+ if(!present()){for(const car of T()?.cars||[])car.enabled=false;button.style.display='none';return}
+ if(rush?.paused||document.getElementById('shop')?.classList.contains('show'))return;
+ if(rush?.mode!=='running'&&S.phase!=='depart'){update();return}
+ if(S.phase==='idle'&&S.ordered===0)startCar();
+ const car=T()?.cars?.[S.index];if(!car)return;
+ const rate=1+(T()?.levels?.drive||0)*.10;
+ if(S.phase==='approach'){
+  S.z=Math.max(3.8,S.z-dt*3.3*rate);
+  car.setLocalPosition(10.45,0,S.z);
+  if(S.z<=3.81)order();
+ }else if(S.phase==='ordering'){
+  S.wait-=dt;
+  if(S.wait<=0){S.phase='toWindow';S.wait=0}
+ }else if(S.phase==='toWindow'){
+  S.z=Math.max(-1.5,S.z-dt*2.8*rate);
+  car.setLocalPosition(10.45,0,S.z);
+  if(S.z<=-1.49)S.phase='pickup';
+ }else if(S.phase==='pickup'){
+  // The actual car holds position. It cannot leave merely because an animation loop reached the edge.
+  car.setLocalPosition(10.45,0,-1.5);
+ }else if(S.phase==='depart'){
+  S.z-=dt*4.5*rate;
+  car.setLocalPosition(10.45,0,S.z);
+  if(S.z<-10.2)release();
+ }
+ if(!S.done)update();
+}
+function canServe(id){
+ return present()&&S.phase==='pickup'&&S.orderId===id;
+}
+function deliver(){
+ const meal=chosen();
+ if(!meal||meal.source!=='DRIVE-THRU'||meal.phase!=='plate')return false;
+ if(!canServe(meal.id)){info.textContent='🚗 WAIT FOR CAR #'+(S.index+1)+' AT PICKUP';return false}
+ S.selectedOrder=meal.id;
+ const previous=R().served;window.__panicRush.serve();
+ if(R().served<=previous){S.selectedOrder=null;return false}
+ return true;
+}
+function dropAt(x,y){
+ const rect=button.getBoundingClientRect();
+ if(button.style.display==='none')return false;
+ if(x<rect.left-18||x>rect.right+18||y<rect.top-18||y>rect.bottom+18)return false;
+ return deliver();
+}
+button.addEventListener('click',deliver);
+window.addEventListener('panic:rush-start',reset);
+window.addEventListener('panic:order-served',event=>{
+ const detail=event.detail||{};
+ if(detail.source!=='DRIVE-THRU'||detail.id!==S.orderId)return;
+ S.delivered++;S.selectedOrder=null;S.phase='depart';update();
+});
+window.addEventListener('panic:order-expired',event=>{
+ const detail=event.detail||{};
+ if(detail.source!=='DRIVE-THRU'||detail.id!==S.orderId)return;
+ S.missed++;S.selectedOrder=null;S.phase='depart';update();
+});
+function init(){
+ if(!T()?.districtReady||!G()?.rendering?.camera)return requestAnimationFrame(init);
+ S.ready=true;T().cars.forEach(car=>car.enabled=false);
+ window.__panicDrive={state:S,reset,tick,canServe,dropAt,deliver,update,startCar};
+ reset();
+}
+init();
+
+})();
