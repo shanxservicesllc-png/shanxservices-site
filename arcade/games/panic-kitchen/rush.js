@@ -174,7 +174,7 @@ function serve(){
  drawTickets();drawWork();update();
 }
 function finish(won){
- R.mode=won?'won':'lost';R.paused=false;
+ R.mode=won?'won':'lost';R.paused=false;window.dispatchEvent(new Event('panic:rush-finished'));
  const p=P();if(p?.state){p.state.mode=won?'won':'lost';p.state.score=R.score;p.state.combo=R.combo;p.state.time=R.time}
  $('overlay').classList.remove('hidden');$('eyebrow').textContent=won?'SXS TYCOON • RUSH CONQUERED':'SXS TYCOON • KITCHEN CLOSED';
  $('title').innerHTML=won?'RUSH<br><em>CRUSHED!</em>':'PANIC<br><em>OVERTIME!</em>';
@@ -289,7 +289,197 @@ $('serveDrop').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e
 $('cookAction').addEventListener('click',cook);
 // The existing engine initializes/hides the intro, then the new real RUSH shift takes over.
 document.addEventListener('click',e=>{if(e.target.closest('#start')&&P()?.state?.modelReady)queueMicrotask(begin)});
-$('pause').addEventListener('click',e=>{if(R.mode==='running'){e.stopImmediatePropagation();R.paused=!R.paused;$('pause').textContent=R.paused?'▶ RESUME':'Ⅱ PAUSE';pausedCurtain.classList.toggle('show',R.paused);say(R.paused?'Ⅱ PAUSED':'🔥 BACK TO WORK')}},true);
-document.addEventListener('visibilitychange',()=>{if(document.hidden&&R.mode==='running'){R.paused=true;pausedCurtain.classList.add('show')}});
+$('pause').addEventListener('click',e=>{if(R.mode==='running'){e.stopImmediatePropagation();R.paused=!R.paused;$('pause').textContent=R.paused?'▶ RESUME':'Ⅱ PAUSE';pausedCurtain.classList.toggle('show',R.paused);say(R.paused?'Ⅱ PAUSED':'🔥 BACK TO WORK');window.dispatchEvent(new CustomEvent('panic:pause-changed',{detail:{paused:R.paused}}))}},true);
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&R.mode==='running'){R.paused=true;pausedCurtain.classList.add('show');window.dispatchEvent(new CustomEvent('panic:pause-changed',{detail:{paused:true}}))}});
 window.__panicRush={state:R,TYPES,DIFF_LEVELS,managerPolicy,spawn,deposit,cook,serve,select:id=>{R.active=id;drawTickets();drawWork()},start:begin,update,checkCleanCompletion:()=>{if(R.mode==='running'&&R.served>=R.goal&&!window.__panicDining?.needsCleanup())finish(true)}};
 requestAnimationFrame(loop);
+
+/* Timed Blender 3D Kitchen / warmer / pause controls. Bundled to stay PBP allowlisted. */
+(()=>{
+// SXS PANIC KITCHEN | Timed 3D production tab, warming rack, pause/restart/quit.
+// Integrates with ORIGINAL Blender kitchen, PlayCanvas scene, queue and tycoon.
+// No second renderer, server, public workspace, or externally loaded assets.
+const P=()=>window.__panic;
+const R=()=>window.__panicRush?.state;
+const T=()=>P()?.tycoon;
+const $=id=>document.getElementById(id);
+const O={tab:'restaurant',remaining:0,cooldown:0,entryDuration:24,cooldownDuration:11,active:null,needle:0,heading:1,elapsed:0,
+ stock:{patty:[],fries:[],soda:[]},capacity:{patty:6,fries:4,soda:4},crafts:0,made:{patty:0,fries:0,soda:0},wasted:0,selected:null,last:performance.now()};
+const names={patty:'🥩 COOK PATTIES',fries:'🍟 BATCH FRIES',soda:'🥤 FILL DRINKS'};
+const key={burger:'patty',fries:'fries',soda:'soda'};
+const div=document.createElement('div');div.id='opsTabs';
+div.innerHTML='<button id="opsRestaurant" type="button" class="selected">🏪 RESTAURANT</button><button id="opsKitchenTab" type="button">🍳 3D KITCHEN • 24s</button>';
+$('view').appendChild(div);
+const stockEl=document.createElement('div');stockEl.id='opsStock';$('view').appendChild(stockEl);
+const kitchen=document.createElement('section');kitchen.id='opsKitchen';
+kitchen.innerHTML='<strong>🍳 REAL 3D PRODUCTION SPRINT • <span id="opsTime">24s</span></strong><p>Batch-cook now. Return to the restaurant and assemble orders from stock. The customer clocks keep running!</p><div id="opsProduction"><button type="button" data-batch="patty">🥩 PATTIES x2</button><button type="button" data-batch="fries">🍟 FRIES x2</button><button type="button" data-batch="soda">🥤 DRINKS x2</button></div><div id="opsTiming"><strong id="opsJobName">COOK</strong><div id="opsGauge"><span id="opsGreen"></span><span id="opsNeedle"></span></div><button id="opsStop" type="button">✅ STOP IN GREEN TO STOCK FOOD</button></div><small id="opsKitchenMessage">Select a batch, time the cook, then get back to serving.</small>';
+$('view').appendChild(kitchen);
+const quick=document.createElement('div');quick.id='opsQuick';quick.innerHTML='<button type="button" id="opsUseStock">🧺 USE WARMER</button><span id="opsQuickHint">Prepared food available</span>';
+$('rushBoard').appendChild(quick);
+const menu=document.createElement('section');menu.id='opsPause';menu.setAttribute('role','dialog');menu.setAttribute('aria-modal','true');menu.setAttribute('aria-label','Pause menu');
+menu.innerHTML='<div class="opsDialog"><h2>⏸️ PAUSED</h2><p>Customer timers, cars, and cooking are frozen. Upgrades and saved coins are safe.</p><button id="opsResume" type="button">▶ RESUME SHIFT</button><button id="opsRestart" class="secondary" type="button">🔁 RESTART SAME DIFFICULTY</button><button id="opsQuit" class="quit" type="button">↩ QUIT TO DIFFICULTY SELECT</button></div>';
+$('app').appendChild(menu);
+function freeze(){return R()?.mode!=='running'||R()?.paused||$('shop')?.classList.contains('show')}
+function count(kind){return O.stock[kind].length}
+function purge(){
+ for(const k of Object.keys(O.stock)){
+  const before=count(k);O.stock[k]=O.stock[k].filter(exp=>exp>O.elapsed);
+  O.wasted+=before-count(k);
+ }
+}
+function refresh(){
+ const running=R()?.mode==='running';
+ div.classList.toggle('active',running);stockEl.classList.toggle('active',running);
+ $('cameraToggle').style.display=running?'none':'';
+ const active=O.tab==='kitchen'&&running;
+ $('opsRestaurant').classList.toggle('selected',!active);
+ $('opsKitchenTab').classList.toggle('selected',active);
+ $('opsKitchenTab').disabled=!running||O.cooldown>0||active;
+ $('opsKitchenTab').textContent=active?'🍳 3D KITCHEN '+Math.ceil(O.remaining)+'s':O.cooldown>0?'⏳ REOPEN IN '+Math.ceil(O.cooldown)+'s':'🍳 3D KITCHEN • 24s';
+ kitchen.classList.toggle('active',active);
+ stockEl.textContent='🧺 WARMER • 🥩 '+count('patty')+'/'+O.capacity.patty+' · 🍟 '+count('fries')+'/'+O.capacity.fries+' · 🥤 '+count('soda')+'/'+O.capacity.soda;
+ $('opsTime').textContent=Math.ceil(O.remaining)+'s';
+ for(const btn of kitchen.querySelectorAll('[data-batch]')){
+  const kind=btn.dataset.batch;btn.disabled=!!O.active||O.stock[kind].length>=O.capacity[kind];
+ }
+ $('opsTiming').classList.toggle('active',!!O.active);
+ $('opsNeedle').style.left=O.needle+'%';
+ if(O.active)$('opsJobName').textContent=names[O.active]+' • GREEN = +2 STOCK';
+ const order=R()?.orders?.find(o=>o.id===R()?.active)||R()?.orders?.[0];
+ let show=false,description='';
+ if(order?.phase==='prep'&&count(key[order.dish])>0&&!R().paused){
+  show=true;
+  description=order.dish==='burger'?'Assemble bun + cheese + lettuce, then add cooked patty':'Grab a prepared '+order.dish+' for immediate plating';
+ }
+ quick.classList.toggle('active',show);
+ $('opsQuickHint').textContent=description;
+ $('opsUseStock').textContent=order?.dish==='burger'?'🥩 ADD COOKED PATTY':'🧺 PLATE READY '+(order?.dish||'FOOD').toUpperCase();
+ $('opsUseStock').disabled=!!(order?.dish==='burger'&&!['bun','cheese','lettuce'].every(x=>order.collected.includes(x)));
+}
+function reset(){
+ O.tab='restaurant';O.remaining=0;O.cooldown=0;O.active=null;O.needle=0;O.heading=1;O.elapsed=0;O.stock={patty:[],fries:[],soda:[]};O.crafts=0;O.wasted=0;O.made={patty:0,fries:0,soda:0};O.selected=null;
+ if(T())T().view='town';
+ $('opsKitchenMessage').textContent='Select a batch, time the cook, then get back to serving.';
+ menu.classList.remove('show');
+ refresh();
+}
+function exitKitchen(byClock=false){
+ if(O.tab!=='kitchen')return;
+ O.tab='restaurant';O.active=null;O.remaining=0;O.cooldown=O.cooldownDuration;
+ if(T())T().view='town';
+ $('opsKitchenMessage').textContent=byClock?'⏰ PRODUCTION WINDOW CLOSED. SERVE YOUR CUSTOMERS!':'📦 FOOD STORED. SERVE THE QUEUE!';
+ refresh();
+}
+function enterKitchen(){
+ if(freeze()||O.tab==='kitchen'||O.cooldown>0)return false;
+ O.tab='kitchen';O.remaining=O.entryDuration;O.needle=0;O.heading=1;O.active=null;
+ if(T())T().view='kitchen';
+ $('opsKitchenMessage').textContent='👨‍🍳 YOU HAVE 24 SECONDS. CHOOSE WHAT TO PRODUCE!';
+ refresh();return true;
+}
+function startBatch(kind){
+ if(freeze()||O.tab!=='kitchen'||!O.stock[kind]||O.active||count(kind)>=O.capacity[kind])return false;
+ O.active=kind;O.needle=0;O.heading=1;
+ $('opsKitchenMessage').textContent='🔥 '+names[kind]+': HIT GREEN TO PREP TWO UNITS';
+ refresh();return true;
+}
+function stopBatch(){
+ if(freeze()||O.tab!=='kitchen'||!O.active)return false;
+ const kind=O.active,success=O.needle>=43&&O.needle<=67;
+ O.active=null;
+ if(success){
+  const add=Math.min(2,O.capacity[kind]-count(kind));
+  for(let i=0;i<add;i++)O.stock[kind].push(O.elapsed+90);
+  O.made[kind]+=add;O.crafts++;
+  $('opsKitchenMessage').textContent='✨ +'+add+' '+kind.toUpperCase()+' INTO WARMER! '+count(kind)+' READY';
+  navigator.vibrate?.(12);
+ }else{
+  O.remaining=Math.max(0,O.remaining-2);
+  $('opsKitchenMessage').textContent='💥 WRONG TEMPERATURE. -2 SECONDS!';
+ }
+ refresh();return success;
+}
+function consumeStock(dish){
+ if(freeze()||O.tab!=='restaurant')return false;
+ const type=key[dish];if(!type)return false;
+ purge();if(!count(type))return false;
+ O.stock[type].shift();refresh();return true;
+}
+function useStock(){
+ if(freeze()||O.tab!=='restaurant')return false;
+ const rush=window.__panicRush,o=R()?.orders?.find(x=>x.id===R()?.active)||R()?.orders?.[0];
+ if(!o||o.phase!=='prep'||!count(key[o.dish]))return false;
+ if(o.dish==='burger'){
+  if(!['bun','cheese','lettuce'].every(x=>o.collected.includes(x)))return false;
+  if(!consumeStock('burger'))return false;
+  o.collected.push('patty');
+ }else if(!consumeStock(o.dish))return false;
+ o.phase='plate';o.quality=.85;R().score+=35;R().combo++;
+ rush.select(o.id);rush.update();
+ $('opsKitchenMessage').textContent='🧺 READY STOCK USED FOR ORDER #'+o.id;
+ refresh();return true;
+}
+function showPause(paused){
+ menu.classList.toggle('show',!!paused&&R()?.mode==='running');
+ if(paused&&O.tab==='kitchen')$('opsKitchenMessage').textContent='⏸️ 3D PRODUCTION PAUSED';
+}
+function resume(){
+ if(R()?.paused)$('pause').click();
+ menu.classList.remove('show');
+}
+function restart(){
+ if(R()?.mode!=='running')return;
+ if(R().cancelDrag)R().cancelDrag();
+ R().paused=false;
+ $('pause').textContent='Ⅱ PAUSE';
+ if(P()?.state)P().state.mode='rush';
+ reset();
+ window.__panicRush.start();
+ menu.classList.remove('show');
+}
+function quit(){
+ const r=R();if(!r||r.mode!=='running')return;
+ if(r.cancelDrag)r.cancelDrag();
+ r.mode='intro';r.paused=false;r.orders=[];r.active=null;r.selectedIngredient=null;r.selectedPlate=false;
+ if(P()?.state)P().state.mode='intro';
+ $('pause').textContent='Ⅱ PAUSE';$('rushPaused').classList.remove('show');
+ $('ticketArea').classList.remove('rushLive');$('counter').classList.remove('rushOn');
+ $('rushTickets').replaceChildren();$('overlay').classList.remove('hidden');
+ $('eyebrow').textContent='SXS PANIC KITCHEN • CHOOSE YOUR CHALLENGE';
+ $('title').innerHTML='PANIC<br><em>KITCHEN!</em>';
+ $('message').textContent='Choose a new difficulty, then start a fresh shift. Earned coins and purchased upgrades stay saved.';
+ $('how').classList.remove('hiddenStuff');$('result').classList.add('hiddenStuff');
+ $('start').textContent='🔥 START NEW KITCHEN SHIFT';
+ window.__panicDining?.reset?.();window.__panicDrive?.reset?.();
+ reset();
+}
+$('opsKitchenTab').addEventListener('click',enterKitchen);
+$('opsRestaurant').addEventListener('click',()=>exitKitchen(false));
+$('opsProduction').addEventListener('click',e=>{const b=e.target.closest('[data-batch]');if(b)startBatch(b.dataset.batch)});
+$('opsStop').addEventListener('click',stopBatch);
+$('opsUseStock').addEventListener('click',useStock);
+$('opsResume').addEventListener('click',resume);
+$('opsRestart').addEventListener('click',restart);
+$('opsQuit').addEventListener('click',quit);
+$('cameraToggle').addEventListener('click',e=>{if(R()?.mode==='running'){e.stopImmediatePropagation();e.preventDefault();O.tab==='kitchen'?exitKitchen(false):enterKitchen()}},true);
+window.addEventListener('panic:rush-start',reset);
+window.addEventListener('panic:pause-changed',e=>showPause(!!e.detail?.paused));
+window.addEventListener('panic:rush-finished',()=>{O.tab='restaurant';O.active=null;if(T())T().view='town';menu.classList.remove('show');refresh()});
+function tick(t){
+ const dt=Math.min(.09,Math.max(0,(t-O.last)/1000||0));O.last=t;
+ if(R()?.mode==='running'&&!R()?.paused&&!$('shop')?.classList.contains('show')){
+  O.elapsed+=dt;purge();
+  O.cooldown=Math.max(0,O.cooldown-dt);
+  if(O.tab==='kitchen'){
+   O.remaining=Math.max(0,O.remaining-dt);
+   if(O.active){O.needle+=dt*104*O.heading;if(O.needle>=100){O.needle=100;O.heading=-1}else if(O.needle<=0){O.needle=0;O.heading=1}}
+   if(O.remaining<=0)exitKitchen(true);
+  }
+ }
+ if(R()?.mode==='running')refresh();
+ requestAnimationFrame(tick);
+}
+window.__panicOps={state:O,enterKitchen,exitKitchen,startBatch,stopBatch,consumeStock,useStock,refresh,reset,quit,restart,resume};
+requestAnimationFrame(tick);
+
+})();

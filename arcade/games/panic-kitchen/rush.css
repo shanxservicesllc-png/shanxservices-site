@@ -45,3 +45,39 @@
 #rushPaused{display:none;position:absolute;inset:0;background:#101f33c9;z-index:7;align-items:center;justify-content:center;font-size:24px;font-weight:1000}
 #rushPaused.show{display:flex}
 @media(max-width:440px){.rushItem{min-height:41px;font-size:8px}.rushItem span{font-size:17px}#rushPrep{min-width:82px}.rushOrder{flex-basis:104px}.rushOrder .dishName{font-size:10px}#rushWork{gap:5px}}
+
+/* PANIC KITCHEN: timed 3D production and useful pause menu */
+#opsTabs{display:none;position:absolute;top:72px;left:8px;right:8px;z-index:8;align-items:center;gap:6px;pointer-events:auto}
+#opsTabs.active{display:flex}
+#opsTabs button{border:2px solid #e3f8cd;border-radius:8px;background:#1b4352ed;color:#f0f9e6;padding:6px 8px;font-weight:1000;font-size:10px;flex:1}
+#opsTabs button.selected{background:#dfff8c;color:#173d3a}
+#opsTabs button:disabled{opacity:.55}
+#opsStock{position:absolute;z-index:7;right:8px;bottom:56px;border:1px solid #a7d5bf;border-radius:9px;background:#123a41e9;color:#eaffdd;font-size:10px;font-weight:1000;padding:7px;max-width:220px;pointer-events:none;display:none;text-align:right}
+#opsStock.active{display:block}
+#opsKitchen{display:none;position:absolute;z-index:9;left:8px;right:8px;bottom:67px;background:#142f40ee;border:2px solid #9cd5bc;border-radius:13px;padding:9px;color:#fff5d2;box-shadow:0 7px 20px #0007}
+#opsKitchen.active{display:block}
+#opsKitchen strong{display:block;color:#e4ff9d;font-size:12px}
+#opsKitchen p{font-size:10px;margin:4px 0 8px}
+#opsProduction{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}
+#opsProduction button{padding:7px 3px;border-radius:8px;border:1px solid #a6d6c4;background:#2b6072;color:#fff;font-size:10px;font-weight:1000}
+#opsProduction button:disabled{opacity:.5}
+#opsTiming{display:none;margin-top:8px}
+#opsTiming.active{display:block}
+#opsGauge{height:20px;background:#526575;border:2px solid #eaffd3;border-radius:12px;position:relative;overflow:visible;margin:7px 0}
+#opsGreen{position:absolute;left:43%;width:24%;height:100%;top:0;background:#25e572;border:2px solid #edffad;box-shadow:0 0 12px #3aff6e}
+#opsNeedle{position:absolute;left:0;top:-4px;bottom:-4px;width:4px;background:#fff;border:1px solid #203c4b;box-shadow:0 0 6px #fff}
+#opsStop{width:100%;background:#dfff86;color:#1b3d38;border:0;border-radius:8px;padding:8px;font-size:12px;font-weight:1000}
+#opsQuick{display:none;align-items:center;gap:6px;margin-top:7px;padding:5px;border:1px solid #a9d4be;border-radius:8px;background:#dff7df}
+#opsQuick.active{display:flex}
+#opsQuick button{flex:1;font-size:10px;font-weight:1000;padding:8px 5px;border:2px solid #4eaa74;background:#e2ff94;border-radius:8px;color:#184235}
+#opsQuick span{font-size:10px;font-weight:900}
+#opsPause{display:none;position:absolute;inset:0;z-index:30;align-items:center;justify-content:center;padding:16px;background:#071624de;backdrop-filter:blur(5px)}
+#opsPause.show{display:flex}
+#opsPause .opsDialog{border:3px solid #f7edcf;background:#173b4e;border-radius:20px;padding:18px;width:min(100%,390px);text-align:center;color:#fff6de;box-shadow:0 15px 40px #0008}
+#opsPause h2{font-size:25px;margin:3px 0 8px}
+#opsPause p{font-size:12px;margin:8px 0 16px}
+#opsPause button{display:block;width:100%;border:2px solid #a7d9c7;border-radius:10px;padding:12px;margin:8px 0;background:#dfff89;color:#20413a;font-size:13px;font-weight:1000}
+#opsPause button.secondary{background:#2b5a67;color:#fff3d0}
+#opsPause button.quit{background:#f8d7b0;color:#613c29}
+@media(max-width:460px){#opsTabs{top:61px}#opsKitchen{bottom:44px;padding:7px}#opsStock{bottom:42px;font-size:9px}#opsTabs button{font-size:9px;padding:5px}}
+
