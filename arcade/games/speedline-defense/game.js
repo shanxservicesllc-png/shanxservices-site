@@ -22,6 +22,7 @@ const interaction={taps:0,padsHit:0,pans:0,pinches:0,zoomButtons:0,ignored:0};
 // V5 seamless player-controlled 3D field and separate reactor breach arena.
 let guardian=null,interiorRoot=null,breach=null,breachers=[],breachCooldown=0,beams=[];
 let joystick={x:0,y:0,id:null},firing=false,fireCount=0,hitCount=0,breachesWon=0,breachesLost=0;
+let aimLockTarget=null,aimLockSwitches=0,cameraSwipes=0;
 let fieldHits=0,fieldIFrames=0,fieldKnockouts=0,reentryKillsNeeded=0,lastFieldHit='none';
 let fieldTimeLeft=0,fieldExpirations=0,fieldDeployments=0;
 const FIELD_SECONDS=25,REENTRY_KILLS=7,MAX_FIELD_HITS=3;
@@ -366,7 +367,7 @@ function zoomBy(f,byButton=true){
  $('zoomStatus').textContent=viewMode==='tactical'?Math.round(tacticalHeight()/cam.camera.orthoHeight*100)+'%':'3D';
 }
 function panBy(dx,dy){
- if(viewMode!=='tactical'){cameraAngle=clamp(cameraAngle+dx*.009,-.7,.7);interaction.pans++;return}
+ if(viewMode!=='tactical'){cameraAngle=clamp(cameraAngle+dx*.005,-1.05,1.05);cameraSwipes++;interaction.pans++;return}
  const scale=cam.camera.orthoHeight/Math.max(220,canvas.clientHeight),right=cam.right,up=cam.up;
  focus.x=clamp(focus.x-dx*scale*right.x+dy*scale*up.x,-9,9);
  focus.z=clamp(focus.z-dx*scale*right.z+dy*scale*up.z,-12,12);
@@ -417,41 +418,45 @@ function resetCombatWorld(){
  if(guardian){guardian.entity.destroy();guardian=null}
  if(interiorRoot){interiorRoot.destroy();interiorRoot=null}
  for(const b of beams)if(b.entity?.parent)b.entity.destroy();
- beams=[];breachers=[];breach=null;breachCooldown=0;firing=false;
+ beams=[];breachers=[];breach=null;breachCooldown=0;firing=false;aimLockTarget=null;
  fieldTimeLeft=0;fieldHits=0;fieldIFrames=0;reentryKillsNeeded=0;
  joystick.x=0;joystick.y=0;joystick.id=null;keys.clear();
- const stick=$('joystick');if(stick){stick.style.left='30px';stick.style.top='30px'}
+ const stick=$('joystick');if(stick)stick.style.transform='translate(-50%,-50%)';
 }
 function ensureGuardian(){
  if(!guardian){
   const entity=new pc.Entity('X13 actual playable third person soldier');
   world.addChild(entity);
   const visual=addModel('field_guardian',entity,[0,0,0],.92);
-  guardian={entity,visual,x:-6.1,z:-13.8,hp:100,cooldown:0,walk:0,facing:0,targetYaw:0};
+  guardian={entity,visual,x:0,z:3.5,hp:100,cooldown:0,walk:0,facing:0,targetYaw:0};
  }
  guardian.entity.enabled=true;return guardian;
 }
 function fieldProjection(){
  cam.camera.projection=pc.PROJECTION_PERSPECTIVE;
  cam.camera.nearClip=.08;cam.camera.farClip=125;cam.camera.fov=65;
- cameraAngle=0;chaseCamera();$('zoomStatus').textContent='3D';
+ cameraAngle=0;aimLockTarget=null;chaseCamera();$('zoomStatus').textContent='3D';
 }
 function chaseCamera(dt=1){
  if(!guardian)return;
  const p=guardian,inRoom=viewMode==='interior';
- const spread=inRoom?3.0:4.4,height=inRoom?3.1:4.3,back=inRoom?4.9:6.1;
- const sx=Math.sin(cameraAngle),cz=Math.cos(cameraAngle);
- let x=p.x+spread*.7+sx*2.5,y=height,z=p.z+back+cz*.2;
+ // Follow the player from BEHIND, aligned with the steerable horizontal camera yaw.
+ const radius=inRoom?5.2:6.5,camHeight=inRoom?3.15:4.15;
+ let x=p.x+Math.sin(cameraAngle)*radius,z=p.z+Math.cos(cameraAngle)*radius;
  if(inRoom){x=clamp(x,-6.3,6.3);z=clamp(z,-8.65,8.7)}
- const now=cam.getPosition(),smooth=clamp(dt*9,0,1);
- cam.setPosition(now.x+(x-now.x)*smooth,now.y+(height-now.y)*smooth,now.z+(z-now.z)*smooth);
- cam.lookAt(p.x,.95,p.z-(inRoom?1.7:3.5));
+ const now=cam.getPosition(),smooth=clamp(dt*8,0,1);
+ cam.setPosition(now.x+(x-now.x)*smooth,now.y+(camHeight-now.y)*smooth,now.z+(z-now.z)*smooth);
+ cam.lookAt(p.x,1.04,p.z);
 }
 function enterBattlefield(){
  if(state!=='running'||viewMode==='interior')return false;
  if(reentryKillsNeeded>0){toast('🔒 EARN '+reentryKillsNeeded+' MORE TURRET KILLS TO RE-ENTER');return false}
  if(viewMode==='battlefield')return true;
- ensureGuardian();fieldHits=0;fieldTimeLeft=FIELD_SECONDS;fieldDeployments++;fieldIFrames=1.3;guardian.hp=100;
+ ensureGuardian();
+ // Redeploy near the middle of the board. The old lower-left corner spawn
+ // pinned the player against both movement clamps after a single joystick push.
+ guardian.x=0;guardian.z=3.5;guardian.entity.setPosition(0,.20,3.5);
+ fieldHits=0;fieldTimeLeft=FIELD_SECONDS;fieldDeployments++;fieldIFrames=1.3;guardian.hp=100;
  viewMode='battlefield';root.enabled=true;fieldProjection();
  message('YOU ARE ON THE FIELD · Left stick / WASD moves · FIRE shoots the nearest drone · MAP returns to command');
  sfx('power');updateHUD();return true;
@@ -462,7 +467,7 @@ function returnMap(){
  const wasOnField=viewMode==='battlefield';
  if(wasOnField&&reentryKillsNeeded===0)reentryKillsNeeded=REENTRY_KILLS;
  fieldTimeLeft=0;
- viewMode='tactical';firing=false;joystick.x=0;joystick.y=0;if(guardian)guardian.entity.enabled=false;
+ viewMode='tactical';firing=false;aimLockTarget=null;joystick.x=0;joystick.y=0;if(guardian)guardian.entity.enabled=false;
  cam.camera.projection=pc.PROJECTION_ORTHOGRAPHIC;cam.camera.orthoHeight=tacticalHeight();
  focus.set(0,0,0);setCamera();$('zoomStatus').textContent='100%';
  message(reentryKillsNeeded>0?'FIELD LOCKED · Destroy '+reentryKillsNeeded+' drones with towers to earn entry again':'COMMAND DEFENSE · Build turrets · ENTER WORLD when ready');
@@ -509,11 +514,18 @@ function finishBreach(won){
 function manualTarget(){
  if(!guardian)return null;
  const list=viewMode==='interior'?breachers:enemies;
- let best=null,dmin=viewMode==='interior'?16:10.5;
+ const maxRange=viewMode==='interior'?16:10.5;
+ // Keep the same live target while it stays within reach. Reacquiring
+ // the nearest target for every shot made the character flip rapidly.
+ if(aimLockTarget?.live && list.includes(aimLockTarget) &&
+   Math.hypot(aimLockTarget.x-guardian.x,aimLockTarget.z-guardian.z)<maxRange+1.3)return aimLockTarget;
+ let best=null,dmin=maxRange;
  for(const e of list)if(e.live){
   const d=Math.hypot(e.x-guardian.x,e.z-guardian.z);
   if(d<dmin){dmin=d;best=e}
  }
+ if(best!==aimLockTarget)aimLockSwitches++;
+ aimLockTarget=best;
  return best;
 }
 function firePlayer(){
@@ -522,7 +534,12 @@ function firePlayer(){
  const e=manualTarget();
  if(!e){emit(guardian.x,1.12,guardian.z,MAT.gold,1);return true}
  const dx=e.x-guardian.x,dz=e.z-guardian.z,d=Math.hypot(dx,dz)||1;
- guardian.targetYaw=Math.atan2(dx,dz)*180/Math.PI+180;
+ // Shooting uses a lock-on beam. It must NEVER override movement steering.
+ // Only turn the character toward the enemy while standing still.
+ const steering= Math.hypot(joystick.x,joystick.y)>.12 ||
+  keys.has('KeyW')||keys.has('KeyA')||keys.has('KeyS')||keys.has('KeyD')||
+  keys.has('ArrowUp')||keys.has('ArrowDown')||keys.has('ArrowLeft')||keys.has('ArrowRight');
+ if(!steering)guardian.targetYaw=Math.atan2(dx,dz)*180/Math.PI+180;
  const from=new pc.Vec3(guardian.x,1.15,guardian.z-.24),to=new pc.Vec3(e.x,.95,e.z);
  const center=from.clone().add(to).mulScalar(.5);
  const beamParent=viewMode==='interior'?interiorRoot:root;
@@ -569,7 +586,12 @@ function updateCombat(dt){
  const kx=(keys.has('KeyD')||keys.has('ArrowRight')?1:0)-(keys.has('KeyA')||keys.has('ArrowLeft')?1:0);
  const kz=(keys.has('KeyW')||keys.has('ArrowUp')?1:0)-(keys.has('KeyS')||keys.has('ArrowDown')?1:0);
  // Screen-forward is -Z: keep up on stick / W moving AWAY from the camera.
- let mx=joystick.x+kx,mz=joystick.y-kz,mag=Math.hypot(mx,mz);
+ // Interpret stick in camera SCREEN coordinates so right/up are always
+ // screen-right / away from the player's view even after camera swipes.
+ const sx=joystick.x+kx,sy=joystick.y-kz;
+ let mx=Math.cos(cameraAngle)*sx+Math.sin(cameraAngle)*sy;
+ let mz=-Math.sin(cameraAngle)*sx+Math.cos(cameraAngle)*sy;
+ const mag=Math.hypot(mx,mz);
  if(mag>.04){
   mx/=Math.max(1,mag);mz/=Math.max(1,mag);
   const speed=viewMode==='interior'?5.0:6.15;
@@ -581,7 +603,9 @@ function updateCombat(dt){
  guardian.entity.setPosition(guardian.x,.20+Math.sin(guardian.walk)*.017,guardian.z);
  if(firing||keys.has('Space')||keys.has('Enter'))firePlayer();
  const turn=((guardian.targetYaw-guardian.facing+540)%360)-180;
- guardian.facing+=turn*clamp(dt*9,0,1);
+ // Cap rotation speed instead of multiplying a 180-degree target jump in
+ // a single frame; target lock holds the heading stable while moving.
+ guardian.facing+=clamp(turn,-420*dt,420*dt);
  guardian.visual.setLocalEulerAngles(0,guardian.facing,Math.sin(guardian.walk)*1.4);
  for(let i=beams.length-1;i>=0;i--){const b=beams[i];b.life-=dt;if(b.life<=0){b.entity.destroy();beams.splice(i,1)}}
  if(viewMode==='interior'&&breach){
@@ -620,16 +644,17 @@ function bindCombatInputs(){
  const base=$('joybase'),stick=$('joystick'),fire=$('fire');
  const position=e=>{
   const rect=base.getBoundingClientRect(),cx=rect.left+rect.width/2,cy=rect.top+rect.height/2;
-  let dx=(e.clientX-cx)/37,dy=(e.clientY-cy)/37,d=Math.hypot(dx,dy);
+  const radius=Math.min(rect.width,rect.height)*.33;
+  let dx=(e.clientX-cx)/radius,dy=(e.clientY-cy)/radius,d=Math.hypot(dx,dy);
   if(d>1){dx/=d;dy/=d}
-  joystick.x=clamp(dx,-1,1);joystick.y=clamp(dy,-1,1);
-  stick.style.left=(30+joystick.x*32)+'px';
-  stick.style.top=(30+joystick.y*32)+'px';
+  joystick.x=Math.abs(dx)<.045?0:clamp(dx,-1,1);
+  joystick.y=Math.abs(dy)<.045?0:clamp(dy,-1,1);
+  stick.style.transform='translate(calc(-50% + '+(joystick.x*radius)+'px),calc(-50% + '+(joystick.y*radius)+'px))';
  };
  const clear=e=>{
   if(joystick.id!==e.pointerId)return;
   joystick.id=null;joystick.x=0;joystick.y=0;
-  stick.style.left='30px';stick.style.top='30px';
+  stick.style.transform='translate(-50%,-50%)';
   try{base.releasePointerCapture(e.pointerId)}catch{}
  };
  base.addEventListener('pointerdown',e=>{if(viewMode==='tactical')return;e.preventDefault();
@@ -648,7 +673,7 @@ function bindCombatInputs(){
   }
  });
  window.addEventListener('keyup',e=>keys.delete(e.code));
- window.addEventListener('blur',()=>{keys.clear();firing=false;joystick.x=0;joystick.y=0});
+ window.addEventListener('blur',()=>{keys.clear();firing=false;joystick.x=0;joystick.y=0;stick.style.transform='translate(-50%,-50%)'});
 }
 
 function input(){
@@ -670,14 +695,23 @@ function input(){
  const distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
  let lastPinch=null;
  canvas.addEventListener('pointerdown',e=>{
-  if(state!=='running'||viewMode!=='tactical')return;e.preventDefault();
+  if(state!=='running')return;
+  e.preventDefault();
+  // Outside the HUD, a one-finger drag on the 3D scene turns the camera.
+  // The left joystick continues to move and FIRE continues to auto-lock.
+  if(viewMode!=='tactical' && pointers.size>0)return;
   pointers.set(e.pointerId,{x:e.clientX,y:e.clientY,sx:e.clientX,sy:e.clientY,moved:false});
   try{canvas.setPointerCapture(e.pointerId)}catch{}
   if(pointers.size>=2){for(const p of pointers.values())p.moved=true;const pts=[...pointers.values()];lastPinch=distance(pts[0],pts[1])}
  },{passive:false});
  canvas.addEventListener('pointermove',e=>{
-  if(!pointers.has(e.pointerId)||state!=='running'||viewMode!=='tactical')return;e.preventDefault();
+  if(!pointers.has(e.pointerId)||state!=='running')return;
+  e.preventDefault();
   const p=pointers.get(e.pointerId),dx=e.clientX-p.x,dy=e.clientY-p.y;p.x=e.clientX;p.y=e.clientY;
+  if(viewMode!=='tactical'){
+   if(Math.abs(dx)>0.3){p.moved=true;panBy(dx,dy)}
+   return;
+  }
   if(pointers.size>=2){const ps=[...pointers.values()],nd=distance(ps[0],ps[1]);
    if(lastPinch>2&&nd>2&&Math.abs(nd-lastPinch)>1)zoomBy(lastPinch/nd,false);
    lastPinch=nd;for(const q of ps)q.moved=true;
@@ -691,7 +725,7 @@ function input(){
   const multi=pointers.size>1;pointers.delete(e.pointerId);
   try{canvas.releasePointerCapture(e.pointerId)}catch{}
   if(pointers.size<2)lastPinch=null;
-  if(!cancel&&!p.moved&&!multi&&state==='running'){
+  if(!cancel&&!p.moved&&!multi&&state==='running'&&viewMode==='tactical'){
    interaction.taps++;activatePad(closestPad(e.clientX,e.clientY));
   }
  }
@@ -704,7 +738,7 @@ function status(){
   credits,core,score,kills,spawned,shots,hits,abilityUses,energy,enemyCount:enemies.length,
   models:modelCount(),worlds:MAPS.map(x=>x.name),pads:pads.length,pathLength:+path.slice(1).reduce((s,p,i)=>s+Math.hypot(p[0]-path[i][0],p[1]-path[i][1]),0).toFixed(1),
   towerCount:towers.length,towerLevels:towers.map(t=>t.level),camera:viewMode,fieldHits,fieldIFrames,fieldKnockouts,reentryKillsNeeded,lastFieldHit,fieldTimeLeft:+fieldTimeLeft.toFixed(2),fieldExpirations,fieldDeployments,fieldDuration:FIELD_SECONDS,
-  interaction:{...interaction},player:guardian?{x:+guardian.x.toFixed(2),z:+guardian.z.toFixed(2),hp:guardian.hp,yaw:+guardian.facing.toFixed(2),targetYaw:+guardian.targetYaw.toFixed(2)}:null,fireCount,hitCount,breachesWon,breachesLost,breach:breach?{...breach}:null,audio:soundOn?'enabled':'muted',proof:'PlayCanvas+Blender+original GLSL+25sec-field-deployment'};
+  interaction:{...interaction},controls:{cameraYaw:+cameraAngle.toFixed(3),cameraSwipes,joystickX:+joystick.x.toFixed(3),joystickY:+joystick.y.toFixed(3),aimLockSwitches,hasLock:!!aimLockTarget?.live},player:guardian?{x:+guardian.x.toFixed(2),z:+guardian.z.toFixed(2),hp:guardian.hp,yaw:+guardian.facing.toFixed(2),targetYaw:+guardian.targetYaw.toFixed(2)}:null,fireCount,hitCount,breachesWon,breachesLost,breach:breach?{...breach}:null,audio:soundOn?'enabled':'muted',proof:'PlayCanvas+Blender+original GLSL+25sec-field-deployment'};
 }
 async function init(){
  try{
