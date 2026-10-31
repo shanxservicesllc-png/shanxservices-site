@@ -7,7 +7,7 @@ const TYPES={
  soda:{name:'SODA SPLASH',icon:'🥤',needs:['cup','ice'],zone:[60,82],station:'DRINK FILLER'}
 };
 const ING={bun:['🍞','BRIOCHE'],patty:['🥩','BEEF'],cheese:['🧀','CHEESE'],lettuce:['🥬','LETTUCE'],potato:['🥔','POTATO'],salt:['🧂','SALT'],cup:['🥤','CUP'],ice:['🧊','ICE']};
-const R={mode:'intro',time:125,orders:[],active:null,nextId:1,served:0,missed:0,score:0,combo:0,spawned:0,goal:4,needle:0,heading:1,selectedIngredient:null,selectedPlate:false,managerClock:0,paused:false,taskStatus:'',lastTick:performance.now(),renderCounter:0,dragging:false,cancelDrag:null,difficulty:'medium',cleanClock:0,managerHelpPrep:0,managerHelpClean:0};
+const R={mode:'intro',time:125,orders:[],active:null,nextId:1,served:0,missed:0,score:0,combo:0,spawned:0,goal:6,day:1,attempt:1,spawnClock:7,lineClock:.75,line:[],lineMax:4,lineNextId:1,waveStartServed:0,needle:0,heading:1,selectedIngredient:null,selectedPlate:false,managerClock:0,paused:false,taskStatus:'',lastTick:performance.now(),renderCounter:0,dragging:false,cancelDrag:null,difficulty:'medium',cleanClock:0,managerHelpPrep:0,managerHelpClean:0};
 const board=document.createElement('div');board.id='rushBoard';
 board.innerHTML='<div id="rushStatus"><strong id="rushTitle">🍳 PICK AN ORDER</strong><span class="hint" id="rushGoal">0 / 4 SERVED</span></div>'
 +'<div id="rushWork"><div id="rushIngredients"></div><div id="rushPrep" role="button" tabindex="0"><strong>🥣 PREP BOARD</strong><small>DRAG FOOD HERE</small></div></div>'
@@ -58,17 +58,51 @@ const pausedCurtain=document.createElement('div');pausedCurtain.id='rushPaused';
 function say(t){R.taskStatus=t;$('rushLog').textContent=t;$('status').textContent=t}
 function chosen(){return R.orders.find(o=>o.id===R.active)||R.orders[0]||null}
 function spawn(dish,source=null){
- if(R.spawned>=R.goal+2)return;
+ if(R.mode!=='running'||R.orders.length>=3)return null;
+ if(!TYPES[dish]||R.day<(TYPES[dish].unlockDay||1))return null;
  const src=source||['WALK-IN','PICKUP','DINE-IN','PICKUP'][R.spawned%4];
- const total=(dish==='burger'?82:68)+(P()?.tycoon?.levels?.hospitality||0)*9+DIFF_LEVELS[R.difficulty].patience;
+ const total=(TYPES[dish].family==='burger'?88:74)+Math.min(12,(R.day-1)*2)+(P()?.tycoon?.levels?.hospitality||0)*9+DIFF_LEVELS[R.difficulty].patience;
  const o={id:R.nextId++,dish,source:src,left:total,total,phase:'prep',collected:[],quality:0,burns:0};
  R.orders.push(o);R.spawned++;if(R.active===null)R.active=o.id;drawTickets();drawWork();return o;
 }
+function shiftDuration(){return DIFF_LEVELS[R.difficulty].shift+(R.goal-4)*21+(P()?.tycoon?.levels?.hospitality||0)*7}
+function queueArrival(source=null){
+ if(R.mode!=='running'||R.line.length>=R.lineMax)return false;
+ const src=source||['WALK-IN','PICKUP','DINE-IN','WALK-IN'][(R.lineNextId+R.spawned)%4];
+ const dish=window.__panicRush?.careerDish?.(R.day,R.attempt,R.spawned+R.line.length+1,src)||'burger';
+ R.line.push({visitor:R.lineNextId++,dish,source:src});
+ R.spawnClock=Math.max(5,10.5-Math.min(7,R.day)*.45);
+ return true;
+}
+function pumpLine(dt){
+ if(!R.line.length||R.orders.length>=3||R.mode!=='running')return;
+ const drive=window.__panicDrive?.state;
+ if(drive&&['approach','ordering'].includes(drive.phase)&&R.orders.length>=2)return;
+ R.lineClock-=dt;
+ if(R.lineClock>0)return;
+ const next=R.line[0],ticket=spawn(next.dish,next.source);
+ if(ticket){R.line.shift();R.lineClock=.8;say('🚶 CUSTOMER #'+next.visitor+' ORDERED '+TYPES[next.dish].name)}
+ else R.lineClock=.6;
+}
+function advanceShift(){
+ if(R.served-R.waveStartServed<R.goal||R.mode!=='running')return false;
+ const finishedDay=R.day,earned=window.__panicCareer?.advance?.(R);
+ if(!earned)return false;
+ R.waveStartServed=R.served;R.day=earned.nextDay;R.goal=earned.nextGoal;
+ R.time=shiftDuration();R.spawnClock=Math.min(R.spawnClock,4);
+ const payout=P()?.tycoon?.awardMilestone?.(R.score);
+ say('🏆 SHIFT '+finishedDay+' COMPLETE! +'+(payout||0)+' COINS • SHIFT '+R.day+' STARTS NOW');
+ window.dispatchEvent(new CustomEvent('panic:shift-advanced',{detail:{day:R.day,fromDay:finishedDay,goal:R.goal,served:R.served}}));
+ drawTickets();drawWork();update();return true;
+}
 function begin(){
- if(R.cancelDrag)R.cancelDrag();R.mode='running';R.time=DIFF_LEVELS[R.difficulty].shift+(P()?.tycoon?.levels?.hospitality||0)*7;R.orders=[];R.active=null;R.nextId=1;R.served=0;R.missed=0;R.score=0;R.combo=0;R.spawned=0;R.needle=0;R.heading=1;R.managerClock=0;R.cleanClock=0;R.managerHelpPrep=0;R.managerHelpClean=0;R.paused=false;R.selectedIngredient=null;R.selectedPlate=false;R.lastTick=performance.now();
+ if(R.cancelDrag)R.cancelDrag();
+ const career=window.__panicCareer?.begin?.()||{day:1,goal:6,attempt:1};
+ R.day=career.day;R.goal=career.goal;R.attempt=career.attempt;R.spawnClock=6;R.lineClock=.8;R.line=[];R.lineNextId=1;R.waveStartServed=0;
+ R.mode='running';R.time=DIFF_LEVELS[R.difficulty].shift+(R.goal-4)*21+(P()?.tycoon?.levels?.hospitality||0)*7;R.orders=[];R.active=null;R.nextId=1;R.served=0;R.missed=0;R.score=0;R.combo=0;R.spawned=0;R.needle=0;R.heading=1;R.managerClock=0;R.cleanClock=0;R.managerHelpPrep=0;R.managerHelpClean=0;R.paused=false;R.selectedIngredient=null;R.selectedPlate=false;R.lastTick=performance.now();
  $('ticketArea').classList.add('rushLive');$('counter').classList.add('rushOn');pausedCurtain.classList.remove('show');
  P().state.mode='rush';P().state.time=R.time;P().state.score=0;P().state.combo=0;
- spawn('burger','WALK-IN');spawn('fries','PICKUP');spawn('soda','DINE-IN');window.dispatchEvent(new Event('panic:rush-start'));say('🥣 DRAG THE FOOD FOR YOUR FIRST ORDER TO PREP');
+ spawn('burger','WALK-IN');spawn('fries','PICKUP');spawn('soda','DINE-IN');queueArrival('WALK-IN');queueArrival('PICKUP');window.dispatchEvent(new Event('panic:rush-start'));say('🥣 DRAG THE FOOD FOR YOUR FIRST ORDER TO PREP');
  update();drawWork();
 }
 function drawTickets(){
@@ -89,7 +123,7 @@ function timeLabels(){
 }
 function drawWork(){
  const o=chosen(),root=$('rushIngredients');if(R.cancelDrag)R.cancelDrag();root.replaceChildren();
- if(!o){$('rushTitle').textContent=R.served>=R.goal?'🧽 CLEAN DINING AREA':'⏳ NO ACTIVE ORDER';$('rushPrep').innerHTML='<strong>🥣 PREP BOARD</strong><small>WAITING FOR CUSTOMERS</small>';$('rushHeat').classList.remove('active');$('rushPlate').classList.remove('active');return}
+ if(!o){$('rushTitle').textContent='🚶 CUSTOMER LINE MOVING';$('rushPrep').innerHTML='<strong>🥣 PREP BOARD</strong><small>'+R.line.length+' IN LINE · NEXT CUSTOMER SOON</small>';$('rushHeat').classList.remove('active');$('rushPlate').classList.remove('active');return}
  const rec=TYPES[o.dish];$('rushTitle').textContent=rec.icon+' ORDER #'+o.id+' '+rec.name;
  for(const item of Object.keys(ING)){
   const used=o.collected.includes(item),b=document.createElement('button');b.className='rushItem'+(used?' used':'')+(R.selectedIngredient===item?' picked':'');
@@ -102,16 +136,16 @@ function drawWork(){
  if(o.phase==='heat'){
   $('heatName').textContent=rec.icon+' '+rec.station+' • TIMING';
   const [lo,hi]=rec.zone;$('heatTarget').style.left=lo+'%';$('heatTarget').style.width=(hi-lo)+'%';
-  $('cookAction').textContent=o.dish==='burger'?'🔥 FLIP THE PATTY!':o.dish==='fries'?'🍟 LIFT THE FRIES!':'🥤 STOP FILLING!';
+  $('cookAction').textContent=rec.family==='burger'?'🔥 FLIP THE PATTY!':rec.family==='fries'?'🍟 LIFT THE FRIES!':'🥤 STOP FILLING!';
  }
  if(o.phase==='plate'){$('readyPlate').textContent=rec.icon+' DRAG PLATE';$('serveDrop').textContent=o.source==='DINE-IN'?'🪑 DRAG TO A DINING TABLE':o.source==='DRIVE-THRU'?'🚗 DRAG TO DRIVE WINDOW':'🍽️ DROP TO SERVE';}
- $('rushGoal').textContent=DIFF_LEVELS[R.difficulty].label+' · '+R.served+'/'+R.goal+' SERVED · '+R.missed+' LOST';
+ $('rushGoal').textContent=DIFF_LEVELS[R.difficulty].label+' · '+(R.served-R.waveStartServed)+'/'+R.goal+' SHIFT · 🚶 '+R.line.length+' IN LINE · '+R.missed+' LOST';
  update3D();
 }
 function update3D(){
  const h=P()?.rendering?.hero,o=chosen();if(!h)return;
  if(h.burger){
-  const state=o?.dish==='burger'?o:null,col=state?.collected||[];
+  const state=TYPES[o?.dish]?.family==='burger'?o:null,col=state?.collected||[];
   h.burger.forEach(e=>{
    if(e===h.burger)return;
    const n=e.name.toLowerCase();let on=!state;
@@ -126,8 +160,8 @@ function update3D(){
    e.enabled=on;
   });
  }
- if(h.fries)h.fries.enabled=!!(o?.dish==='fries'&&o.phase==='plate');
- if(h.soda)h.soda.enabled=!!(o?.dish==='soda'&&o.phase==='plate');
+ if(h.fries)h.fries.enabled=!!(TYPES[o?.dish]?.family==='fries'&&o.phase==='plate');
+ if(h.soda)h.soda.enabled=!!(TYPES[o?.dish]?.family==='soda'&&o.phase==='plate');
 }
 function wrong(message){
  const o=chosen();R.combo=0;if(o)o.left=Math.max(1,o.left-4);R.time=Math.max(0,R.time-1.5);
@@ -167,31 +201,33 @@ function serve(){
  R.score+=bonus;R.served++;R.combo++;
  R.orders=R.orders.filter(a=>a!==o);R.active=R.orders[0]?.id||null;R.selectedPlate=false;R.selectedIngredient=null;
  window.dispatchEvent(new CustomEvent('panic:order-served',{detail:{id:o.id,dish:o.dish,source:o.source,table}}));
- say('🔔 '+TYPES[o.dish].icon+' DELIVERED! +'+bonus+' · '+R.served+'/'+R.goal);
+ say('🔔 '+TYPES[o.dish].icon+' DELIVERED! +'+bonus+' · '+(R.served-R.waveStartServed)+'/'+R.goal+' THIS SHIFT');
  navigator.vibrate?.(20);
- if(R.spawned<R.goal&&!P()?.tycoon?.drive)spawn('burger','PICKUP');
- if(R.served>=R.goal){if(!window.__panicDining?.needsCleanup()){finish(true);return}say('🧽 ALL ORDERS SERVED. CLEAN AND RESET DINING TABLES TO WIN!')}
+ advanceShift();R.lineClock=Math.min(R.lineClock,.25);
  drawTickets();drawWork();update();
 }
 function finish(won){
- R.mode=won?'won':'lost';R.paused=false;window.dispatchEvent(new Event('panic:rush-finished'));
+ R.mode=won?'won':'lost';R.paused=false;
+ const careerResult=window.__panicCareer?.finish?.(R,won);
+ window.dispatchEvent(new Event('panic:rush-finished'));
  const p=P();if(p?.state){p.state.mode=won?'won':'lost';p.state.score=R.score;p.state.combo=R.combo;p.state.time=R.time}
  $('overlay').classList.remove('hidden');$('eyebrow').textContent=won?'SXS TYCOON • RUSH CONQUERED':'SXS TYCOON • KITCHEN CLOSED';
  $('title').innerHTML=won?'RUSH<br><em>CRUSHED!</em>':'PANIC<br><em>OVERTIME!</em>';
- $('message').textContent=R.served+' delivered, '+R.missed+' missed. Score '+R.score+'. '+(won?'You ran the whole restaurant!':'Try a faster strategy next shift.');
+ $('message').textContent='SHIFT '+R.day+' • '+R.served+' delivered, '+R.missed+' missed. Score '+R.score+'. '+(won?'SHIFT '+(careerResult?.nextDay||R.day+1)+' UNLOCKED! FRESH RECIPES AND CUSTOMER RUSHES.':'Retry this shift for a different order mix.');
  $('how').classList.add('hiddenStuff');$('result').classList.remove('hiddenStuff');$('result').textContent=won?'🏆 ⚡ 🪙':'💔 ⏰';
- $('start').textContent=won?'⚡ NEXT RUSH SHIFT':'🔥 RETRY THE RUSH';
+ $('start').textContent=won?'🏪 OPEN NEXT SHIFT':'🔥 RETRY THIS SHIFT';
  drawWork();update();
 }
 function update(){
  const p=P();if(p?.state){p.state.time=R.time;p.state.score=R.score;p.state.combo=R.combo}
- $('rushGoal').textContent=DIFF_LEVELS[R.difficulty].label+' · '+R.served+'/'+R.goal+' SERVED · '+R.missed+' LOST';
+ $('rushGoal').textContent=DIFF_LEVELS[R.difficulty].label+' · '+(R.served-R.waveStartServed)+'/'+R.goal+' SHIFT · 🚶 '+R.line.length+' IN LINE · '+R.missed+' LOST';
  $('rushLog').textContent=R.taskStatus;$('heatNeedle').style.left=R.needle+'%';timeLabels();
 }
 function loop(t){
  const dt=Math.min(.08,Math.max(0,(t-R.lastTick)/1000||0));R.lastTick=t;
  if(R.mode==='running'&&!R.paused&&!$('shop').classList.contains('show')){
   R.time=Math.max(0,R.time-dt);
+  if(R.time<=0){R.time=shiftDuration();R.combo=0;say('⏱️ RUSH CLOCK RENEWED! KEEP SERVING THE LINE')}
   for(const o of [...R.orders]){
    o.left-=dt;
    if(o.left<=0){
@@ -199,14 +235,20 @@ function loop(t){
     window.dispatchEvent(new CustomEvent('panic:order-expired',{detail:{id:o.id,source:o.source,dish:o.dish}}));
     if(o.id===R.active)R.active=R.orders[0]?.id||null;
     say('💔 ORDER #'+o.id+' WALKED OUT!');
-    if(R.spawned<R.goal+2)spawn('soda','PICKUP');
+    R.lineClock=Math.min(R.lineClock,.15);
     drawTickets();drawWork();
    }
   }
+  R.spawnClock-=dt;
+  if(R.spawnClock<=0){if(!queueArrival())R.spawnClock=1.2;}
+  pumpLine(dt);
+  if(!R.orders.length&&!R.line.length)queueArrival('WALK-IN');
   R.needle+=dt*(102/(1+.13*(P()?.tycoon?.levels?.kitchen||0)))*R.heading;
   if(R.needle>=100){R.needle=100;R.heading=-1}if(R.needle<=0){R.needle=0;R.heading=1}
-  if(R.served>=R.goal&&!window.__panicDining?.needsCleanup())finish(true);
-  else if(R.missed>=DIFF_LEVELS[R.difficulty].misses||R.time<=0||(!R.orders.length&&R.spawned>=R.goal&&R.served<R.goal))finish(false);
+  // The visible needle must track the scored position EVERY frame, on BOTH passes.
+  $('heatNeedle').style.left=R.needle+'%';
+  // Continuous restaurant: missed customers affect score and streak, never halt arrivals.
+  if(R.served-R.waveStartServed>=R.goal)advanceShift();
   // Manager assist is earned, difficulty-gated and never interrupts a player's drag.
   if(P()?.tycoon?.manager&&R.mode==='running'){
    const policy=managerPolicy();
@@ -286,12 +328,23 @@ $('rushPrep').addEventListener('click',()=>{if(R.selectedIngredient)deposit(R.se
 $('rushPrep').addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&R.selectedIngredient){e.preventDefault();deposit(R.selectedIngredient)}});
 $('serveDrop').addEventListener('click',()=>{if(R.selectedPlate)serve()});
 $('serveDrop').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();serve()}});
-$('cookAction').addEventListener('click',cook);
+// Score the needle on initial finger contact, not on the later mobile click.
+let lastCookPointerAt=-Infinity;
+$('cookAction').addEventListener('pointerdown',e=>{
+ if(!e.isPrimary||e.button!==0)return;
+ lastCookPointerAt=performance.now();
+ const displayed=parseFloat($('heatNeedle').style.left);
+ if(chosen()?.phase==='heat'&&Number.isFinite(displayed))R.needle=displayed;
+ cook(); // either direction scores in the identical target zone
+});
+$('cookAction').addEventListener('click',()=>{
+ if(performance.now()-lastCookPointerAt>=700)cook(); // keyboard/assistive click
+});
 // The existing engine initializes/hides the intro, then the new real RUSH shift takes over.
 document.addEventListener('click',e=>{if(e.target.closest('#start')&&P()?.state?.modelReady)queueMicrotask(begin)});
 $('pause').addEventListener('click',e=>{if(R.mode==='running'){e.stopImmediatePropagation();R.paused=!R.paused;$('pause').textContent=R.paused?'▶ RESUME':'Ⅱ PAUSE';pausedCurtain.classList.toggle('show',R.paused);say(R.paused?'Ⅱ PAUSED':'🔥 BACK TO WORK');window.dispatchEvent(new CustomEvent('panic:pause-changed',{detail:{paused:R.paused}}))}},true);
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&R.mode==='running'){R.paused=true;pausedCurtain.classList.add('show');window.dispatchEvent(new CustomEvent('panic:pause-changed',{detail:{paused:true}}))}});
-window.__panicRush={state:R,TYPES,DIFF_LEVELS,managerPolicy,spawn,deposit,cook,serve,select:id=>{R.active=id;drawTickets();drawWork()},start:begin,update,checkCleanCompletion:()=>{if(R.mode==='running'&&R.served>=R.goal&&!window.__panicDining?.needsCleanup())finish(true)}};
+window.__panicRush={state:R,TYPES,ING,DIFF_LEVELS,managerPolicy,spawn,queueArrival,pumpLine,advanceShift,deposit,cook,serve,select:id=>{R.active=id;drawTickets();drawWork()},start:begin,update,checkCleanCompletion:()=>{if(R.mode==='running')update()}};
 requestAnimationFrame(loop);
 
 /* Timed Blender 3D Kitchen / warmer / pause controls. Bundled to stay PBP allowlisted. */
@@ -306,7 +359,11 @@ const $=id=>document.getElementById(id);
 const O={tab:'restaurant',remaining:0,cooldown:0,entryDuration:24,cooldownDuration:11,active:null,needle:0,heading:1,elapsed:0,
  stock:{patty:[],fries:[],soda:[]},capacity:{patty:6,fries:4,soda:4},crafts:0,made:{patty:0,fries:0,soda:0},wasted:0,selected:null,last:performance.now()};
 const names={patty:'🥩 COOK PATTIES',fries:'🍟 BATCH FRIES',soda:'🥤 FILL DRINKS'};
-const key={burger:'patty',fries:'fries',soda:'soda'};
+const recipe=dish=>window.__panicRush?.TYPES?.[dish];
+const family=dish=>recipe(dish)?.family||dish;
+const forStock=dish=>({burger:'patty',fries:'fries',soda:'soda'})[family(dish)];
+const stockCost=dish=>recipe(dish)?.stockNeeded||1;
+const toppingNeeds=dish=>{const type=family(dish),base=type==='burger'?['patty','patty2']:type==='fries'?['potato','salt']:['cup','ice'];return (recipe(dish)?.needs||[]).filter(x=>!base.includes(x))};
 const div=document.createElement('div');div.id='opsTabs';
 div.innerHTML='<button id="opsRestaurant" type="button" class="selected">🏪 RESTAURANT</button><button id="opsKitchenTab" type="button">🍳 3D KITCHEN • 24s</button>';
 $('view').appendChild(div);
@@ -320,7 +377,7 @@ const menu=document.createElement('section');menu.id='opsPause';menu.setAttribut
 menu.innerHTML='<div class="opsDialog"><h2>⏸️ PAUSED</h2><p>Customer timers, cars, and cooking are frozen. Upgrades and saved coins are safe.</p><button id="opsResume" type="button">▶ RESUME SHIFT</button><button id="opsRestart" class="secondary" type="button">🔁 RESTART SAME DIFFICULTY</button><button id="opsQuit" class="quit" type="button">↩ QUIT TO DIFFICULTY SELECT</button></div>';
 $('app').appendChild(menu);
 function freeze(){return R()?.mode!=='running'||R()?.paused||$('shop')?.classList.contains('show')}
-function count(kind){return O.stock[kind].length}
+function count(kind){return (O.stock[kind]||[]).length}
 function purge(){
  for(const k of Object.keys(O.stock)){
   const before=count(k);O.stock[k]=O.stock[k].filter(exp=>exp>O.elapsed);
@@ -347,14 +404,14 @@ function refresh(){
  if(O.active)$('opsJobName').textContent=names[O.active]+' • GREEN = +2 STOCK';
  const order=R()?.orders?.find(o=>o.id===R()?.active)||R()?.orders?.[0];
  let show=false,description='';
- if(order?.phase==='prep'&&count(key[order.dish])>0&&!R().paused){
+ if(order?.phase==='prep'&&count(forStock(order.dish))>=stockCost(order.dish)&&!R().paused){
   show=true;
-  description=order.dish==='burger'?'Assemble bun + cheese + lettuce, then add cooked patty':'Grab a prepared '+order.dish+' for immediate plating';
+  description=toppingNeeds(order.dish).every(x=>order.collected.includes(x))?'READY: use the warmer to plate this meal':'Add '+toppingNeeds(order.dish).filter(x=>!order.collected.includes(x)).join(', ')+' before warmed stock';
  }
  quick.classList.toggle('active',show);
  $('opsQuickHint').textContent=description;
- $('opsUseStock').textContent=order?.dish==='burger'?'🥩 ADD COOKED PATTY':'🧺 PLATE READY '+(order?.dish||'FOOD').toUpperCase();
- $('opsUseStock').disabled=!!(order?.dish==='burger'&&!['bun','cheese','lettuce'].every(x=>order.collected.includes(x)));
+ $('opsUseStock').textContent=family(order?.dish)==='burger'?'🥩 ADD WARM PATTY'+(stockCost(order?.dish)>1?' x2':''):'🧺 PLATE READY '+(order?.dish||'FOOD').toUpperCase();
+ $('opsUseStock').disabled=!!(order&&!toppingNeeds(order.dish).every(x=>order.collected.includes(x)));
 }
 function reset(){
  O.tab='restaurant';O.remaining=0;O.cooldown=0;O.active=null;O.needle=0;O.heading=1;O.elapsed=0;O.stock={patty:[],fries:[],soda:[]};O.crafts=0;O.wasted=0;O.made={patty:0,fries:0,soda:0};O.selected=null;
@@ -401,22 +458,22 @@ function stopBatch(){
 }
 function consumeStock(dish){
  if(freeze()||O.tab!=='restaurant')return false;
- const type=key[dish];if(!type)return false;
+ const type=forStock(dish);if(!type)return false;
  purge();if(!count(type))return false;
  O.stock[type].shift();refresh();return true;
 }
 function useStock(){
  if(freeze()||O.tab!=='restaurant')return false;
  const rush=window.__panicRush,o=R()?.orders?.find(x=>x.id===R()?.active)||R()?.orders?.[0];
- if(!o||o.phase!=='prep'||!count(key[o.dish]))return false;
- if(o.dish==='burger'){
-  if(!['bun','cheese','lettuce'].every(x=>o.collected.includes(x)))return false;
-  if(!consumeStock('burger'))return false;
-  o.collected.push('patty');
- }else if(!consumeStock(o.dish))return false;
+ if(!o||o.phase!=='prep'||!recipe(o.dish))return false;
+ const kind=forStock(o.dish),amount=stockCost(o.dish);
+ if(!kind||count(kind)<amount||!toppingNeeds(o.dish).every(x=>o.collected.includes(x)))return false;
+ for(let i=0;i<amount;i++)if(!consumeStock(o.dish))return false;
+ const type=family(o.dish),base=type==='burger'?['patty',...(amount>1?['patty2']:[])]:type==='fries'?['potato','salt']:['cup','ice'];
+ for(const item of base)if(!o.collected.includes(item))o.collected.push(item);
  o.phase='plate';o.quality=.85;R().score+=35;R().combo++;
  rush.select(o.id);rush.update();
- $('opsKitchenMessage').textContent='🧺 READY STOCK USED FOR ORDER #'+o.id;
+ $('opsKitchenMessage').textContent='🧺 WARMED FOOD USED FOR ORDER #'+o.id;
  refresh();return true;
 }
 function showPause(paused){
@@ -456,7 +513,18 @@ function quit(){
 $('opsKitchenTab').addEventListener('click',enterKitchen);
 $('opsRestaurant').addEventListener('click',()=>exitKitchen(false));
 $('opsProduction').addEventListener('click',e=>{const b=e.target.closest('[data-batch]');if(b)startBatch(b.dataset.batch)});
-$('opsStop').addEventListener('click',stopBatch);
+// Same touch-on-press scoring for the 3D production meter.
+let lastBatchPointerAt=-Infinity;
+$('opsStop').addEventListener('pointerdown',e=>{
+ if(!e.isPrimary||e.button!==0)return;
+ lastBatchPointerAt=performance.now();
+ const displayed=parseFloat($('opsNeedle').style.left);
+ if(Number.isFinite(displayed))O.needle=displayed;
+ stopBatch();
+});
+$('opsStop').addEventListener('click',()=>{
+ if(performance.now()-lastBatchPointerAt>=700)stopBatch();
+});
 $('opsUseStock').addEventListener('click',useStock);
 $('opsResume').addEventListener('click',resume);
 $('opsRestart').addEventListener('click',restart);
@@ -492,7 +560,7 @@ const R=()=>window.__panicRush?.state;
 const O=()=>window.__panicOps?.state;
 const $=id=>document.getElementById(id);
 const HELP_KEY='sxs-panic-kitchen-help-v1';
-const ingredientNames={bun:'BRIOCHE',patty:'BEEF',cheese:'CHEESE',lettuce:'LETTUCE',potato:'POTATO',salt:'SALT',cup:'CUP',ice:'ICE'};
+const ingredientNames={bun:'BRIOCHE',patty:'BEEF',patty2:'SECOND PATTY',cheese:'CHEESE',lettuce:'LETTUCE',potato:'POTATO',salt:'SALT',cup:'CUP',ice:'ICE',bacon:'BACON',tomato:'TOMATO',onion:'ONION',lemon:'LEMON',jalapeno:'JALAPEÑO'};
 const slides=[
  {icon:'🎟️',title:'1. PICK A CUSTOMER ORDER',body:'Tap one of the order cards above the ingredients. Each customer has a countdown. You can switch between orders whenever you need.'},
  {icon:'🥣',title:'2. PUT INGREDIENTS ON PREP',body:'Drag the correct ingredients onto the green PREP BOARD. Or tap an ingredient, then tap PREP BOARD. Keep adding ingredients until the cooking meter appears. Just selecting an ingredient does not cook it.'},
@@ -570,11 +638,11 @@ function stageCue(){
  const o=r.orders.find(x=>x.id===r.active)||r.orders[0],ops=O();
  let text='';
  if(ops?.tab==='kitchen')text='⏱️ 3D KITCHEN: Choose a batch, then STOP the cooking gauge INSIDE GREEN. You return automatically when time runs out.';
- else if(!o)text='🧽 NO ORDERS LEFT: Drag the sponge to RED dirty tables twice to finish cleaning.';
+ else if(!o)text=r.served>=r.goal?'🧽 ORDERS COMPLETE: clean any dirty tables to finish the shift.':'⏳ NEXT CUSTOMER COMING: continue serving to reach today’s order goal.';
  else if(o.phase==='prep'){
   const recipe=window.__panicRush.TYPES[o.dish],missing=recipe.needs.filter(k=>!o.collected.includes(k));
   text='🥣 NEXT: Drag '+missing.map(k=>ingredientNames[k]||k.toUpperCase()).join(' + ')+' onto PREP BOARD. Tap ingredient then PREP also works.';
- }else if(o.phase==='heat')text='🔥 NEXT: Tap the '+(o.dish==='burger'?'GRILL':o.dish==='fries'?'FRYER':'FILLER')+' button when the WHITE marker is inside BRIGHT GREEN.';
+ }else if(o.phase==='heat')text='🔥 NEXT: Tap the '+(window.__panicRush.TYPES[o.dish].family==='burger'?'GRILL':window.__panicRush.TYPES[o.dish].family==='fries'?'FRYER':'FILLER')+' button when the WHITE marker is inside BRIGHT GREEN.';
  else if(o.phase==='plate'){
   text=o.source==='DINE-IN'?'🍽️ NEXT: Drag the PLATE to a highlighted GREEN dining TABLE.':
   o.source==='DRIVE-THRU'?'🚗 NEXT: Wait for the car, then drag PLATE to the DRIVE-THRU WINDOW.':
@@ -586,5 +654,111 @@ let last=0;
 function loop(t){if(t-last>170){last=t;stageCue()}requestAnimationFrame(loop)}
 requestAnimationFrame(loop);
 window.__panicHelp={open:openHelp,close:closeHelp,slides,stageCue};
+})();
+
+
+/* Independent, no-purchase recipe variety and career system */
+// SXS PANIC KITCHEN career recipe expansion, earned by playing, not upgrades.
+(function(){
+ const api=window.__panicRush;
+ if(!api?.TYPES||!api?.ING)throw Error('Career menus require the original cooking game');
+ Object.assign(api.TYPES,{
+  cheeseburger:{name:'CHEESE MELT',icon:'🧀',family:'burger',unlockDay:1,needs:['bun','patty','cheese'],zone:[47,65],station:'GRILL'},
+  loadedfries:{name:'LOADED FRIES',icon:'🍟',family:'fries',unlockDay:2,needs:['potato','salt','cheese','bacon'],zone:[40,61],station:'FRYER'},
+  lemonade:{name:'FRESH LEMONADE',icon:'🍋',family:'soda',unlockDay:2,needs:['cup','ice','lemon'],zone:[49,68],station:'DRINK FILLER'},
+  deluxe:{name:'SXS DELUXE',icon:'🍔',family:'burger',unlockDay:3,needs:['bun','patty','cheese','lettuce','tomato','onion'],zone:[45,61],station:'GRILL'},
+  spicy:{name:'FIRE BURGER',icon:'🌶️',family:'burger',unlockDay:3,needs:['bun','patty','cheese','jalapeno','lettuce'],zone:[43,61],station:'GRILL'},
+  club:{name:'BACON CLUB',icon:'🥓',family:'burger',unlockDay:4,needs:['bun','patty','cheese','bacon','tomato'],zone:[47,62],station:'GRILL'},
+  double:{name:'DOUBLE STACK',icon:'🍔',family:'burger',unlockDay:5,stockNeeded:2,needs:['bun','patty','patty2','cheese','lettuce'],zone:[44,59],station:'DOUBLE GRILL'}
+ });
+ Object.assign(api.ING,{
+  patty2:['🥩','SECOND PATTY'],bacon:['🥓','BACON'],tomato:['🍅','TOMATO'],
+  onion:['🧅','ONION'],lemon:['🍋','LEMON'],jalapeno:['🌶️','JALAPEÑO']
+ });
+ for(const id of ['burger','fries','soda']){
+  api.TYPES[id].family=id;api.TYPES[id].unlockDay=1;
+ }
+ function dishFor(day,attempt,index,source='PICKUP'){
+  const all=Object.keys(api.TYPES).filter(k=>day >= (api.TYPES[k].unlockDay||1));
+  if(source==='DRIVE-THRU'&&day===1&&index<=3)return 'fries';
+  const newFood=all.filter(k=>!['burger','fries','soda'].includes(k));
+  const plan=[...newFood,...all.filter(k=>['burger','fries','soda'].includes(k))];
+  return plan[(Math.max(0,index-3)+Math.max(0,day-1)+Math.max(0,attempt-1))%plan.length];
+ }
+ api.careerDish=dishFor;
+})();
+
+/* PANIC KITCHEN Career Service: increasing, replayable restaurant shifts.
+ * Not an upgrade product. Wins advance the menu and customer mix for free.
+ * Works in the existing PlayCanvas game; no new renderer and no new ports.
+ */
+(function(){
+ const KEY='sxs-panic-kitchen-career-v1';
+ const defaults={day:1,wins:0,attempts:0,best:0};
+ let saved={...defaults};
+ try{
+  const v=JSON.parse(localStorage.getItem(KEY)||'{}');
+  for(const k of ['day','wins','attempts','best'])
+   if(Number.isInteger(v[k])&&v[k]>=0&&v[k]<=10000000)saved[k]=v[k];
+  saved.day=Math.max(1,saved.day);
+ }catch(e){}
+ const shifts=['LUNCH SERVICE','DINNER RUSH','WEEKEND CROWD','STREET FESTIVAL','LATE NIGHT'];
+ const $=id=>document.getElementById(id);
+ const intro=document.createElement('section');intro.id='careerIntro';
+ intro.setAttribute('aria-label','Restaurant career progress');
+ const dlg=$('overlay')?.querySelector('.dialog');
+ const selector=$('difficultySelect');
+ if(selector)selector.insertAdjacentElement('afterend',intro);
+ else dlg?.appendChild(intro);
+ const top=document.createElement('div');top.id='careerProgress';top.setAttribute('role','status');
+ $('ticketArea')?.insertAdjacentElement('afterbegin',top);
+ function menuFor(day){
+  const defs=window.__panicRush?.TYPES||{};
+  return Object.entries(defs).filter(([id,d])=>day>=(d.unlockDay||1)).map(([id,d])=>({id,name:d.name,icon:d.icon,day:d.unlockDay||1}));
+ }
+ function goalFor(day){return Math.min(14,6+(Math.min(5,day)-1)*2)}
+ function styleFor(day){return shifts[(day-1)%shifts.length]}
+ function write(){try{localStorage.setItem(KEY,JSON.stringify(saved))}catch(e){}}
+ function render(){
+  const d=saved.day,menu=menuFor(d);
+  const next=Object.values(window.__panicRush?.TYPES||{}).filter(x=>x.unlockDay===d+1);
+  intro.innerHTML='<strong>🏪 YOUR RESTAURANT • SHIFT '+d+'</strong><p>'+styleFor(d)+' · '+goalFor(d)+' orders to next milestone · '+menu.length+' menu items</p>'
+    +'<p>🏆 '+saved.wins+' shifts completed · ⭐ Best '+saved.best+'</p>'
+    +(next.length?'<p>🔓 NEXT SHIFT: '+next.map(x=>x.icon+' '+x.name).join(' • ')+'</p>':'<p>🔄 The rush changes every shift. Keep growing your restaurant!</p>')
+    +'<small>New recipes unlock by playing, even without buying upgrades.</small>';
+  const r=window.__panicRush?.state;
+  top.textContent=r?.mode==='running'?'🏪 SHIFT '+r.day+' • '+styleFor(r.day)+' • MENU '+menuFor(r.day).length+' • '+(r.served-(r.waveStartServed||0))+'/'+r.goal+' THIS SHIFT · 🚶 '+(r.line?.length||0)+' IN LINE':'🏪 CAREER SHIFT '+saved.day;
+ }
+ function begin(){
+  saved.attempts++;write();
+  const day=saved.day,goal=goalFor(day),shift=styleFor(day);
+  render();return {day,goal,shift,attempt:saved.attempts};
+ }
+ function advance(r){
+ if(r.mode!=='running')return null;
+ saved.wins++;saved.best=Math.max(saved.best,Math.round(r.score)||0);
+ saved.day=Math.max(saved.day+1,r.day+1);write();render();
+ return {nextDay:saved.day,nextGoal:goalFor(saved.day),menu:menuFor(saved.day)};
+}
+function finish(r,won){
+  if(won){
+   saved.wins++;saved.best=Math.max(saved.best,Math.round(r.score)||0);
+   saved.day=Math.max(saved.day+1,r.day+1);
+   write();
+  }
+  render();
+  return {day:r.day,nextDay:saved.day,won,menu:menuFor(saved.day),shift:styleFor(saved.day)};
+ }
+ window.__panicCareer={state:saved,shifts,begin,finish,advance,render,menuFor,goalFor,styleFor};
+ render();
+ window.addEventListener('panic:rush-start',render);
+ window.addEventListener('panic:rush-finished',()=>requestAnimationFrame(render));
+ let prev='';
+ function tick(){const r=window.__panicRush?.state;if(r?.mode==='running'){
+  const label='🏪 SHIFT '+r.day+' • '+styleFor(r.day)+' • MENU '+menuFor(r.day).length+' • '+(r.served-(r.waveStartServed||0))+'/'+r.goal+' THIS SHIFT · 🚶 '+(r.line?.length||0)+' IN LINE';
+  if(label!==prev){prev=label;top.textContent=label}
+ }else{prev='';}
+ requestAnimationFrame(tick)}
+ requestAnimationFrame(tick);
 })();
 

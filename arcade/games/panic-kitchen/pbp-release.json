@@ -1,13 +1,13 @@
 {
   "approval": "owner-approved",
-  "approved_at_utc": "2026-10-30T19:11:27.292530+00:00",
+  "approved_at_utc": "2026-10-31T00:05:00.732511+00:00",
   "browser_qa_passed": true,
-  "content_sha256": "97b076a8075c752270992f439a91d1c549e0c6dc0615dbbc217b4eb33bd0bce5",
+  "content_sha256": "12fcd1a50f1cd0213015a8d32c0c821118a164b6560b7421f5f678c6b8579cc5",
   "files": [
     {
-      "bytes": 10951,
+      "bytes": 10950,
       "path": "index.html",
-      "sha256": "61454e3d3acca561c603baa1af8bd892a3914e4c13285dffa121c8aad213f0af"
+      "sha256": "2e6bbcf4b3d7d130b893a48517938e0cf2f9246c9d2bf95d01c4241d06b9acca"
     },
     {
       "bytes": 16725,
@@ -25,19 +25,19 @@
       "sha256": "dae5ceb248b2257ebd93d45c99989f64172df9ec20432fba5c3eff39d5b8d889"
     },
     {
-      "bytes": 10389,
+      "bytes": 11189,
       "path": "rush.css",
-      "sha256": "187c6efcceedc56a110f4bf32bd44a298748fa3061c3362213d710d8423120f6"
+      "sha256": "b6c093154e916e3ded823c18212ffe6f8b03a2fe43bca1a52fabfcfa492dc14d"
     },
     {
-      "bytes": 39154,
+      "bytes": 49754,
       "path": "rush.js",
-      "sha256": "c99351aa09e68c692f4fbca57d86ec7e9ffa68977d8954d212470584d93dba25"
+      "sha256": "16fb5e63addfdfddd8fd8a99bc92c493883608c7a57887ca56b92c6312ad737f"
     },
     {
-      "bytes": 17383,
+      "bytes": 20628,
       "path": "tycoon.js",
-      "sha256": "81bff9ec3896e8d359d851d605dc8ee3c83ea17df560d60b8dc6c832c1ea0e39"
+      "sha256": "6cbfe3f75144bf7df2fb67239a95e4847ebb4ed50bc821d1e288414ec243659a"
     },
     {
       "bytes": 3898188,
@@ -61,6 +61,6 @@
     }
   ],
   "game": "panic-kitchen",
-  "release_id": "panic-kitchen-97b076a8075c7522",
+  "release_id": "panic-kitchen-12fcd1a50f1cd021",
   "schema": "x13-pbp-1"
 }

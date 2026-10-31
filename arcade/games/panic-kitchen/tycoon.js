@@ -17,6 +17,7 @@ try{const saved=JSON.parse(localStorage.getItem(DB)||'{}');
  T.patio=T.levels.patio>0;T.drive=T.levels.drive>0;T.manager=T.levels.manager>0;
 }catch(e){}
 function save(){try{localStorage.setItem(DB,JSON.stringify({money:T.money,patio:T.patio,drive:T.drive,manager:T.manager,carsServed:T.carsServed,levels:T.levels}))}catch(e){}}
+T.awardMilestone=(score)=>{const amount=120+Math.round(Math.min(450,score*.06))+T.levels.patio*25+T.levels.drive*45;T.money+=amount;save();renderHUD();document.getElementById('shopToast').textContent='🏆 Shift bonus +'+amount+' coins';return amount};
 const css=document.createElement('style');
 css.textContent='#tycoonHud{position:absolute;top:12px;right:10px;z-index:6;display:flex;align-items:center;gap:5px;flex-wrap:wrap;justify-content:flex-end;max-width:58%}'
 +' .tycoonBtn{background:#103542ef;color:#e4ffd2;border:1px solid #c5eeb0a0;border-radius:10px;font-size:10px;font-weight:1000;padding:8px;box-shadow:0 3px 0 #062333;touch-action:manipulation}'
@@ -138,7 +139,6 @@ renderHUD();requestAnimationFrame(poll);
 
 // Bundled into the approved web distributor allowlist; same PlayCanvas engine, no new runtime files.
 (()=>{
-
 // SXS PANIC KITCHEN: orders must be placed by an actual approaching car.
 // This module does not run its own renderer or server. Only the existing PlayCanvas actors.
 const G=()=>window.__panic, R=()=>window.__panicRush?.state, T=()=>G()?.tycoon;
@@ -159,10 +159,10 @@ function reset(){
 }
 function showCar(i,z){
  const actors=T()?.cars||[];
- actors.forEach((car,j)=>{car.enabled=j===i;if(j===i)car.setLocalPosition(10.45,0,z)});
+ actors.forEach((car,j)=>{const here=j===i%actors.length;car.enabled=here;if(here)car.setLocalPosition(10.45,0,z)});
 }
 function startCar(){
- if(!present()||R()?.mode!=='running'||S.index>=2||R().served>=R().goal){S.phase='idle';button.style.display='none';return}
+ if(!present()||R()?.mode!=='running'){S.phase='idle';button.style.display='none';return}
  S.z=11.8;S.wait=0;S.orderId=null;S.selectedOrder=null;S.phase='approach';
  showCar(S.index,S.z);update();
 }
@@ -170,20 +170,20 @@ function order(){
  if(S.phase!=='approach')return;
  const rush=window.__panicRush;
  if(!rush||R()?.mode!=='running'){S.phase='idle';return}
- if(R().spawned>=R().goal+2){S.phase='depart';return}
+ if(R().orders.length>=3){S.wait=.4;return}
  // Actual order is made NOW at the car-side menu, not when the rush begins.
- const dish=S.index===0?'fries':'burger';
+ const dish=rush.careerDish?rush.careerDish(R().day,R().attempt,R().spawned,'DRIVE-THRU'):(S.index===0?'fries':'burger');
  const ticket=rush.spawn(dish,'DRIVE-THRU');
- if(!ticket){S.phase='depart';return}
+ if(!ticket){return}
  S.orderId=ticket.id;S.ordered++;S.wait=.8;S.phase='ordering';
  info.textContent='📢 CAR #'+(S.index+1)+' ORDERED '+dish.toUpperCase()+' • TICKET #'+ticket.id;
  update();
 }
 function release(){
- const car=T()?.cars?.[S.index];
+ const cars=T()?.cars||[];const car=cars.length?cars[S.index%cars.length]:null;
  if(car)car.enabled=false;
  S.index++;
- if(R()?.mode==='running'&&S.index<2){startCar()}
+ if(R()?.mode==='running'){startCar()}
  else{S.phase='idle';S.orderId=null;button.style.display='none';update()}
 }
 function update(){
@@ -209,9 +209,9 @@ function tick(dt){
  const rush=R();
  if(!present()){for(const car of T()?.cars||[])car.enabled=false;button.style.display='none';return}
  if(rush?.paused||document.getElementById('shop')?.classList.contains('show'))return;
- if(rush?.mode!=='running'&&S.phase!=='depart'){update();return}
- if(S.phase==='idle'&&S.ordered===0)startCar();
- const car=T()?.cars?.[S.index];if(!car)return;
+ if(rush?.mode!=='running'){update();return}
+ if(S.phase==='idle'&&R()?.mode==='running')startCar();
+ const cars=T()?.cars||[];const car=cars.length?cars[S.index%cars.length]:null;if(!car)return;
  const rate=1+(T()?.levels?.drive||0)*.10;
  if(S.phase==='approach'){
   S.z=Math.max(3.8,S.z-dt*3.3*rate);
@@ -273,3 +273,69 @@ function init(){
 init();
 
 })();
+
+/* Original GLB queue actors, no overlay canvas */
+/* SXS PANIC KITCHEN | Physical queued customers in the existing PlayCanvas GLB.
+ * Clones licensed/original guest entities, not meshes drawn on a second canvas.
+ * Player queue ordering lives in rush.js; actors display that canonical state.
+ */
+(function(){
+ const G=()=>window.__panic,T=()=>G()?.tycoon,R=()=>window.__panicRush?.state;
+ const Q={actors:[],positions:[],ready:false,maxVisible:4,frame:0};
+ const queueLabel=document.createElement('div');
+ queueLabel.id='sxsPhysicalQueueLabel';queueLabel.setAttribute('role','status');
+ queueLabel.style.cssText='position:absolute;top:77px;left:9px;z-index:8;color:#e7ffd9;background:#113e4bcf;border:1px solid #b6de9b;border-radius:8px;padding:5px 8px;font-size:10px;font-weight:900;pointer-events:none;max-width:60%';
+ const scene=document.getElementById('view');
+ if(scene)scene.appendChild(queueLabel);
+ function initialize(){
+  const t=T();
+  if(Q.ready||!t?.districtReady||!t.scene||!t.walkers?.length)return;
+  for(let i=0;i<Q.maxVisible;i++){
+   const template=t.walkers[i%t.walkers.length];
+   const actor=template.clone();
+   actor.name='SXS_LINE_GUEST_'+i;
+   t.scene.addChild(actor);
+   actor.setLocalPosition(-10.7,0,7.4);
+   actor.setLocalEulerAngles(0,90,0);
+   actor.enabled=false;
+   Q.actors.push(actor);Q.positions.push({x:-10.7,z:7.4});
+  }
+  Q.ready=true;
+ }
+ function tick(dt){
+  initialize();
+  const r=R(),t=T(),n=r?.mode==='running'?(r.line?.length||0):0;
+  queueLabel.style.display=r?.mode==='running'?'block':'none';
+  if(!r||r.mode!=='running') {for(const actor of Q.actors)actor.enabled=false;return}
+  queueLabel.textContent='🚶 '+n+' IN LINE · 📋 '+r.orders.length+' ORDERS · '+Math.max(0,Math.ceil(r.spawnClock))+'s TO NEXT';
+  if(!Q.ready)return;
+  if(r.paused||document.getElementById('shop')?.classList.contains('show'))return;
+  Q.frame+=dt;
+  for(let i=0;i<Q.actors.length;i++){
+   const node=Q.actors[i],active=i<n;
+   node.enabled=active;
+   if(!active)continue;
+   const targetX=-5.75-i*1.05,targetZ=5.75+i*.46;
+   const pos=Q.positions[i],gain=Math.min(1,dt*1.9);
+   pos.x+=(targetX-pos.x)*gain;pos.z+=(targetZ-pos.z)*gain;
+   node.setLocalPosition(pos.x,Math.max(0,.012*Math.sin(Q.frame*3+i)),pos.z);
+   node.setLocalEulerAngles(0,-30+8*Math.sin(Q.frame*1.6+i),0);
+  }
+  t.visitorCount=(window.__panicDining?.state?.jobs?.length||0)+n;
+ }
+ window.__panicLineVisual={state:Q,tick};
+ const loop=()=>{
+  const t=T();
+  if(t?.districtReady&&!Q.ready)initialize();
+  requestAnimationFrame(loop);
+ };
+ requestAnimationFrame(loop);
+ window.addEventListener('panic:rush-start',()=>{
+  for(let i=0;i<Q.positions.length;i++){Q.positions[i].x=-10.7;Q.positions[i].z=7.4;}
+ });
+ const wait=()=>{const app=G()?.rendering?.app;if(!app){requestAnimationFrame(wait);return}
+  app.on('update',dt=>tick(Math.min(.1,dt)));
+ };
+ wait();
+})();
+

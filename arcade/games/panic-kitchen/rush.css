@@ -106,3 +106,12 @@
 #sxsHelpNext{background:#dfff8f;color:#1c4536;border:2px solid #92bb7a}
 @media(max-width:450px){#sxsHelpButton{font-size:9px;padding:6px}#sxsStepCue{font-size:9px;padding:6px}#sxsHelpText{font-size:12px;min-height:80px}}
 
+
+/* Career loop: shift variety and menu progress, not tied to cash upgrades. */
+#careerIntro{background:#193e49;border:2px solid #86cbaa;border-radius:12px;padding:9px 11px;margin:9px 0;color:#f2ffd9;text-align:left;font:700 11px/1.35 system-ui}
+#careerIntro strong{font-size:13px;color:#e9ffac}
+#careerIntro p{margin:4px 0}
+#careerIntro small{font-size:9px;color:#b2ead7}
+#careerProgress{display:block;width:100%;flex-basis:100%;border:1px solid #97c8b5;background:#164353;color:#eaffc1;border-radius:9px;padding:6px 9px;font-size:10px;font-weight:1000;letter-spacing:.1px;text-align:center;margin-bottom:4px}
+@media(max-width:480px){#careerIntro{margin:5px 0;padding:6px 8px;font-size:10px}#careerIntro strong{font-size:11px}#careerIntro p{margin:3px 0}#careerProgress{font-size:9px;padding:5px}}
+
