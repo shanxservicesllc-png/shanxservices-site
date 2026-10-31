@@ -1,23 +1,23 @@
 {
-  "version": "redline-rift-v4-slice-1",
+  "version": "timebreaker-v10-nine-stage-chronicle",
   "project": "TIMEBREAKER",
   "owner": "X13",
-  "status": "first connected vertical slice; remaining distinct worlds not yet built",
+  "status": "nine-stage original connected campaign; public release not yet authorized",
   "start": "neon-run",
   "stages": [
     {
       "id": "neon-run",
       "type": "runner",
-      "title": "REDLINE APPROACH",
-      "world": "NEON VELOCITY LAB",
-      "scene": "lab_segment",
-      "hero": "riftwalker",
-      "distance": 1040,
-      "timeLimit": 72,
+      "title": "RUN THROUGH TIME",
+      "world": "CHRONOSPINE RUNWAY",
+      "scene": "chronospine_tunnel",
+      "hero": "redline_warden_skinned",
+      "distance": 2650,
+      "timeLimit": 142,
       "baseSpeed": 25.5,
       "maxSpeed": 58,
-      "enemyFrequency": 1.8,
-      "energyPickups": 0.82,
+      "enemyFrequency": 1.55,
+      "energyPickups": 0.85,
       "portalEnergy": 20,
       "portal": "time_rift_gateway",
       "next": "ruin-arena",
@@ -28,41 +28,69 @@
     {
       "id": "ruin-arena",
       "type": "arena",
-      "title": "FALLEN HOUR",
+      "title": "THE FALLEN HOUR",
       "world": "SHATTERED CITY",
       "scene": "ruined_city_arena",
-      "hero": "riftwalker",
+      "hero": "redline_warden_skinned",
       "playerStart": {
         "x": 0,
         "z": 8
       },
       "enemies": {
         "type": "temporal_marauder",
-        "count": 4,
-        "spawn": [
-          [
-            5,
-            -7
-          ],
-          [
-            -5,
-            -10
-          ],
-          [
-            8,
-            -11
-          ],
-          [
-            -7,
-            -16
-          ]
-        ],
-        "health": 2
+        "health": 2,
+        "count": 9,
+        "waves": [
+          {
+            "spawn": [
+              [
+                5,
+                -7
+              ],
+              [
+                -5,
+                -10
+              ],
+              [
+                8,
+                -11
+              ],
+              [
+                -7,
+                -16
+              ]
+            ]
+          },
+          {
+            "spawn": [
+              [
+                -9,
+                -4
+              ],
+              [
+                7,
+                -13
+              ],
+              [
+                4,
+                -17
+              ],
+              [
+                -5,
+                -15
+              ],
+              [
+                -10,
+                -12
+              ]
+            ]
+          }
+        ]
       },
       "objective": {
-        "type": "defeat-all",
-        "count": 4,
-        "description": "Defeat the four temporal marauders"
+        "type": "defeat-waves",
+        "count": 9,
+        "description": "Clear the marauder waves"
       },
       "portalEnergy": 30,
       "portal": "time_rift_gateway",
@@ -74,47 +102,404 @@
       "checkpoint": "arena-start",
       "lighting": "#50304b",
       "music": "original combat ambience pending",
-      "timeLimit": 120
+      "timeLimit": 175
     },
     {
       "id": "next-run",
       "type": "runner",
-      "title": "AFTERSHOCK HIGHWAY",
-      "world": "REDLINE AFTERSHOCK",
-      "scene": "lab_segment",
-      "hero": "riftwalker",
-      "distance": 1220,
-      "timeLimit": 75,
+      "title": "RIFTBOUND HIGHWAY",
+      "world": "AFTERSHOCK PASSAGE",
+      "scene": "chronospine_tunnel",
+      "hero": "redline_warden_skinned",
+      "distance": 3200,
+      "timeLimit": 155,
       "baseSpeed": 34,
       "maxSpeed": 63,
-      "enemyFrequency": 1.15,
-      "energyPickups": 0.77,
+      "enemyFrequency": 1.23,
+      "energyPickups": 0.81,
       "portalEnergy": 25,
       "portal": "time_rift_gateway",
-      "next": null,
+      "next": "battlefield-arena",
       "checkpoint": "next-run",
       "lighting": "#3b1648",
       "music": "original ambient pending"
+    },
+    {
+      "id": "battlefield-arena",
+      "type": "arena",
+      "title": "THE BROKEN AGE",
+      "world": "ANCIENT TEMPORAL BATTLEFIELD",
+      "scene": "temporal_battlefield",
+      "hero": "redline_warden_skinned",
+      "playerStart": {
+        "x": 0,
+        "z": 8
+      },
+      "enemies": {
+        "type": "temporal_marauder",
+        "count": 12,
+        "health": 2,
+        "waves": [
+          {
+            "spawn": [
+              [
+                -8,
+                -7
+              ],
+              [
+                7,
+                -13
+              ],
+              [
+                3,
+                -16
+              ]
+            ]
+          },
+          {
+            "spawn": [
+              [
+                -7,
+                -15
+              ],
+              [
+                8,
+                -5
+              ],
+              [
+                -3,
+                -12
+              ],
+              [
+                3,
+                -8
+              ]
+            ]
+          },
+          {
+            "spawn": [
+              [
+                -9,
+                -10
+              ],
+              [
+                9,
+                -10
+              ],
+              [
+                -6,
+                -16
+              ],
+              [
+                6,
+                -16
+              ],
+              [
+                0,
+                -14
+              ]
+            ]
+          }
+        ]
+      },
+      "objective": {
+        "type": "defeat-waves",
+        "count": 12,
+        "description": "Clear three ancient guardian waves"
+      },
+      "timeLimit": 200,
+      "portalEnergy": 32,
+      "portal": "time_rift_gateway",
+      "exitAt": {
+        "x": 0,
+        "z": -12
+      },
+      "next": "storm-run",
+      "checkpoint": "battlefield-arena-start",
+      "lighting": "#2b3024",
+      "music": "original combat ambience pending"
+    },
+    {
+      "id": "storm-run",
+      "type": "runner",
+      "title": "STORM OF CENTURIES",
+      "world": "TIME-STORM CAUSEWAY",
+      "scene": "chronospine_tunnel",
+      "hero": "redline_warden_skinned",
+      "distance": 3650,
+      "timeLimit": 175,
+      "baseSpeed": 37,
+      "maxSpeed": 70,
+      "enemyFrequency": 1.1,
+      "energyPickups": 0.83,
+      "portalEnergy": 28,
+      "portal": "time_rift_gateway",
+      "next": "factory-arena",
+      "checkpoint": "storm-run-start",
+      "lighting": "#103126",
+      "music": "original temporal ambience pending"
+    },
+    {
+      "id": "factory-arena",
+      "type": "arena",
+      "title": "ENGINE OF FOREVER",
+      "world": "INDUSTRIAL TIME FACTORY",
+      "scene": "time_factory",
+      "hero": "redline_warden_skinned",
+      "playerStart": {
+        "x": 0,
+        "z": 8
+      },
+      "enemies": {
+        "type": "temporal_marauder",
+        "count": 15,
+        "health": 3,
+        "waves": [
+          {
+            "spawn": [
+              [
+                6,
+                -7
+              ],
+              [
+                -6,
+                -9
+              ],
+              [
+                7,
+                -15
+              ],
+              [
+                -7,
+                -15
+              ]
+            ]
+          },
+          {
+            "spawn": [
+              [
+                -10,
+                -10
+              ],
+              [
+                10,
+                -10
+              ],
+              [
+                -5,
+                -14
+              ],
+              [
+                5,
+                -14
+              ],
+              [
+                0,
+                -17
+              ]
+            ]
+          },
+          {
+            "spawn": [
+              [
+                -8,
+                -6
+              ],
+              [
+                8,
+                -6
+              ],
+              [
+                -8,
+                -17
+              ],
+              [
+                8,
+                -17
+              ],
+              [
+                0,
+                -13
+              ],
+              [
+                0,
+                -8
+              ]
+            ]
+          }
+        ]
+      },
+      "objective": {
+        "type": "defeat-waves",
+        "count": 15,
+        "description": "Destroy the time factory defence waves"
+      },
+      "timeLimit": 230,
+      "portalEnergy": 32,
+      "portal": "time_rift_gateway",
+      "exitAt": {
+        "x": 0,
+        "z": -12
+      },
+      "next": "fracture-run",
+      "checkpoint": "factory-arena-start",
+      "lighting": "#2b3024",
+      "music": "original combat ambience pending"
+    },
+    {
+      "id": "fracture-run",
+      "type": "runner",
+      "title": "EDGE OF COLLAPSE",
+      "world": "FRACTURE VELOCITY TUBE",
+      "scene": "chronospine_tunnel",
+      "hero": "redline_warden_skinned",
+      "distance": 3880,
+      "timeLimit": 185,
+      "baseSpeed": 42,
+      "maxSpeed": 74,
+      "enemyFrequency": 1.02,
+      "energyPickups": 0.83,
+      "portalEnergy": 28,
+      "portal": "time_rift_gateway",
+      "next": "collapse-arena",
+      "checkpoint": "fracture-run-start",
+      "lighting": "#103126",
+      "music": "original temporal ambience pending"
+    },
+    {
+      "id": "collapse-arena",
+      "type": "arena",
+      "title": "THE END OF SECONDS",
+      "world": "COLLAPSING DIMENSION",
+      "scene": "collapse_dimension",
+      "hero": "redline_warden_skinned",
+      "playerStart": {
+        "x": 0,
+        "z": 8
+      },
+      "enemies": {
+        "type": "temporal_marauder",
+        "count": 15,
+        "health": 3,
+        "waves": [
+          {
+            "spawn": [
+              [
+                -8,
+                -7
+              ],
+              [
+                8,
+                -7
+              ],
+              [
+                -8,
+                -16
+              ],
+              [
+                8,
+                -16
+              ]
+            ]
+          },
+          {
+            "spawn": [
+              [
+                -9,
+                -9
+              ],
+              [
+                9,
+                -9
+              ],
+              [
+                -6,
+                -13
+              ],
+              [
+                6,
+                -13
+              ],
+              [
+                0,
+                -16
+              ]
+            ]
+          },
+          {
+            "spawn": [
+              [
+                -8,
+                -14
+              ],
+              [
+                8,
+                -14
+              ],
+              [
+                -7,
+                -6
+              ],
+              [
+                7,
+                -6
+              ],
+              [
+                0,
+                -12
+              ],
+              [
+                0,
+                -17
+              ]
+            ]
+          }
+        ]
+      },
+      "objective": {
+        "type": "defeat-waves",
+        "count": 15,
+        "description": "Survive and clear the collapsing timeline"
+      },
+      "timeLimit": 240,
+      "portalEnergy": 32,
+      "portal": "time_rift_gateway",
+      "exitAt": {
+        "x": 0,
+        "z": -12
+      },
+      "next": "last-run",
+      "checkpoint": "collapse-arena-start",
+      "lighting": "#2b3024",
+      "music": "original combat ambience pending"
+    },
+    {
+      "id": "last-run",
+      "type": "runner",
+      "title": "REDLINE ASCENSION",
+      "world": "FINAL CHRONOSPINE",
+      "scene": "chronospine_tunnel",
+      "hero": "redline_warden_skinned",
+      "distance": 4700,
+      "timeLimit": 205,
+      "baseSpeed": 48,
+      "maxSpeed": 83,
+      "enemyFrequency": 0.92,
+      "energyPickups": 0.83,
+      "portalEnergy": 28,
+      "portal": "time_rift_gateway",
+      "next": null,
+      "checkpoint": "last-run-start",
+      "lighting": "#103126",
+      "music": "original temporal ambience pending"
     }
   ],
   "futureWorlds": [
     {
-      "id": "temporal-battlefield",
-      "type": "arena",
-      "design": "ancient temporal battlefield",
-      "status": "planned"
-    },
-    {
-      "id": "industrial-time-factory",
-      "type": "arena",
-      "design": "moving machine hazards and reactor objectives",
-      "status": "planned"
-    },
-    {
-      "id": "collapsing-dimension",
-      "type": "arena",
-      "design": "floating ruins and boss",
-      "status": "planned"
+      "id": "future-time-periods",
+      "type": "expansion",
+      "design": "additional new temporal eras after owner approves the extended campaign",
+      "status": "future"
     }
   ]
 }

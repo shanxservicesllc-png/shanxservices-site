@@ -10,7 +10,7 @@ const qa=window.__RIFT_QA__={ready:false,mode:'loading',models:{},errors:[],port
 
 let app,worlds=[],stage=null,stageIndex=0,mode='loading',paused=false,gameTime=0,clock=0,timeLeft=72,energy=100,health=100,combo=0,boost=0,speed=25,progress=0,seed=13013,playerX=0,steeringX=0,yaw=0,movement={x:0,y:0},shotWait=0,slashWait=0,dashWait=0,blinkWait=0,warpWait=0,invuln=0,portalTimer=0,nextStage=null,riftOpened=false,toastTimer=0,frame=0,cameraShake=0,holdingTime=false,pausedBefore='run';
 
-let runPhase=0,actorYaw=0,actorMove=0,runnerWorld,arenaWorld,player,rift,arena,segments=[],enemies=[],drones=[],rings=[],particles=[],chainStrikes=[],fx,pointLight;
+let runPhase=0,actorYaw=0,actorMove=0,arenaWave=0,arenaKills=0,arenaNextWaveDelay=0,arenaScenes={},runnerWorld,arenaWorld,player,rift,arena,segments=[],enemies=[],drones=[],rings=[],particles=[],chainStrikes=[],fx,pointLight;
 
 const res={},modelled={};
 
@@ -50,7 +50,7 @@ function state(){
 
  qa.mode=mode;qa.stageId=stage?.id;qa.stageIndex=stageIndex;qa.energy=energy;qa.health=health;qa.combo=combo;qa.boost=boost;qa.speed=speed+boost;
 
- qa.timeLeft=timeLeft;qa.progress=progress;qa.player={x:heroX(),z:heroZ()};qa.enemyCount=enemies.length;qa.droneCount=drones.length;qa.portalVisible=rift?.enabled||false;qa.ready=!!player&&!!stage;qa.paused=paused;qa.riftOpened=riftOpened;qa.activeChainLinks=chainStrikes.reduce((n,a)=>n+a.links.length,0);qa.weaponStowed=chainStrikes.length===0;qa.facingDegrees=actorYaw*180/Math.PI;qa.runGait=runPhase;qa.rigLegs=Boolean(player?.findByName('LegPivot_L')&&player?.findByName('LegPivot_R'));qa.cameraYaw=yaw;qa.legSwingL=player?.findByName("LegPivot_L")?.getLocalEulerAngles().x??null;qa.legSwingR=player?.findByName("LegPivot_R")?.getLocalEulerAngles().x??null;qa.rigArms=Boolean(player?.findByName('ArmPivot_L')&&player?.findByName('ArmPivot_R'));
+ qa.timeLeft=timeLeft;qa.progress=progress;qa.totalStages=worlds.length;qa.completedArenaKills=arenaKills;qa.arenaWave=arenaWave+1;qa.totalWaves=stage?.enemies?.waves?.length||1;qa.waveDelay=arenaNextWaveDelay;qa.activeArenaScene=stage?.scene;qa.player={x:heroX(),z:heroZ()};qa.enemyCount=enemies.length;qa.droneCount=drones.length;qa.portalVisible=rift?.enabled||false;qa.ready=!!player&&!!stage;qa.paused=paused;qa.riftOpened=riftOpened;qa.activeChainLinks=chainStrikes.reduce((n,a)=>n+a.links.length,0);qa.weaponStowed=chainStrikes.length===0;qa.productionPBR=!!res.chronospine_tunnel;qa.renderAssetCount=modelled.hero||0;qa.facingDegrees=actorYaw*180/Math.PI;qa.runGait=runPhase;qa.rigLegs=Boolean(player?.findByName('LegPivot_L')&&player?.findByName('LegPivot_R'));qa.cameraYaw=yaw;qa.legSwingL=player?.findByName("LegPivot_L")?.getLocalEulerAngles().x??null;qa.legSwingR=player?.findByName("LegPivot_R")?.getLocalEulerAngles().x??null;qa.rigArms=Boolean(player?.findByName('ArmPivot_L')&&player?.findByName('ArmPivot_R'));
 
  return qa;
 
@@ -91,11 +91,13 @@ function setStage(index,{save=true}={}){
 
  speed=stage.baseSpeed||0;boost=0;progress=0;combo=0;timeLeft=stage.timeLimit||105;energy=100;health=100;
 
- steeringX=0;playerX=0;movement.x=0;movement.y=0;yaw=0;actorYaw=0;runPhase=0;actorMove=0;riftOpened=false;shotWait=0;dashWait=0;slashWait=0;blinkWait=0;warpWait=0;invuln=0;clock=0;
+ steeringX=0;playerX=0;movement.x=0;movement.y=0;yaw=0;actorYaw=0;runPhase=0;actorMove=0;arenaWave=0;arenaKills=0;arenaNextWaveDelay=0;riftOpened=false;shotWait=0;dashWait=0;slashWait=0;blinkWait=0;warpWait=0;invuln=0;clock=0;
 
  clearActors();rift.enabled=false;
 
  runnerWorld.enabled=mode==='run';arenaWorld.enabled=mode==='arena';
+ for(const [asset,obj] of Object.entries(arenaScenes))obj.enabled=(mode==='arena'&&asset===stage.scene);
+ if(mode==='arena'&&!arenaScenes[stage.scene])throw Error('No matching true 3D world GLB for '+stage.scene);
 
  segments.forEach((e,i)=>pos(e,0,0,-i*32));
 
@@ -153,7 +155,7 @@ function announceObjective(){
 
  if(mode==='run-rift')return 'SWIPE UP TO SLASH OPEN THE TIME RIFT';
 
- if(mode==='arena')return stage.objective.description+' · '+(stage.objective.count-enemies.length)+' / '+stage.objective.count;
+ if(mode==='arena')return stage.objective.description+' · '+arenaKills+' / '+stage.objective.count+' · WAVE '+(arenaWave+1)+' / '+(stage.enemies?.waves?.length||1);
 
  if(mode==='arena-portal')return 'PORTAL UNLOCKED · REACH IT & SLASH';
 
@@ -167,7 +169,7 @@ function announceObjective(){
 
 function updateUI(){
 
- $('worldName').textContent=stage?.world||'LOADING WORLDS';
+ $('worldName').textContent=stage?(stage.world+' · '+(stageIndex+1)+'/'+worlds.length):'LOADING WORLDS';
 
  $('objective').textContent=announceObjective();
 
@@ -175,7 +177,7 @@ function updateUI(){
 
  $('timerbox').firstElementChild.textContent=mode==='arena'?'TIME TO CLEAR':'TIME LEFT';
 
- $('bar').style.width=(stage?.type==='arena'?((stage?.objective?.count||4)-enemies.length)/(stage?.objective?.count||4):progress/(stage?.distance||1))*100+'%';
+ $('bar').style.width=(stage?.type==='arena'?arenaKills/(stage?.objective?.count||1):progress/(stage?.distance||1))*100+'%';
 
  $('speed').textContent=inRun()?Math.round((speed+boost)*6.4)+' KM/H':'FREE ROAM';
 
@@ -205,7 +207,7 @@ function updateUI(){
 
 function instantiate(asset,name,parent=app.root){
 
- const e=res[asset]?.resource.instantiateRenderEntity({castShadows:false});
+ const e=res[asset]?.resource.instantiateRenderEntity({castShadows:asset==='redline_warden_skinned',receiveShadows:true});
 
  if(!e)throw Error('GLB resource missing '+asset);
 
@@ -221,17 +223,32 @@ function setupModels(){
 
  app.root.addChild(runnerWorld);app.root.addChild(arenaWorld);
 
- player=instantiate('riftwalker','ORIGINAL HUMAN RIFTWALKER');
+ player=instantiate('redline_warden_skinned','ORIGINAL CC0-SKINNED SXS REDLINE WARDEN');
 
- player.setLocalScale(.96,.96,.96);
+ player.setLocalScale(1.22,1.22,1.22);
 
  modelled.hero=player.findComponents('render').length;
+ const tracks=res.redline_warden_skinned.resource.animations;
+ qa.realBoneAnimationAssets=tracks.length;qa.skinnedHeroMeshes=modelled.hero;
+ if(tracks.length){
+  player.addComponent('anim',{activate:true});
+  player.anim.assignAnimation('RIFTWALKER_RUN_24FRAME_LOOP',tracks[0].resource);
+  player.anim.baseLayer.transition('RIFTWALKER_RUN_24FRAME_LOOP',.08);
+ }
+ // The real skinned character's bone animation replaces the old fake pivot posing.
+ const avatarSkin=player.findComponents('render').flatMap(r=>r.meshInstances).filter(m=>!!m.skinInstance).length;
+ qa.actualSkinInstances=avatarSkin;
 
- for(let i=0;i<4;i++){const ent=instantiate('lab_segment','BLENDER SPEED CORRIDOR '+i,runnerWorld);segments.push(ent);pos(ent,0,0,-i*32)}
+ for(let i=0;i<4;i++){const ent=instantiate('chronospine_tunnel','SXS PHYSICALLY UV-TEXTURED CHRONOSPINE TUBE '+i,runnerWorld);segments.push(ent);pos(ent,0,0,-i*32)}
 
  modelled.corridor=segments[0].findComponents('render').length;
 
  arena=instantiate('ruined_city_arena','BLENDER SHATTERED CITY ARENA',arenaWorld);
+ arenaScenes.ruined_city_arena=arena;
+ for(const asset of ['temporal_battlefield','time_factory','collapse_dimension']){
+  arenaScenes[asset]=instantiate(asset,'SXS ORIGINAL 3D WORLD '+asset,arenaWorld);
+  arenaScenes[asset].enabled=false;
+ }
 
  modelled.arena=arena.findComponents('render').length;
 
@@ -239,19 +256,20 @@ function setupModels(){
 
  modelled.rift=rift.findComponents('render').length;rift.enabled=false;rift.setLocalScale(1.3,1.3,1.3);
 
- for(const key of ['riftwalker','ruined_city_arena','temporal_marauder','time_rift_gateway'])qa.models[key]=!!res[key];
+ for(const key of ['redline_warden_skinned','chronospine_tunnel','ruined_city_arena','temporal_battlefield','time_factory','collapse_dimension','temporal_marauder','time_rift_gateway'])qa.models[key]=!!res[key];
 
- if(modelled.hero<20||modelled.arena<50||modelled.rift<10)throw Error('Required original model detail missing '+JSON.stringify(modelled));
+ if(modelled.hero<14||modelled.arena<50||modelled.rift<10)throw Error('Required original model detail missing '+JSON.stringify(modelled));
 
  const savedCheckpoint=(()=>{try{return localStorage.getItem('timebreaker:redline:checkpoint:v4')}catch(e){return null}})();
  qa.resumeStage=worlds.findIndex(w=>w.id===savedCheckpoint)>0?savedCheckpoint:null;
  setStage(0,{save:false});
 
  qa.ready=true;
+ mode='menu';paused=true;holdingTime=false;state();
 
  $('play').disabled=false;$('play').textContent='RUN THROUGH TIME';
 
- setOverlay('TIME<br>BREAKER','One connected journey: high-speed run, slash-opened reality, original ruined-city combat, Warp Bubble and the next time highway.',qa.resumeStage?'RESUME LAST RIFT':'START REDLINE ADVENTURE');
+ setOverlay('TIME<br>BREAKER','<span class="guide-title">HOW TO PLAY</span><span class="guide-step"><strong>⚡ RUN</strong><span class="guide-detail">Slide left/right to dodge. Tap to fire your laser. Grab energy dots to speed up.</span></span><span class="guide-step"><strong>⛓️ CHAIN</strong><span class="guide-detail">Swipe UP to whip enemies. Hold TIME BREAK or tap WARP BUBBLE when charged.</span></span><span class="guide-step"><strong>🌀 RIFT</strong><span class="guide-detail">Reach the gateway, then swipe UP to slash open the portal.</span></span><span class="guide-step"><strong>⚔️ FIGHT</strong><span class="guide-detail">Use the left joystick to move and drag on the right to look. CHAIN, DASH, BLINK and WARP through foes.</span></span><span class="guide-foot">⏱ Beat the clock, finish each objective and enter the next portal.</span>',qa.resumeStage?'GOT IT · RESUME RIFT':'GOT IT · START RUN');
 
  $('runActions').style.display='none';$('arenaControls').classList.remove('active');
 
@@ -271,11 +289,11 @@ async function bootstrap(){
 
   if(worlds.length<3||worlds[0].type!=='runner'||worlds[1].type!=='arena')throw Error('Invalid world graph');
 
-  const names=['riftwalker','ruined_city_arena','temporal_marauder','time_rift_gateway','lab_segment','hazard_drone','pickup'];
+  const names=['redline_warden_skinned','chronospine_tunnel','ruined_city_arena','temporal_battlefield','time_factory','collapse_dimension','temporal_marauder','time_rift_gateway','hazard_drone','pickup'];
 
   await Promise.all(names.map(name=>new Promise((resolve,reject)=>{
 
-   app.assets.loadFromUrl('./assets/'+name+'.glb?v=7','container',(err,asset)=>{
+   app.assets.loadFromUrl('./assets/'+name+'.glb?v=10','container',(err,asset)=>{
 
     if(err){reject(new Error(name+': '+String(err)));return;}res[name]=asset;resolve();
 
@@ -297,29 +315,30 @@ try{
 
  app.graphicsDevice.maxPixelRatio=Math.min(window.devicePixelRatio||1,1.38);
 
- app.scene.ambientLight=new pc.Color(.45,.51,.63);app.scene.toneMapping=pc.TONEMAP_ACES;
+ app.scene.ambientLight=new pc.Color(.32,.39,.34);app.scene.toneMapping=pc.TONEMAP_ACES;
 
- app.scene.gammaCorrection=pc.GAMMA_SRGB;app.scene.exposure=1.25;app.start();
+ app.scene.gammaCorrection=pc.GAMMA_SRGB;app.scene.exposure=1.10;app.start();
+ try{qa.webglVersion=(typeof WebGL2RenderingContext!=='undefined'&&app.graphicsDevice.gl instanceof WebGL2RenderingContext)?2:1}catch(e){qa.webglVersion=0}
 
 }catch(e){fail('WebGL setup',e);throw e}
 
 const camera=new pc.Entity('responsive over-the-shoulder camera');
 
-camera.addComponent('camera',{fov:69,nearClip:.1,farClip:155,clearColor:new pc.Color(.018,.045,.11)});app.root.addChild(camera);
+camera.addComponent('camera',{fov:69,nearClip:.1,farClip:155,clearColor:new pc.Color(.012,.022,.028)});app.root.addChild(camera);
 
 pos(camera,0,6.15,10.35);camera.lookAt(0,1.50,-11.8);
 
-for(const l of [{color:[.72,.84,1],intensity:2.65,angle:[38,12,0]},{color:[1,.50,.45],intensity:1.8,angle:[10,150,0]},{color:[.45,.4,1],intensity:.8,angle:[-35,200,0]}]){
+for(const l of [{color:[.88,.95,.85],intensity:2.65,angle:[38,12,0]},{color:[1,.72,.45],intensity:1.0,angle:[10,150,0]},{color:[.28,.57,1],intensity:.55,angle:[-35,200,0]}]){
 
  const e=new pc.Entity('time rift stage directional light');
 
- e.addComponent('light',{type:'directional',color:new pc.Color(...l.color),intensity:l.intensity,castShadows:false});
+ e.addComponent('light',{type:'directional',color:new pc.Color(...l.color),intensity:l.intensity,castShadows:l.intensity>2.5,shadowResolution:768,shadowDistance:34,normalOffsetBias:.06});
 
  e.setEulerAngles(...l.angle);app.root.addChild(e);
 
 }
 
-pointLight=new pc.Entity('player chrono aura light');pointLight.addComponent('light',{type:'point',color:new pc.Color(.28,.85,1),intensity:2.5,range:12});app.root.addChild(pointLight);
+pointLight=new pc.Entity('player chrono aura light');pointLight.addComponent('light',{type:'point',color:new pc.Color(.18,.64,.52),intensity:1.75,range:12});app.root.addChild(pointLight);
 
 const electric=new pc.StandardMaterial();electric.diffuse=new pc.Color(.01,.69,1);electric.emissive=new pc.Color(.02,.9,1);electric.emissiveIntensity=4;electric.useMetalness=false;electric.update();
 
@@ -442,6 +461,10 @@ function particlesStep(dt){
 
 function animationStep(dt,runMotion=false){
 
+ if(player.anim){
+  player.anim.speed=mode==='run'?Math.max(.65,(speed+boost)/33):((actorMove>.08&&inArena())?1:0);
+  return;
+ }
  const legs=[player.findByName('LegPivot_L'),player.findByName('LegPivot_R')];
 
  const arms=[player.findByName('ArmPivot_L'),player.findByName('ArmPivot_R')];
@@ -628,24 +651,28 @@ function enemyHit(i,damage,method){
  const e=enemies[i];if(!e)return;e.hp-=damage;e.stun=.9;e.flash=.16;sparks(e.x,e.z,9,.8);
 
  if(e.hp<=0){
-
-  removeAt(enemies,i);qa.kills++;energy=clamp(energy+16,0,100);boost=clamp(boost+3,0,25);
-
-  if(enemies.length===0&&mode==='arena')unlockExitPortal();
+   removeAt(enemies,i);qa.kills++;arenaKills++;energy=clamp(energy+16,0,100);boost=clamp(boost+3,0,25);health=clamp(health+7,0,100);
+   if(enemies.length===0&&mode==='arena'){
+    if(arenaWave+1<(stage.enemies?.waves?.length||1)){
+     arenaNextWaveDelay=2.1;
+     message('WAVE CLEARED · NEXT TEMPORAL ASSAULT INCOMING',2.3);
+    }else unlockExitPortal();
+   }
 
  }else{e.x=clamp(e.x+(e.x-heroX())*.25,-17,17);e.z=clamp(e.z+(e.z-heroZ())*.25,-18,18)}
 
 }
 
 function createEnemies(){
-
- const entries=stage.enemies?.spawn||[];
+ const waves=stage.enemies?.waves;
+ const entries=waves?waves[arenaWave]?.spawn||[]:stage.enemies?.spawn||[];
+ if(!entries.length)throw Error('Arena '+stage.id+' wave '+arenaWave+' has no configured enemies');
 
  for(let i=0;i<entries.length;i++){
 
-  const e=instantiate('temporal_marauder','ARENA TEMPORAL MARAUDER '+i,arenaWorld);
+   const e=instantiate('temporal_marauder','ARENA TEMPORAL MARAUDER W'+arenaWave+' E'+i,arenaWorld);
 
-  e.setLocalScale(1,1,1);const [x,z]=entries[i];pos(e,x,0,z);
+  e.setLocalScale(stage.id==='collapse-arena'&&arenaWave===2?1.35:1,stage.id==='collapse-arena'&&arenaWave===2?1.35:1,stage.id==='collapse-arena'&&arenaWave===2?1.35:1);const [x,z]=entries[i];pos(e,x,0,z);
 
   enemies.push({entity:e,x,z,hp:stage.enemies.health||2,cooldown:.9+i*.35,stun:0,phase:rand()*6.28});
 
@@ -713,7 +740,7 @@ function advanceTransition(dt){
 
  }else{
 
-  mode='complete';paused=true;setOverlay('THROUGH<br>TIME','Riftwalker completed the first connected world journey.<br>The next eras are ready for future expansion.','PLAY AGAIN');
+  mode='complete';paused=true;setOverlay('THROUGH<br>TIME','REDLINE CHRONICLE COMPLETE · '+worlds.length+' STAGES CLEARED.<br>You ran through time and conquered four worlds.','PLAY CHRONICLE AGAIN');
 
   try{localStorage.setItem('timebreaker:redline:checkpoint:v4','neon-run')}catch(e){}
 
@@ -819,6 +846,10 @@ function arenaStep(dt){
 
  }
 
+ if(mode==='arena'&&arenaNextWaveDelay>0){
+  arenaNextWaveDelay-=dt;
+  if(arenaNextWaveDelay<=0){arenaNextWaveDelay=0;arenaWave++;createEnemies();message('WAVE '+(arenaWave+1)+' / '+(stage.enemies.waves?.length||1)+' · SURVIVE THE RUSH',2)}
+ }
  if(mode==='arena-portal'){rift.rotateLocal(0,dt*34,0);const p=1.45+Math.sin(gameTime*3)*.085;rift.setLocalScale(p,p,p)}
 
 }
@@ -853,7 +884,7 @@ function togglePause(){
 
 }
 
-$('play').addEventListener('click',()=>{if(paused&&mode!=='failed'&&mode!=='complete'){paused=false;$('overlay').classList.add('hidden')}else startFromMenu()});
+$('play').addEventListener('click',()=>{if(paused&&mode!=='menu'&&mode!=='failed'&&mode!=='complete'){paused=false;$('overlay').classList.add('hidden')}else startFromMenu()});
 
 $('pause').addEventListener('click',togglePause);
 
@@ -1037,7 +1068,8 @@ if(qaMode){
 
  qa.setSteering=x=>{steeringX=clamp(x,-2.64,2.64)};qa.setCameraYaw=r=>{yaw=r};qa.holdTime=x=>{holdingTime=Boolean(x)};
 
- qa.snapshot=state;qa.setTimeLeft=seconds=>{timeLeft=seconds};
+ qa.resolveCurrentWave=()=>{if(mode!=='arena')return false;let n=0;while(enemies.length&&n<30){enemyHit(0,100,'QA_PLAYABLE_COMBAT');n++}return n>0};
+ qa.snapshot=state;qa.samplePerf=()=>({fps:app.stats.fps,frameMs:app.stats.frameTime,drawCalls:app.stats.drawCallCount,cpuUpdateMs:app.stats.cpuUpdateTime,cpuRenderMs:app.stats.cpuRenderTime,vramBytes:app.stats.vramTotalBytes,glVersion:qa.webglVersion});qa.setTimeLeft=seconds=>{timeLeft=seconds};
 
 }
 
