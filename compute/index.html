@@ -39,6 +39,12 @@ dt{color:var(--muted)}dd{margin:0}
 .tile p{color:var(--muted);font-size:.9rem}
 a{color:var(--gold)}footer{margin-top:28px}
 @media(max-width:590px){.card{padding:17px}.twocol{grid-template-columns:1fr}dl{grid-template-columns:1fr;gap:3px}dd{margin-bottom:10px}.stats{gap:6px}.stat{padding:12px 7px}.stat small{font-size:.77rem}.stat strong{font-size:1.25rem}}
+
+dialog#loopModal{max-width:none;max-height:none;width:min(98vw,1040px);height:min(94dvh,900px);padding:12px;background:#102017;color:#f4f7ed;border:1px solid var(--gold);border-radius:16px;box-shadow:0 0 90px #000a}
+dialog#loopModal::backdrop{background:#000b;backdrop-filter:blur(2px)}
+.modalheader{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:0 2px 10px;color:var(--gold)}
+#loopFrame{display:block;width:100%;height:calc(100% - 100px);border:1px solid var(--edge);background:#08120a;border-radius:8px}
+@media(max-width:590px){dialog#loopModal{width:99vw;height:95dvh;padding:8px}#loopFrame{height:calc(100% - 92px)}}
 </style>
 </head><body>
 <main>
@@ -70,11 +76,16 @@ a{color:var(--gold)}footer{margin-top:28px}
 <section class="card">
 <h2>Other X13 tools</h2>
 <div class="twocol">
-<div class="tile"><h3>♾️ X13 Loop Box</h3><p>Open the existing X13 Loop Box webpage in a separate tab. It is separate from this compute pilot.</p><a class="button secondary" href="/x13-loop-box.html" target="_blank" rel="noopener">Open Loop Box</a></div>
+<div class="tile"><h3>♾️ X13 Loop Box</h3><p>Open the existing X13 Loop Box inside this page without stopping the compute worker.</p><button type="button" class="secondary" id="openLoop" aria-haspopup="dialog">Open Loop Box pop-up</button></div>
 <div class="tile"><h3>🖥️ PC worker &amp; 📱 Android</h3><p>PC script available for a separate local test. The signed Android APK is not available yet.</p><a class="button secondary" href="downloads/x13_pc_worker.py" download>Download PC test</a></div>
 </div>
 </section>
 <footer>Opt-in local JavaScript proof of concept. No cryptocurrency mining, hidden background process, remote access, permanent installation, or connected distributed coordinator. <a href="/">Back to ShanX Services</a>.</footer>
 </main>
+<dialog id="loopModal" aria-labelledby="loopTitle">
+  <div class="modalheader"><strong id="loopTitle">X13 Loop Box</strong><button type="button" class="secondary" id="closeLoop">Close</button></div>
+  <iframe id="loopFrame" title="X13 Loop Box" loading="lazy" referrerpolicy="no-referrer"></iframe>
+  <p class="note">This pop-up opens inside the same page and does not stop your volunteer worker.</p>
+</dialog>
 <script src="./v02-app.js" defer></script>
 </body></html>
