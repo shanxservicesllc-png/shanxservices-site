@@ -75,7 +75,7 @@ start.addEventListener('click',()=>{
 });
 stop.addEventListener('click',()=>stopNow());
 window.addEventListener('pagehide',()=>stopNow('Page closed: worker ended.'));
-document.addEventListener('visibilitychange',()=>{if(running&&mobile&&document.hidden)stopNow('Paused when phone page was hidden.');});
+// Continue while browser permits background execution; Android may still throttle or suspend.
 if(typeof navigator.getBattery==='function')navigator.getBattery().then(b=>{
   battery=b;
   const guard=()=>{if(running&&!b.charging&&b.level<=0.2)stopNow('Low battery: stopped.');};
@@ -100,4 +100,15 @@ details.addEventListener('toggle',()=>{
   add('Volunteer cap (one thread)',cap+'% duty-cycle target');
   add('Remote job endpoint','None; this is a local-only demo');
 });
+const loopModal=$('loopModal'),loopFrame=$('loopFrame');
+$('openLoop').addEventListener('click',()=>{
+  if(!loopFrame.getAttribute('src'))loopFrame.src='/x13-loop-box.html';
+  if(typeof loopModal.showModal==='function')loopModal.showModal();
+  else loopModal.setAttribute('open','');
+});
+$('closeLoop').addEventListener('click',()=>{
+  if(typeof loopModal.close==='function')loopModal.close();
+  else loopModal.removeAttribute('open');
+});
+// Opening the in-page Loop Box never calls stopNow().
 update();
