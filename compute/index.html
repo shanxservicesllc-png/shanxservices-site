@@ -1,70 +1,80 @@
 <!doctype html>
 <html lang="en"><head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#08100b">
-<meta name="description" content="Join the X13 volunteer compute pilot with an opt-in browser test or a PC test script.">
-<title>X13 Volunteer Compute | ShanX Services</title>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#08140e">
+<meta name="description" content="Opt-in browser compute test and Infinity Box device details for X13 Volunteer Compute.">
+<title>X13 Volunteer Compute | Infinity Box</title>
 <style>
-:root{color-scheme:dark;--bg:#08100b;--card:#111b15;--line:#35553d;--green:#70e89a;--gold:#eac86b;--muted:#b6c8b9}
-*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 90% 0,#1d3123,#08100b 55%);font:16px/1.55 system-ui,Segoe UI,Arial,sans-serif;color:#f4f5ef}
-main{max-width:850px;margin:auto;padding:26px 20px 65px}a{color:var(--gold)}header{display:flex;justify-content:space-between;align-items:center;gap:15px;flex-wrap:wrap}
-.brand{color:var(--gold);font-weight:900;letter-spacing:.1em;text-decoration:none}h1{font-size:clamp(2rem,6vw,3.5rem);line-height:1.1;margin:48px 0 12px}
-.lede{color:var(--muted);font-size:1.15rem}.panel{padding:24px;background:var(--card);border:1px solid var(--line);border-radius:19px;margin:20px 0}
-label{display:block;margin:16px 0}select{background:#07120a;border:1px solid var(--line);border-radius:9px;color:white;padding:10px;font:inherit}
-button,.button{display:inline-block;cursor:pointer;border:1px solid var(--gold);border-radius:12px;padding:13px 19px;background:var(--gold);color:#111;font-weight:800;text-decoration:none;margin:5px 8px 5px 0}
-button:disabled{opacity:.4;cursor:not-allowed}.secondary{background:transparent;color:var(--gold)}.status{padding:9px 15px;border-radius:99px;border:1px solid var(--line);display:inline-block}
-#status[data-state="running"]{color:var(--green);border-color:var(--green)}.metric{font-size:2rem;font-weight:800;color:var(--green)}small,.note{color:var(--muted)}
-.downloads{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}.download{padding:19px;border:1px solid var(--line);border-radius:14px;background:#0d180f}
-footer{margin-top:30px;color:var(--muted);font-size:.9rem}
-</style></head><body><main>
-<header><a class="brand" href="/">SHANX SERVICES</a><span>X13 • COMPUTE PILOT v0.1</span></header>
-<h1>Help X13 compute. Your device, your choice.</h1>
-<p class="lede">Try a voluntary, low-impact computing test. You choose when to start and when to stop. Closing the tab ends the browser worker.</p>
-<section class="panel" aria-labelledby="pilot-heading">
-<h2 id="pilot-heading">Browser worker test</h2>
-<p><strong>Prototype only:</strong> harmless arithmetic runs locally. Results are not sent to X13, and there is no distributed-job server connected yet. We do not read your files, browsing history, passwords or personal data.</p>
-<label for="duty">Approximate share of one worker thread</label>
-<select id="duty"><option value="2">2% very light</option><option value="5" selected>5% light</option><option value="10">10% moderate</option></select>
-<label><input id="consent" type="checkbox"> I choose to contribute processing time for this local test and can stop at any time.</label>
-<div><button id="start" disabled>Start test</button><button id="stop" class="secondary" disabled>Stop</button></div>
-<p><span class="status" id="status" role="status" data-state="idle">Not running</span></p>
-<div class="metric" id="count">0</div><small>Arithmetic iterations completed this session</small>
-<p class="note">Leave this tab open while participating. Background tabs may be slowed or suspended, particularly on phones. Incognito mode does not remove these browser restrictions. These percentages are approximate duty cycles, not exact whole-device CPU limits.</p>
-</section>
-<h2>Other ways to help</h2>
-<div class="downloads">
-<div class="download"><h3>🖥️ Windows / Linux PC</h3><p>Visible, time-limited Python worker test. No installation service or automatic startup.</p><a class="button secondary" href="downloads/x13_pc_worker.py" download>Download PC test script</a><p><small>Python 3.10+. Use a terminal and review the source before running.</small></p></div>
-<div class="download"><h3>📱 Android app</h3><p>A native Android volunteer worker is in development. It will require opt-in and an ongoing status notification.</p><span class="status">APK not available yet</span></div>
+:root{color-scheme:dark;--bg:#08140e;--panel:#12251a;--edge:#30563b;--gold:#e8c56a;--green:#75eaa2;--text:#f5f7ed;--muted:#b0c5b6}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(ellipse at top right,#1d4329 0,#0c1e12 39%,#060f09 100%);color:var(--text);font:16px/1.5 system-ui,'Segoe UI',Arial,sans-serif}
+main{width:min(900px,94%);margin:auto;padding:22px 9px 70px}
+header{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;font-size:.84rem;letter-spacing:.08em}
+header a{text-decoration:none;color:var(--gold);font-weight:900;letter-spacing:.13em}
+h1{font-size:clamp(2.2rem,7vw,4.2rem);line-height:1.04;margin:42px 0 12px;max-width:810px}
+h2{color:var(--gold);font-size:1.4rem;margin:0 0 12px}
+h3{margin:0 0 8px}
+.lead{font-size:1.12rem;color:var(--muted);max-width:750px}
+.pill{font-size:.78rem;padding:5px 10px;color:var(--green);border:1px solid var(--edge);border-radius:999px;white-space:nowrap}
+.card{padding:24px;background:linear-gradient(160deg,#152a1c,#0d1c13);border:1px solid var(--edge);border-radius:20px;margin-top:18px;box-shadow:0 10px 40px #0003}
+label{display:block;margin:18px 0 10px}.slider{width:100%;min-height:35px;accent-color:var(--green)}
+.scale{display:flex;justify-content:space-between;gap:12px;color:var(--muted);font-size:.8rem}
+input[type=checkbox]{accent-color:var(--green);width:20px;height:20px;flex-shrink:0;margin-top:3px}.agree{display:flex;align-items:flex-start;gap:11px}
+.note,small,footer{color:var(--muted);font-size:.89rem}.note{line-height:1.6}
+button,.button{display:inline-block;background:var(--gold);color:#111911;border:1px solid var(--gold);font:800 1rem system-ui;border-radius:11px;padding:13px 18px;cursor:pointer;text-decoration:none}
+button.secondary,.button.secondary{background:transparent;color:var(--gold)}
+button:disabled{opacity:.45;cursor:not-allowed}.actions{display:flex;flex-wrap:wrap;gap:10px;margin:15px 0}
+.status{display:inline-block;padding:9px 14px;border-radius:99px;border:1px solid var(--edge)}
+.status[data-state=running]{color:var(--green);border-color:var(--green)}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:20px}
+.stat{border:1px solid var(--edge);border-radius:12px;padding:15px 10px;background:#091a11}
+.stat strong{font-size:clamp(1.35rem,4vw,2.1rem);display:block;color:var(--green);overflow-wrap:anywhere}
+.stat small{display:block}
+details>summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:10px;color:var(--gold);font-weight:800;font-size:1.1rem}
+details>summary::-webkit-details-marker{display:none}
+details>summary:after{content:'+';font-size:1.7rem;font-weight:400}
+details[open]>summary:after{content:'−'}
+dl{display:grid;grid-template-columns:minmax(130px,1fr) 1.5fr;gap:11px;font-size:.92rem;overflow-wrap:anywhere}
+dt{color:var(--muted)}dd{margin:0}
+.twocol{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.tile{padding:19px;border:1px solid var(--edge);border-radius:14px;background:#0b1a11}
+.tile p{color:var(--muted);font-size:.9rem}
+a{color:var(--gold)}footer{margin-top:28px}
+@media(max-width:590px){.card{padding:17px}.twocol{grid-template-columns:1fr}dl{grid-template-columns:1fr;gap:3px}dd{margin-bottom:10px}.stats{gap:6px}.stat{padding:12px 7px}.stat small{font-size:.77rem}.stat strong{font-size:1.25rem}}
+</style>
+</head><body>
+<main>
+<header><a href="/">SHANX SERVICES</a><span class="pill">X13 VOLUNTEER COMPUTE • WEB TEST v0.2</span></header>
+<h1>Your power.<br>Your permission.</h1>
+<p class="lead">Test X13's browser compute worker on your S24 or PC. It performs actual numerical vector-scoring jobs, verifies the results on your device, and stops when you tell it to.</p>
+<section class="card" aria-labelledby="work">
+<h2 id="work">Browser worker • local test</h2>
+<p>This version proves the webpage can run and verify numerical tasks online. <strong>No processing results are sent to X13 yet.</strong> It does not access your personal files, browse history, camera, or contacts.</p>
+<label for="power"><strong>Processing share:</strong> <output id="powerLabel" for="power">50%</output> of the conservative device cap</label>
+<input class="slider" id="power" type="range" min="0" max="100" step="5" value="50">
+<div class="scale"><span>0% / Off</span><span>50% / Half cap</span><span>100% / Maximum cap</span></div>
+<p class="note" id="capLabel">Reading device capability...</p>
+<label class="agree"><input id="consent" type="checkbox"><span>I choose to participate in this local processing test. I can stop immediately and closing the browser tab ends the worker.</span></label>
+<div class="actions"><button id="start" disabled>Start test</button><button id="stop" class="secondary" disabled>Stop now</button></div>
+<p><span class="status" id="status" role="status" data-state="idle">Stopped</span></p>
+<div class="stats">
+<div class="stat"><strong id="jobs">0</strong><small>Verified jobs</small></div>
+<div class="stat"><strong id="vectors">0</strong><small>Vector scores</small></div>
+<div class="stat"><strong id="digest">00000000</strong><small>Latest result checksum</small></div>
 </div>
-<footer>No cryptocurrency mining. No stealth processes, unattended installations, remote control or automatic background start. A future coordinator will be required for useful shared jobs. <a href="/">Return to ShanX Services</a>.</footer>
+<p class="note">Each job performs 128 numerical dot products. The browser independently recalculates and checks the scores. On phones, this pilot stops when the page is hidden; background/browser behavior varies. 100% on the slider is not 100% of your phone's CPU.</p>
+</section>
+<details id="deviceDetails" class="card">
+<summary>Infinity Box • Device &amp; browser information</summary>
+<p class="note">Tap to show or hide the browser-reported details. They are displayed only on this device and are not transmitted as part of compute jobs. Browsers may omit or round values.</p>
+<dl id="metadata"></dl>
+</details>
+<section class="card">
+<h2>Other X13 tools</h2>
+<div class="twocol">
+<div class="tile"><h3>♾️ X13 Loop Box</h3><p>Open the existing X13 Loop Box webpage in a separate tab. It is separate from this compute pilot.</p><a class="button secondary" href="/x13-loop-box.html" target="_blank" rel="noopener">Open Loop Box</a></div>
+<div class="tile"><h3>🖥️ PC worker &amp; 📱 Android</h3><p>PC script available for a separate local test. The signed Android APK is not available yet.</p><a class="button secondary" href="downloads/x13_pc_worker.py" download>Download PC test</a></div>
+</div>
+</section>
+<footer>Opt-in local JavaScript proof of concept. No cryptocurrency mining, hidden background process, remote access, permanent installation, or connected distributed coordinator. <a href="/">Back to ShanX Services</a>.</footer>
 </main>
-<script>
-'use strict';
-const consent=document.querySelector('#consent');
-const start=document.querySelector('#start');
-const stop=document.querySelector('#stop');
-const status=document.querySelector('#status');
-const count=document.querySelector('#count');
-let worker=null;
-consent.addEventListener('change',()=>{start.disabled=!consent.checked||!!worker;});
-start.addEventListener('click',()=>{
-  if(worker||!consent.checked)return;
-  try {
-    worker=new Worker('./worker.js');
-    worker.onmessage=({data})=>{
-      if(data.type==='started'){status.textContent='Running: '+data.duty+'% approximate';status.dataset.state='running';}
-      if(data.type==='progress')count.textContent=data.operations.toLocaleString();
-    };
-    worker.onerror=()=>end('Worker error. Stopped.');
-    worker.postMessage({type:'start',duty:Number(document.querySelector('#duty').value)});
-    start.disabled=true;stop.disabled=false;status.textContent='Starting...';
-  }catch(err){end('Worker unavailable in this browser.');}
-});
-function end(message='Stopped'){
-  if(worker){worker.terminate();worker=null;}
-  start.disabled=!consent.checked;stop.disabled=true;
-  status.dataset.state='idle';status.textContent=message;
-}
-stop.addEventListener('click',()=>end());
-window.addEventListener('pagehide',()=>end());
-</script></body></html>
+<script src="./v02-app.js" defer></script>
+</body></html>
