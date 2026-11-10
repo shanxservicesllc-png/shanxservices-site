@@ -66,7 +66,7 @@ dialog#loopModal::backdrop{background:#000b;backdrop-filter:blur(2px)}
 <div class="stat"><strong id="vectors">0</strong><small>Vector scores</small></div>
 <div class="stat"><strong id="digest">00000000</strong><small>Latest result checksum</small></div>
 </div>
-<p class="note">Each job performs 128 numerical dot products. The browser independently recalculates and checks the scores. On phones, this pilot stops when the page is hidden; background/browser behavior varies. 100% on the slider is not 100% of your phone's CPU.</p>
+<p class="note">Each job performs 128 numerical dot products. The browser independently recalculates and checks the scores. The worker remains active while the browser permits background execution; Android may throttle or suspend it when hidden. Opening the Loop Box pop-up stays on this page. 100% on the slider is not 100% of your phone's CPU.</p>
 </section>
 <details id="deviceDetails" class="card">
 <summary>Infinity Box • Device &amp; browser information</summary>
