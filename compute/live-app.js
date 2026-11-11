@@ -127,7 +127,7 @@ async function runLoop(my){
      await wait(3000);continue;
    }
    const ticket=response.job;
-   $("jobType").textContent=ticket.task.type==="rabbitry-citation-audit-v1"?"Citation audit":ticket.task.origin==="rabbitry-relevance-v1"?"Relevance scoring":"Numerical task";
+   $("jobType").textContent=ticket.task.type==="rabbitry-citation-audit-v1"?"Citation audit":ticket.task.origin==="comfy-image-qa-v1"?"Comfy image QA":ticket.task.origin==="hemisync-infinity-triage-v1"?"Live sync triage":ticket.task.origin==="rabbitry-relevance-v1"?"Relevance scoring":"Numerical task";
    setStatus("Processing "+ticket.task.type.replace("rabbitry-citation-audit-v1","RABBITRY audit").replace("dot-batch-v1","research scores"),true);
    const jobStart=performance.now();
    const completed=await runTask(ticket.task,actualDuty());
@@ -144,7 +144,7 @@ async function runLoop(my){
    $("vectors").textContent=String(records);
    $("monster").textContent=String(health.verified+1);
    $("digest").textContent=receipt.receiptSha256?.slice(0,12)||receipt.jobId.slice(0,12);
-   $("latest").textContent=completed.report?"Verified "+completed.report.records+" real RABBITRY citations; "+completed.report.possibleDuplicatePairs.length+" duplicate-review pairs.":(ticket.task.origin==="rabbitry-relevance-v1"?"Verified real RABBITRY relevance scoring across "+completed.scores.length+" citations.":"Verified "+completed.scores.length+" numeric scores.");
+   $("latest").textContent=completed.report?"Verified "+completed.report.records+" real RABBITRY citations; "+completed.report.possibleDuplicatePairs.length+" duplicate-review pairs.":(ticket.task.origin==="comfy-image-qa-v1"?"Verified "+completed.scores.length+" real Comfy-generated image quality tiles.":ticket.task.origin==="hemisync-infinity-triage-v1"?"Verified ongoing HemiSync/Infinity Sync triage for "+completed.scores.length+" task records.":ticket.task.origin==="rabbitry-relevance-v1"?"Verified real RABBITRY relevance scoring across "+completed.scores.length+" citations.":"Verified "+completed.scores.length+" numerical records.");
    $("gpuState").textContent=completed.engine==="webgpu"?"WebGPU":completed.engine==="gles31"?"GPU":"CPU";
    lastEngine=completed.engine||"cpu";
    lastMetrics={...completed.metrics,jobWallMs,records:completed.report?.records||completed.scores?.length||0,at:Date.now()};
