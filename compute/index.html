@@ -48,25 +48,25 @@ dialog#loopModal::backdrop{background:#000b;backdrop-filter:blur(2px)}
 </style>
 </head><body>
 <main>
-<header><a href="/">SHANX SERVICES</a><span class="pill">X13 VOLUNTEER COMPUTE • WEB TEST v0.2</span></header>
+<header><a href="/">SHANX SERVICES</a><span class="pill">X13 VOLUNTEER COMPUTE • MONSTER LIVE</span></header>
 <h1>Your power.<br>Your permission.</h1>
-<p class="lead">Test X13's browser compute worker on your S24 or PC. It performs actual numerical vector-scoring jobs, verifies the results on your device, and stops when you tell it to.</p>
+<p class="lead">Your S24 or PC receives real approved RABBITRY analysis tasks from MONSTER, sends results back, and shows MONSTER's verification receipts. It keeps asking for more work until you stop it.</p>
 <section class="card" aria-labelledby="work">
-<h2 id="work">Browser worker • local test</h2>
-<p>This version proves the webpage can run and verify numerical tasks online. <strong>No processing results are sent to X13 yet.</strong> It does not access your personal files, browse history, camera, or contacts.</p>
-<label for="power"><strong>Processing share:</strong> <output id="powerLabel" for="power">50%</output> of the conservative device cap</label>
-<input class="slider" id="power" type="range" min="0" max="100" step="5" value="50">
+<h2 id="work">Browser worker • MONSTER coordinator</h2>
+<p>Real HTTPS connection to the MONSTER coordinator. Current tasks audit existing public RABBITRY citations and score the relevance of research titles. GPU acceleration is attempted through WebGPU when available, with CPU fallback. No personal files, contacts, camera, passwords or remote scripts are accessed.</p>
+<label for="power"><strong>Processing share:</strong> <output id="powerLabel" for="power">75%</output> of the conservative device cap</label>
+<input class="slider" id="power" type="range" min="0" max="100" step="5" value="75">
 <div class="scale"><span>0% / Off</span><span>50% / Half cap</span><span>100% / Maximum cap</span></div>
 <p class="note" id="capLabel">Reading device capability...</p>
-<label class="agree"><input id="consent" type="checkbox"><span>I choose to participate in this local processing test. I can stop immediately and closing the browser tab ends the worker.</span></label>
-<div class="actions"><button id="start" disabled>Start test</button><button id="stop" class="secondary" disabled>Stop now</button></div>
+<p class="note" id="permissionNote">First time: tap Start contributing to authorize this browser. Later visits auto-start until you stop it. No checkbox.</p>
+<div class="actions"><button id="start">Start contributing</button><button id="stop" class="secondary" disabled>Stop now</button><button id="revoke" class="secondary">Revoke auto-start</button></div>
 <p><span class="status" id="status" role="status" data-state="idle">Stopped</span></p>
 <div class="stats">
-<div class="stat"><strong id="jobs">0</strong><small>Verified jobs</small></div>
-<div class="stat"><strong id="vectors">0</strong><small>Vector scores</small></div>
-<div class="stat"><strong id="digest">00000000</strong><small>Latest result checksum</small></div>
+<div class="stat"><strong id="jobs">0</strong><small>This session verified</small></div>
+<div class="stat"><strong id="vectors">0</strong><small>Real records scored</small></div>
+<div class="stat"><strong id="monster">0</strong><small>MONSTER total verified</small></div>
 </div>
-<p class="note">Each job performs 128 numerical dot products. The browser independently recalculates and checks the scores. The worker remains active while the browser permits background execution; Android may throttle or suspend it when hidden. Opening the Loop Box pop-up stays on this page. 100% on the slider is not 100% of your phone's CPU.</p>
+<p class="note"><strong>Connection:</strong> <span id="connection">Checking configured MONSTER endpoint</span>. <strong>Active job:</strong> <span id="jobType">No job yet</span>. <strong>GPU:</strong> <span id="gpuState">Not yet tested</span>. <strong>Receipt:</strong> <span id="digest">none</span>.</p><p id="latest" class="note">MONSTER verification details will appear here.</p><p class="note">As long as you have consented and not pressed Stop, the client keeps requesting approved tasks. If no new useful work exists, it stays connected and polls rather than repeating fake calculations. Background browser activity may be suspended by Android; the APK will use a visible foreground service.</p>
 </section>
 <details id="deviceDetails" class="card">
 <summary>Infinity Box • Device &amp; browser information</summary>
@@ -80,12 +80,12 @@ dialog#loopModal::backdrop{background:#000b;backdrop-filter:blur(2px)}
 <div class="tile"><h3>🖥️ PC worker &amp; 📱 Android</h3><p>PC script available for a separate local test. The signed Android APK is not available yet.</p><a class="button secondary" href="downloads/x13_pc_worker.py" download>Download PC test</a></div>
 </div>
 </section>
-<footer>Opt-in local JavaScript proof of concept. No cryptocurrency mining, hidden background process, remote access, permanent installation, or connected distributed coordinator. <a href="/">Back to ShanX Services</a>.</footer>
+<footer>Live GitHub Pages front end and MONSTER backend through temporary Cloudflare HTTPS routing. No crypto mining, hidden processes, arbitrary remote code or guaranteed background browser uptime. <a href="/">Back to ShanX Services</a>.</footer>
 </main>
 <dialog id="loopModal" aria-labelledby="loopTitle">
   <div class="modalheader"><strong id="loopTitle">X13 Loop Box</strong><button type="button" class="secondary" id="closeLoop">Close</button></div>
   <iframe id="loopFrame" title="X13 Loop Box" loading="lazy" referrerpolicy="no-referrer"></iframe>
   <p class="note">This pop-up opens inside the same page and does not stop your volunteer worker.</p>
 </dialog>
-<script src="./v02-app.js" defer></script>
+<script src="./live-app.js" defer></script>
 </body></html>
