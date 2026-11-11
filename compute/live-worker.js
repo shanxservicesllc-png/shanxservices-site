@@ -1,15 +1,20 @@
 "use strict";
 importScripts("./live-compute.js","./live-research.js");
 let active=false,timer=null,offset=0,results=[],task=null,duty=5,epoch=0;
+let cpuComputeMs=0;
+function ms(start){return Math.round((performance.now()-start)*1000)/1000;}
 function stopped(){active=false;epoch++;if(timer!==null)clearTimeout(timer);timer=null;task=null;results=[];offset=0;}
 function slice(){
  if(!active||!task)return;
  try{
    const chunk=task.vectors.slice(offset,offset+8);
+   const begin=performance.now();
    results.push(...X13Compute.compute({type:"dot-batch-v1",query:task.query,vectors:chunk}));
+   cpuComputeMs+=ms(begin);
    offset+=chunk.length;
    if(offset>=task.vectors.length){
-     const scores=results;stopped();postMessage({type:"complete",scores,engine:"cpu"});
+     const scores=results,metrics={cpuComputeMs:Math.round(cpuComputeMs*1000)/1000,gpuTaskMs:0,gpuBufferBytes:0};
+     stopped();postMessage({type:"complete",scores,engine:"cpu",metrics});
    }else{timer=setTimeout(slice,Math.max(20,Math.round(600/Math.max(1,duty))));}
  }catch(err){stopped();postMessage({type:"error",message:String(err.message||err)});}
 }
@@ -63,18 +68,36 @@ onmessage=async(event)=>{
  const ticket=++epoch;
  try{
    duty=Math.min(30,Math.max(1,Math.floor(Number(data.duty)||1)));
+   cpuComputeMs=0;
    active=true;
    if(data.task?.type==="rabbitry-citation-audit-v1"){
+     const begin=performance.now();
      const report=X13ResearchAudit.compute(data.task);
-     stopped();postMessage({type:"complete",report,engine:"cpu"});return;
+     const metrics={cpuComputeMs:ms(begin),gpuTaskMs:0,gpuBufferBytes:0};
+     stopped();postMessage({type:"complete",report,engine:"cpu",metrics});return;
    }
    X13Compute.validateJob(data.task);
    if(data.task.origin==="rabbitry-relevance-v1"){
-     let scores,engine="cpu";
-     try{scores=await gpuDot(data.task);engine="webgpu";}
-     catch{scores=X13Compute.compute(data.task);}
+     let scores,engine="cpu",gpuTaskMs=0,gpuBufferBytes=0;
+     const cpuBegin=performance.now();
+     const reference=X13Compute.compute(data.task);
+     cpuComputeMs=ms(cpuBegin);
+     try{
+       const gpuBegin=performance.now();
+       const fromGPU=await gpuDot(data.task);
+       gpuTaskMs=ms(gpuBegin);
+       const same=fromGPU.length===reference.length&&fromGPU.every((r,i)=>
+          r.id===reference[i].id&&Math.abs(r.score-reference[i].score)<=0.0000015);
+       if(same){
+         scores=fromGPU;engine="webgpu";
+         gpuBufferBytes=(data.task.query.length+
+           data.task.vectors.length*data.task.query.length+
+           2*data.task.vectors.length)*4;
+       }else{scores=reference;engine="cpu";}
+     }catch{scores=reference;}
      if(!active||ticket!==epoch)return;
-     stopped();postMessage({type:"complete",scores,engine});return;
+     const metrics={cpuComputeMs,gpuTaskMs,gpuBufferBytes};
+     stopped();postMessage({type:"complete",scores,engine,metrics});return;
    }
    task=data.task;offset=0;results=[];slice();
  }catch(error){stopped();postMessage({type:"error",message:String(error.message||error)});}
