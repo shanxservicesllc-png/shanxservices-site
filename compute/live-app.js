@@ -112,7 +112,7 @@ async function runLoop(my){
    $("online").textContent=String(health.connectedWorkers||0);
    await pulse();
    setStatus("Connected · checking work",true);
-   const response=await json("/api/job");
+   const response=await json("/api/job?session="+encodeURIComponent(volunteerSession));
    if(!enabled||my!==generation)return;
    if(!response.job){
      failures=0;
