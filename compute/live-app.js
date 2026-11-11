@@ -101,7 +101,12 @@ async function showLatest(){
    const x=r.result.report;
    $("latest").textContent="MONSTER's verified RABBITRY audit: "+x.records+" real citations, "+x.distinctDoi+" distinct DOIs and "+x.possibleDuplicatePairs.length+" potential duplicate pairs.";
   }
-  if(h.rabbitryRelevance)$("gpuState").textContent=h.rabbitryRelevance.engine==="webgpu"?"WebGPU":h.rabbitryRelevance.engine==="gles31"?"GPU":"CPU";
+  if(!lastMetrics)$("gpuState").textContent="Waiting";
+  if(h.mediaLatest){
+    $("latest").textContent="MONSTER: "+(h.mediaVerified||0)+
+      " Comfy-generated images quality-analyzed, 256 real pixel tiles each. "+
+      "The device GPU/CPU label updates only after this device finishes a job.";
+  }
  }catch{}
 }
 async function runLoop(my){
@@ -123,7 +128,7 @@ async function runLoop(my){
    if(!enabled||my!==generation)return;
    if(!response.job){
      failures=0;
-     setStatus("Connected · waiting for next job",true);
+     setStatus("Connected · no new task right now",true);
      await wait(3000);continue;
    }
    const ticket=response.job;
