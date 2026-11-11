@@ -9,6 +9,15 @@ const lowRam=typeof navigator.deviceMemory==="number"&&navigator.deviceMemory<=2
 const cap=lowRam?10:mobile?15:30;
 let enabled=false,generation=0,controller=null,activeWorker=null,jobReject=null,endpoint="",jobs=0,records=0,battery=null;
 let configMode="Not connected";
+const volunteerSession=crypto.randomUUID();
+let lastHeartbeat=0;
+async function pulse(){
+ if(Date.now()-lastHeartbeat<10000)return;
+ const p=await json("/api/heartbeat",{method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({session:volunteerSession,kind:"browser",power:Number(power.value)})});
+ lastHeartbeat=Date.now();
+ $("connection").textContent=configMode+" · "+Number(p.connectedWorkers||1)+" online worker(s)";
+}
 function getSaved(){try{return localStorage.getItem(savedKey)==="enabled";}catch{return false;}}
 function setSaved(value){try{if(value)localStorage.setItem(savedKey,"enabled");else localStorage.removeItem(savedKey);}catch{}}
 const power=$("power"),start=$("start"),stop=$("stop"),status=$("status");
@@ -41,6 +50,7 @@ function cancelInFlight(){
 }
 function stopNow(message="Stopped by volunteer.",revoke=true){
  enabled=false;generation++;cancelInFlight();
+ if(endpoint)fetch(endpoint+"/api/disconnect",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({session:volunteerSession}),keepalive:true}).catch(()=>{});
  if(revoke)setSaved(false);viewSlider();updateConsent();setStatus(message);
 }
 stop.addEventListener("click",()=>stopNow());
@@ -87,6 +97,7 @@ async function runLoop(my){
    const health=await json("/api/health");
    if(!enabled||my!==generation)return;
    $("monster").textContent=String(health.verified||0);
+   await pulse();
    setStatus("Connected to MONSTER. Requesting approved research work...",true);
    const response=await json("/api/job");
    if(!enabled||my!==generation)return;
