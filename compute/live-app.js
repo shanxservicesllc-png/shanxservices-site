@@ -9,6 +9,13 @@ const lowRam=typeof navigator.deviceMemory==="number"&&navigator.deviceMemory<=2
 const cap=lowRam?10:mobile?15:30;
 let enabled=false,generation=0,controller=null,activeWorker=null,jobReject=null,endpoint="",jobs=0,records=0,battery=null;
 let configMode="MONSTER";
+let lastMetrics=null;
+let lastEngine="Not tested";
+function byteLabel(bytes){return (bytes/1048576).toFixed(2)+" MB";}
+function pageMemoryBytes(){
+ const m=performance.memory;
+ return typeof m?.usedJSHeapSize==="number"&&m.usedJSHeapSize>=0?m.usedJSHeapSize:null;
+}
 let activeSince=0,lastElapsed=0;
 function clock(ms){
  const sec=Math.floor(ms/1000),h=Math.floor(sec/3600),m=Math.floor(sec%3600/60),r=sec%60;
@@ -122,7 +129,9 @@ async function runLoop(my){
    const ticket=response.job;
    $("jobType").textContent=ticket.task.type==="rabbitry-citation-audit-v1"?"Citation audit":ticket.task.origin==="rabbitry-relevance-v1"?"Relevance scoring":"Numerical task";
    setStatus("Processing "+ticket.task.type.replace("rabbitry-citation-audit-v1","RABBITRY audit").replace("dot-batch-v1","research scores"),true);
+   const jobStart=performance.now();
    const completed=await runTask(ticket.task,actualDuty());
+   const jobWallMs=Math.round(performance.now()-jobStart);
    if(!enabled||my!==generation)return;
    const payload={id:ticket.id,lease:ticket.lease,engine:completed.engine||"cpu"};
    if(completed.report)payload.report=completed.report;
@@ -137,6 +146,9 @@ async function runLoop(my){
    $("digest").textContent=receipt.receiptSha256?.slice(0,12)||receipt.jobId.slice(0,12);
    $("latest").textContent=completed.report?"Verified "+completed.report.records+" real RABBITRY citations; "+completed.report.possibleDuplicatePairs.length+" duplicate-review pairs.":(ticket.task.origin==="rabbitry-relevance-v1"?"Verified real RABBITRY relevance scoring across "+completed.scores.length+" citations.":"Verified "+completed.scores.length+" numeric scores.");
    $("gpuState").textContent=completed.engine==="webgpu"?"WebGPU":completed.engine==="gles31"?"GPU":"CPU";
+   lastEngine=completed.engine||"cpu";
+   lastMetrics={...completed.metrics,jobWallMs,records:completed.report?.records||completed.scores?.length||0,at:Date.now()};
+   renderResourceDetails();
    setStatus("MONSTER verified job · running",true);
    failures=0;await wait(900);
   }catch(e){
@@ -165,18 +177,39 @@ async function startNow(){
 start.addEventListener("click",startNow);
 try{if(typeof navigator.getBattery==="function")navigator.getBattery().then(b=>{battery=b;}).catch(()=>{});}catch{}
 const box=$("deviceDetails");
-box.addEventListener("toggle",()=>{
+function renderResourceDetails(){
+ const heap=pageMemoryBytes();
+ $("ramStatus").textContent=heap!==null?byteLabel(heap):"N/A";
  if(!box.open)return;
  const dl=$("metadata");dl.replaceChildren();
- const add=(key,value)=>{const dt=document.createElement("dt"),dd=document.createElement("dd");dt.textContent=key;dd.textContent=String(value||"Unavailable");dl.append(dt,dd);};
- add("Browser",navigator.userAgent);add("Platform",navigator.userAgentData?.platform||navigator.platform);
- add("Mobile",mobile?"Yes":"No");add("Logical cores (estimate)",navigator.hardwareConcurrency);
- add("RAM rounded estimate",navigator.deviceMemory?navigator.deviceMemory+" GB":null);
- add("Screen",screen.width+" × "+screen.height);
+ const add=(key,value)=>{
+  const dt=document.createElement("dt"),dd=document.createElement("dd");
+  dt.textContent=key;
+  dd.textContent=value===null||value===undefined||value===""?"Not exposed":String(value);
+  dl.append(dt,dd);
+ };
+ add("CPU: last task calculation",lastMetrics?lastMetrics.cpuComputeMs?.toFixed(3)+" ms":"No task yet");
+ add("GPU: last task computation",lastMetrics?(lastMetrics.gpuTaskMs||0).toFixed(3)+" ms":"No task yet");
+ add("GPU task memory buffers",lastMetrics?byteLabel(lastMetrics.gpuBufferBytes||0):"No task yet");
+ add("Job total elapsed",lastMetrics?lastMetrics.jobWallMs+" ms":"No task yet");
+ add("Last compute engine",lastEngine);
+ add("RAM: current page JavaScript heap",heap!==null?byteLabel(heap):"Not supported in this browser");
+ add("RAM: approximate device total",navigator.deviceMemory?navigator.deviceMemory+" GB (rounded estimate)":"Not exposed");
+ add("CPU: logical hardware threads",navigator.hardwareConcurrency||"Not exposed");
+ add("CPU: whole-device utilization","Not exposed by browser");
+ add("GPU: whole-device utilization","Not exposed by browser");
+ add("VRAM: device total or free","Not exposed by browser");
+ add("GPU API available",navigator.gpu?"WebGPU advertised":"Not available");
+ add("Browser",navigator.userAgent);
+ add("Platform",navigator.userAgentData?.platform||navigator.platform);
+ add("Mobile",mobile?"Yes":"No");
  add("Network",navigator.connection?.effectiveType);
- add("WebGPU API available",!!navigator.gpu?"Yes":"No");
- add("Single-thread cap",cap+"% duty cycle target");
-});
+ add("Screen",screen.width+" × "+screen.height);
+ add("Processing slider",power.value+"% of conservative worker cap");
+ add("Target CPU thread duty cycle",actualDuty()+"% (approximate cap, not measured usage)");
+}
+box.addEventListener("toggle",renderResourceDetails);
+setInterval(renderResourceDetails,2500);
 const modal=$("loopModal"),frame=$("loopFrame");
 $("openLoop").addEventListener("click",()=>{if(!frame.getAttribute("src"))frame.src="/x13-loop-box.html";modal.showModal();});
 $("closeLoop").addEventListener("click",()=>modal.close());
