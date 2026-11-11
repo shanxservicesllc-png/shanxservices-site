@@ -77,7 +77,7 @@ onmessage=async(event)=>{
      stopped();postMessage({type:"complete",report,engine:"cpu",metrics});return;
    }
    X13Compute.validateJob(data.task);
-   if(data.task.origin==="rabbitry-relevance-v1"){
+   if(["rabbitry-relevance-v1","hemisync-infinity-triage-v1","comfy-image-qa-v1"].includes(data.task.origin)){
      let scores,engine="cpu",gpuTaskMs=0,gpuBufferBytes=0;
      const cpuBegin=performance.now();
      const reference=X13Compute.compute(data.task);
