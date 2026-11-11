@@ -8,7 +8,18 @@ const mobile=Boolean(navigator.userAgentData?.mobile||/Android|iPhone|iPad|iPod/
 const lowRam=typeof navigator.deviceMemory==="number"&&navigator.deviceMemory<=2;
 const cap=lowRam?10:mobile?15:30;
 let enabled=false,generation=0,controller=null,activeWorker=null,jobReject=null,endpoint="",jobs=0,records=0,battery=null;
-let configMode="Not connected";
+let configMode="MONSTER";
+let activeSince=0,lastElapsed=0;
+function clock(ms){
+ const sec=Math.floor(ms/1000),h=Math.floor(sec/3600),m=Math.floor(sec%3600/60),r=sec%60;
+ return [h,m,r].map(x=>String(x).padStart(2,"0")).join(":");
+}
+function tick(){
+ const ms=activeSince?Math.max(0,Date.now()-activeSince):lastElapsed;
+ $("uptime").textContent=clock(ms);
+}
+setInterval(tick,1000);
+document.addEventListener("visibilitychange",tick);
 const volunteerSession=crypto.randomUUID();
 let lastHeartbeat=0;
 async function pulse(){
@@ -16,7 +27,8 @@ async function pulse(){
  const p=await json("/api/heartbeat",{method:"POST",headers:{"Content-Type":"application/json"},
     body:JSON.stringify({session:volunteerSession,kind:"browser",power:Number(power.value)})});
  lastHeartbeat=Date.now();
- $("connection").textContent=configMode+" · "+Number(p.connectedWorkers||1)+" online worker(s)";
+ $("connection").textContent="Connected";
+ $("online").textContent=String(Number(p.connectedWorkers||1));
 }
 function getSaved(){try{return localStorage.getItem(savedKey)==="enabled";}catch{return false;}}
 function setSaved(value){try{if(value)localStorage.setItem(savedKey,"enabled");else localStorage.removeItem(savedKey);}catch{}}
@@ -31,8 +43,7 @@ function viewSlider(){
 }
 function setStatus(message,live=false){status.textContent=message;status.dataset.state=live?"running":"idle";}
 function updateConsent(){const granted=getSaved();$("permissionNote").textContent=granted?
- "This browser was authorized previously. It can resume automatically on reload until you press Stop.":
- "First time: tap Start contributing to give permission. No checkbox. After that, this browser automatically starts on future visits until you press Stop.";
+ "Auto-start enabled. Stop to disable.": "Tap Start to allow contributions.";
 }
 power.addEventListener("input",()=>{viewSlider();if(enabled&&actualDuty()<=0)stopNow("Slider set to 0%, stopped.",true);});
 async function json(path,options={}){
@@ -49,7 +60,7 @@ function cancelInFlight(){
  if(jobReject){jobReject(Error("Stopped"));jobReject=null;}
 }
 function stopNow(message="Stopped by volunteer.",revoke=true){
- enabled=false;generation++;cancelInFlight();
+ enabled=false;generation++;if(activeSince){lastElapsed=Math.max(0,Date.now()-activeSince);activeSince=0;tick();}cancelInFlight();
  if(endpoint)fetch(endpoint+"/api/disconnect",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({session:volunteerSession}),keepalive:true}).catch(()=>{});
  if(revoke)setSaved(false);viewSlider();updateConsent();setStatus(message);
 }
@@ -78,6 +89,7 @@ async function showLatest(){
  try{
   const [h,r]=await Promise.all([json("/api/health"),json("/api/rabbitry/latest")]);
   $("monster").textContent=String(h.verified||0);
+  $("online").textContent=String(h.connectedWorkers||0);
   if(r?.result?.report){
    const x=r.result.report;
    $("latest").textContent="MONSTER's verified RABBITRY audit: "+x.records+" real citations, "+x.distinctDoi+" distinct DOIs and "+x.possibleDuplicatePairs.length+" potential duplicate pairs.";
@@ -97,18 +109,19 @@ async function runLoop(my){
    const health=await json("/api/health");
    if(!enabled||my!==generation)return;
    $("monster").textContent=String(health.verified||0);
+   $("online").textContent=String(health.connectedWorkers||0);
    await pulse();
-   setStatus("Connected to MONSTER. Requesting approved research work...",true);
+   setStatus("Connected · checking work",true);
    const response=await json("/api/job");
    if(!enabled||my!==generation)return;
    if(!response.job){
      failures=0;
-     setStatus("Connected. No new X13 work yet; watching for new jobs.",true);
+     setStatus("Connected · waiting for next job",true);
      await wait(3000);continue;
    }
    const ticket=response.job;
    $("jobType").textContent=ticket.task.type+(ticket.task.origin?" · "+ticket.task.origin:"");
-   setStatus("MONSTER assigned real task. Processing...",true);
+   setStatus("Processing "+ticket.task.type.replace("rabbitry-citation-audit-v1","RABBITRY audit").replace("dot-batch-v1","research scores"),true);
    const completed=await runTask(ticket.task,actualDuty());
    if(!enabled||my!==generation)return;
    const payload={id:ticket.id,lease:ticket.lease,engine:completed.engine||"cpu"};
@@ -124,18 +137,18 @@ async function runLoop(my){
    $("digest").textContent=receipt.receiptSha256?.slice(0,12)||receipt.jobId.slice(0,12);
    $("latest").textContent=completed.report?"Verified "+completed.report.records+" real RABBITRY citations; "+completed.report.possibleDuplicatePairs.length+" duplicate-review pairs.":(ticket.task.origin==="rabbitry-relevance-v1"?"Verified real RABBITRY relevance scoring across "+completed.scores.length+" citations.":"Verified "+completed.scores.length+" numeric scores.");
    $("gpuState").textContent=(completed.engine==="webgpu"?"WebGPU compute used": "CPU used")+(ticket.task.origin?" for RABBITRY relevance":"");
-   setStatus("MONSTER ACK: accepted job "+receipt.jobId+". Requesting next...",true);
+   setStatus("MONSTER verified job · running",true);
    failures=0;await wait(900);
   }catch(e){
    if(!enabled||my!==generation)return;
-   failures++;setStatus("MONSTER reconnecting ("+failures+"): "+String(e.message||e),false);
+   failures++;setStatus("Reconnecting ("+failures+"): "+String(e.message||e),false);
    await wait(Math.min(15000,2000+failures*1200));
   }
  }
 }
 async function startNow(){
  if(enabled||actualDuty()<=0)return;
- enabled=true;generation++;setSaved(true);updateConsent();viewSlider();
+ enabled=true;generation++;activeSince=Date.now();lastElapsed=0;tick();setSaved(true);updateConsent();viewSlider();
  setStatus("Connecting to MONSTER HTTPS...",false);
  try{
   if(!endpoint){
@@ -143,8 +156,8 @@ async function startNow(){
    if(!r.ok)throw Error("Backend configuration unavailable");
    const config=await r.json();
    if(!/^https:\/\/[-a-z0-9.]+$/i.test(config.apiBase))throw Error("HTTPS endpoint invalid");
-   endpoint=config.apiBase.replace(/\/$/,"");configMode=config.mode||"MONSTER";
-   $("connection").textContent=configMode;
+   endpoint=config.apiBase.replace(/\/$/,"");configMode="MONSTER";
+   $("connection").textContent="Connecting";
   }
   await showLatest();await runLoop(generation);
  }catch(e){if(enabled)stopNow("Cannot connect: "+String(e.message||e),false);}
