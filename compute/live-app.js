@@ -94,7 +94,7 @@ async function showLatest(){
    const x=r.result.report;
    $("latest").textContent="MONSTER's verified RABBITRY audit: "+x.records+" real citations, "+x.distinctDoi+" distinct DOIs and "+x.possibleDuplicatePairs.length+" potential duplicate pairs.";
   }
-  if(h.rabbitryRelevance)$("gpuState").textContent="Last MONSTER relevance run: "+h.rabbitryRelevance.engine;
+  if(h.rabbitryRelevance)$("gpuState").textContent=h.rabbitryRelevance.engine==="webgpu"?"WebGPU":h.rabbitryRelevance.engine==="gles31"?"GPU":"CPU";
  }catch{}
 }
 async function runLoop(my){
@@ -120,7 +120,7 @@ async function runLoop(my){
      await wait(3000);continue;
    }
    const ticket=response.job;
-   $("jobType").textContent=ticket.task.type+(ticket.task.origin?" · "+ticket.task.origin:"");
+   $("jobType").textContent=ticket.task.type==="rabbitry-citation-audit-v1"?"Citation audit":ticket.task.origin==="rabbitry-relevance-v1"?"Relevance scoring":"Numerical task";
    setStatus("Processing "+ticket.task.type.replace("rabbitry-citation-audit-v1","RABBITRY audit").replace("dot-batch-v1","research scores"),true);
    const completed=await runTask(ticket.task,actualDuty());
    if(!enabled||my!==generation)return;
@@ -136,7 +136,7 @@ async function runLoop(my){
    $("monster").textContent=String(health.verified+1);
    $("digest").textContent=receipt.receiptSha256?.slice(0,12)||receipt.jobId.slice(0,12);
    $("latest").textContent=completed.report?"Verified "+completed.report.records+" real RABBITRY citations; "+completed.report.possibleDuplicatePairs.length+" duplicate-review pairs.":(ticket.task.origin==="rabbitry-relevance-v1"?"Verified real RABBITRY relevance scoring across "+completed.scores.length+" citations.":"Verified "+completed.scores.length+" numeric scores.");
-   $("gpuState").textContent=(completed.engine==="webgpu"?"WebGPU compute used": "CPU used")+(ticket.task.origin?" for RABBITRY relevance":"");
+   $("gpuState").textContent=completed.engine==="webgpu"?"WebGPU":completed.engine==="gles31"?"GPU":"CPU";
    setStatus("MONSTER verified job · running",true);
    failures=0;await wait(900);
   }catch(e){
