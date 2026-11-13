@@ -17,7 +17,7 @@
 <title>ASK SHAN X | Powered by X13 AI | ShanX Services</title>
 <script src="ovh-chat.js" defer></script>
 <script src="app-voice.js" defer></script>
-<script src="voice-controls.js" defer></script>
+<script type="module" src="voice/voice-shanx.js"></script>
 </head>
 <body>
 <div class="app" id="app" data-mode="go">
@@ -99,10 +99,10 @@
     <section class="setting-row"><div><strong>Install on this device</strong><p>Keep ASK SHAN X a tap away. Add it to your home screen.</p></div><button type="button" class="secondary-btn" id="install-button">Install</button></section>
     <section class="setting-row"><div><strong>Conversation history</strong><p>Your conversations are saved in this browser. Clear them anytime.</p></div><button type="button" class="danger-btn" id="clear-history">Clear history</button></section>
     <section class="setting-row voice-setting">
-      <div><strong>Spoken answers</strong>
-        <p>Use Read aloud on a reply. Pause or stop it whenever you like.</p>
+      <div><strong>ShanX voice</strong>
+        <p>Tap Read aloud to hear answers in the ShanX voice. Playback can be paused or stopped.</p>
         <div class="voice-preview-actions">
-          <button type="button" class="secondary-btn" id="voice-preview">▶ Try voice</button>
+          <button type="button" class="secondary-btn" id="voice-preview">▶ Hear ShanX voice</button>
           <button type="button" class="secondary-btn" id="voice-stop-preview">■ Stop</button>
         </div>
       </div>
