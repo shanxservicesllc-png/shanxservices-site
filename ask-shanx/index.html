@@ -1,114 +1,230 @@
 <!DOCTYPE html>
+
 <html lang="en">
+
 <head>
+
 <meta charset="utf-8">
+
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+
 <meta name="theme-color" content="#081516">
+
 <meta name="robots" content="noindex,nofollow,noarchive">
-<meta name="description" content="ASK SHAN X is the general-purpose ShanX Services assistant powered by X13 AI. Ask about everyday life, technology, home troubleshooting, and creative ideas.">
+
+<meta name="description" content="ASK SHANX is the general-purpose ShanX Services assistant powered by X13 AI. Ask about everyday life, technology, home troubleshooting, and creative ideas.">
+
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="ASK SHAN X">
+
+<meta name="apple-mobile-web-app-title" content="ASK SHANX">
+
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
 <link rel="manifest" href="manifest.webmanifest">
+
 <link rel="icon" href="icon.svg" type="image/svg+xml">
+
 <link rel="apple-touch-icon" href="icon.svg">
+
 <link rel="stylesheet" href="styles.css">
+
 <link rel="stylesheet" href="voice-controls.css">
-<title>ASK SHAN X | Powered by X13 AI | ShanX Services</title>
+
+<title>ASK SHANX | Powered by X13 AI | ShanX Services</title>
+
 <script src="ovh-chat.js" defer></script>
+
+<script src="media-attachments.js" defer></script>
 <script src="app-voice.js" defer></script>
-<script type="module" src="voice/voice-shanx.js"></script>
+
+<script src="voice-controls.js" defer></script>
+
 </head>
+
 <body>
+
 <div class="app" id="app" data-mode="go">
+
   <aside class="rail" aria-label="App navigation">
+
     <div class="brand">
+
       <div class="brand-mark" aria-hidden="true"><span>S</span><i></i></div>
-      <div class="brand-copy"><strong>ASK <em>SHAN X</em></strong><small>Powered by X13 AI | ShanX Services</small></div>
+
+      <div class="brand-copy"><strong>ASK <em>SHANX</em></strong><small>Powered by X13 AI | ShanX Services</small></div>
+
     </div>
+
     <div class="rail-label">YOUR ASSISTANT</div>
-    <nav class="mode-picker" aria-label="Device interface mode">
-      <button type="button" class="mode active" data-switch="go"><span class="mode-symbol">◈</span><span class="mode-text"><strong>Go</strong><small>Everyday questions</small></span></button>
-      <button type="button" class="mode" data-switch="home"><span class="mode-symbol">▣</span><span class="mode-text"><strong>Home</strong><small>Desktop experience</small></span></button>
-      <button type="button" class="mode" data-switch="mini"><span class="mode-symbol">◉</span><span class="mode-text"><strong>Mini</strong><small>Voice-first layout</small></span></button>
-    </nav>
+
     <div class="rail-space"></div>
+
     <div class="status-panel">
+
       <div class="status-title">ASSISTANT STATUS</div>
+
       <div class="status-line"><span class="status-dot checking" id="status-dot"></span><span id="status-text">Checking AI…</span></div>
+
       <p id="status-detail">Ready for your questions.</p>
+
     </div>
+
     <button class="plain-button rail-settings" id="settings-button" type="button">⚙ &nbsp; Settings</button>
-    <div class="rail-footer">ONE BRAIN. THREE EXPERIENCES.</div>
+
+    <div class="rail-footer">ASK SHANX • ONE ASSISTANT.</div>
+
   </aside>
+
   <main class="workspace">
+
     <header class="topbar">
-      <div class="mobile-brand"><div class="small-mark">S</div><b>ASK <span>SHAN X</span></b></div>
-      <div class="top-left"><div class="eyebrow">YOUR INTELLIGENT ASSISTANT</div><h1>Ask Shan X<span class="accent">.</span></h1></div>
+
+      <div class="mobile-brand"><div class="small-mark">S</div><b>ASK <span>SHANX</span></b></div>
+
+      <div class="top-left"><div class="eyebrow">YOUR INTELLIGENT ASSISTANT</div><h1>Ask ShanX<span class="accent">.</span></h1></div>
+
       <div class="top-actions">
+
         <span class="brain-status" id="header-status"><span class="status-dot checking"></span> Connecting</span>
+
         <button type="button" class="icon-button" id="new-chat" title="Start a new conversation" aria-label="New conversation">↺</button>
+
         <button type="button" class="icon-button mobile-settings" id="mobile-settings" title="Settings" aria-label="Open settings">⚙</button>
+
       </div>
+
     </header>
-    <div class="mobile-modes" role="group" aria-label="Device interface mode">
-      <button type="button" data-switch="go" class="active">Go</button>
-      <button type="button" data-switch="home">Home</button>
-      <button type="button" data-switch="mini">Mini</button>
-    </div>
+
     <section class="chat-scroll" id="chat-scroll" aria-label="Chat conversation" tabindex="0">
+
       <div class="chat-content" id="conversation" role="log" aria-live="polite" aria-relevant="additions">
+
         <section class="welcome" id="welcome">
+
           <div class="hero-orb" aria-hidden="true"><div class="hero-core"><span>S</span></div><div class="ring ring-one"></div><div class="ring ring-two"></div></div>
-          <div class="hello-flag">ASK SHAN X • YOUR EVERYDAY ASSISTANT</div>
+
+          <div class="hello-flag">ASK SHANX • YOUR EVERYDAY ASSISTANT</div>
+
           <h2>Big questions.<br><span>Clear answers.</span></h2>
-          <p>Ask Shan X about everyday questions, practical advice, new ideas, and more.</p>
-          <div class="prompts capabilities" aria-label="Topics ASK SHAN X can help with">
+
+          <p>Ask ShanX about everyday questions, practical advice, new ideas, and more.</p>
+
+          <div class="prompts capabilities" aria-label="Topics ASK SHANX can help with">
+
             <div class="topic"><span>✦</span> General assistance</div>
+
             <div class="topic"><span>◇</span> Creative ideas</div>
+
             <div class="topic"><span>✳</span> Learn something</div>
+
             <div class="topic"><span>◷</span> Everyday planning</div>
+
           </div>
+
           <div class="mini-callout"><div class="mini-icon">◉</div><div><strong>Say it your way.</strong><span>Tap the microphone to dictate a question. Voice availability depends on your browser.</span></div></div>
+
         </section>
+
       </div>
+
     </section>
+
     <div class="composer-wrap">
+
       <div id="notice" class="notice" role="status" hidden></div>
+
+      <button type="button" class="secondary-btn" id="retry-question" hidden>Retry last question</button>
+
       <form class="composer" id="question-form">
+
         <label for="question" class="sr-only">Your question</label>
-        <textarea rows="1" id="question" placeholder="Ask Shan X a question…" autocomplete="off" maxlength="6000" enterkeyhint="send"></textarea>
+
+        <textarea rows="1" id="question" placeholder="Ask ShanX a question…" autocomplete="off" maxlength="6000" enterkeyhint="send"></textarea>
+
+        <input type="file" id="media-input" accept="image/*,video/*" hidden aria-label="Choose a photo or video">
+        <div id="attachment-tray" class="attachment-tray" hidden>
+          <div id="attachment-preview" class="attachment-preview"></div>
+          <div class="attachment-meta">
+            <p id="attachment-info" role="status"></p>
+            <small>Only when you send: a photo or one video still frame is sent to OVHcloud for AI analysis. The full video is never uploaded.</small>
+          </div>
+          <button type="button" id="remove-media" aria-label="Remove attachment">Remove</button>
+        </div>
         <div class="composer-actions">
-          <button type="button" class="voice-btn" id="mic" title="Speak your question" aria-label="Speak your question">🎙 <span>Voice</span></button>
-          <button type="submit" class="send-btn" id="send" disabled><span>Ask Shan X</span><span aria-hidden="true">↗</span></button>
+
+          <button type="button" class="attach-btn" id="add-media" title="Attach photo or video" aria-label="Attach photo or video">＋</button>
+          <div class="composer-right">
+
+            <button type="button" class="voice-btn" id="mic" title="Speak your question" aria-label="Speak your question">🎙 <span>Voice</span></button>
+
+            <button type="submit" class="send-btn" id="send" disabled><span>Ask ShanX</span><span aria-hidden="true">↗</span></button>
+
+          </div>
+
         </div>
+
       </form>
-      <div class="privacy-strip"><span>✧</span> Conversation history stays on this device <span class="privacy-divider">•</span> <span id="footer-context">ASK SHAN X</span></div>
+
+      <div class="privacy-strip"><span>✧</span> Conversation history stays on this device <span class="privacy-divider">•</span> <span id="footer-context">ASK SHANX</span></div>
+
     </div>
+
   </main>
+
   <div id="speech-dock" class="speech-dock" role="group" aria-label="Speaking controls" hidden>
-    <span class="speech-now">🔊 ASK SHAN X speaking</span>
+
+    <span class="speech-now">🔊 ASK SHANX speaking</span>
+
     <button type="button" class="speech-pause" id="pause-speech">⏸ Pause</button>
+
     <button type="button" class="speech-stop" id="stop-speech">■ Stop</button>
+
   </div>
+
 </div>
+
 <dialog id="settings-dialog" aria-labelledby="settings-title">
+
   <div class="dialog-inner">
+
     <div class="dialog-top"><h2 id="settings-title">Settings</h2><button id="close-settings" type="button" class="icon-button" aria-label="Close settings">×</button></div>
+
     <p class="muted">Personalize your experience and manage your conversations.</p>
-    <section class="setting-row"><div><strong>Install on this device</strong><p>Keep ASK SHAN X a tap away. Add it to your home screen.</p></div><button type="button" class="secondary-btn" id="install-button">Install</button></section>
+
+    <section class="setting-row"><div><strong>Install on this device</strong><p>Keep ASK SHANX a tap away. Add it to your home screen.</p></div><button type="button" class="secondary-btn" id="install-button">Install</button></section>
+
     <section class="setting-row"><div><strong>Conversation history</strong><p>Your conversations are saved in this browser. Clear them anytime.</p></div><button type="button" class="danger-btn" id="clear-history">Clear history</button></section>
+
     <section class="setting-row voice-setting">
-      <div><strong>ShanX voice</strong>
-        <p>Tap Read aloud to hear answers in the ShanX voice. Playback can be paused or stopped.</p>
+
+      <div><strong>Spoken answers</strong>
+
+        <p>Use Read aloud on a reply. Pause or stop it whenever you like.</p>
+
+        <label for="device-voice-select">Device voice</label>
+
+        <select id="device-voice-select" aria-label="Choose an installed device voice"></select>
+
+        <p class="muted" id="device-voice-status">Looking for voices installed on this device.</p>
+
         <div class="voice-preview-actions">
-          <button type="button" class="secondary-btn" id="voice-preview">▶ Hear ShanX voice</button>
+
+          <button type="button" class="secondary-btn" id="voice-preview">▶ Try voice</button>
+
           <button type="button" class="secondary-btn" id="voice-stop-preview">■ Stop</button>
+
         </div>
+
       </div>
+
     </section>
+
     <div class="dialog-note"><strong>Privacy</strong><p>Your questions and recent chat are processed to provide answers. Avoid sharing passwords, payment details, or other sensitive information.</p></div>
+
   </div>
+
 </dialog>
+
 </body>
+
 </html>
