@@ -4,6 +4,7 @@ const $$ = (s) => [...document.querySelectorAll(s)];
 const STORAGE = "ask-shanx-v1-conversation";
 const API_BASE = location.pathname.startsWith("/ask-shanx/") ? "/ask-shanx" : "";
 const guidedReady = typeof globalThis.AskShanXLocal?.answer === "function";
+const cloudReady = () => globalThis.AskShanXCloud?.available() === true;
 const MODE = "ask-shanx-v1-mode";
 const app = $("#app");
 const convo = $("#conversation");
@@ -84,11 +85,17 @@ function render() {
 }
 function setBusy(v) {
   busy=v;
-  send.disabled = v || !(connected || guidedReady) || !input.value.trim();
+  send.disabled = v || !(connected || cloudReady() || guidedReady) || !input.value.trim();
   send.querySelector("span").textContent = v ? "Thinking…" : "Ask Shan X";
   input.disabled=v;
 }
-function updateSend() {send.disabled = busy || !(connected || guidedReady) || !input.value.trim();}
+function updateFeatureAvailability() {
+  $("[data-requires-ai]").forEach(button => {
+    button.disabled = !(connected || cloudReady());
+    button.title = connected || cloudReady() ? "Ask Shan X using cloud AI (account sign-in may be required)" : "Requires the live general AI connection";
+  });
+}
+function updateSend() {send.disabled = busy || !(connected || cloudReady() || guidedReady) || !input.value.trim();}
 function resizeInput() {
   input.style.height = "auto";
   input.style.height = Math.min(135,input.scrollHeight)+"px";
@@ -100,7 +107,7 @@ async function checkStatus() {
     const s=await r.json();
     connected = s.connected === true;
     backend = String(s.provider || "Configured AI");
-    const detail = connected ? ("Ready • "+(s.model||"AI")+" • "+(s.localOnly?"local MONSTER":"remote AI")) : "Type a question for free guided refrigerator help. Live model chat is not connected yet.";
+    const detail = connected ? ("Ready • "+(s.model||"AI")+" • "+(s.localOnly?"local MONSTER":"remote AI")) : "ASK SHAN X is for any topic. Only the refrigerator guide is active until live general AI is connected.";
     $("#status-text").textContent = connected ? "Cloud AI connected" : "Guided help ready";
     $("#status-detail").textContent = detail;
     $("#engine-info").textContent = detail;
@@ -109,21 +116,22 @@ async function checkStatus() {
     const dot = document.createElement("span");dot.className="status-dot "+(connected?"online":"offline");
     $("#header-status").append(dot,document.createTextNode(connected?"Cloud AI connected":"Guided help ready"));
     $("#status-dot").className="status-dot "+(connected?"online":"offline");
-    if(!connected) notify("You can type refrigerator questions now using free guided help. This is not a live AI model.","info");
+    if(!connected) notify("ASK SHAN X is for any question. Refrigerator help works now; general AI chat is not yet connected.","info");
     else if(!busy) notify("");
   } catch {
     connected=false;
-    $("#status-text").textContent="Guided help ready";
-    $("#status-detail").textContent="Free guided refrigerator help is ready. The cloud AI model is not connected.";
-    $("#engine-info").textContent="Rule-based guided help only. Live cloud AI: not connected.";
-    $("#header-status").textContent="Guided help ready";
+    $("#status-text").textContent=cloudReady()?"General AI available":"Guided help ready";
+    $("#status-detail").textContent=cloudReady()?"Cloud AI through Puter. Sign-in may be required; visitors have individual free allowances.":"General-purpose ASK SHAN X: external AI could not load. Guided refrigerator help is available.";
+    $("#engine-info").textContent=cloudReady()?"Puter cloud AI (visitor allowance, no ShanX GPU or key).":"Rule-based refrigerator guide only. Cloud AI unavailable.";
+    $("#header-status").textContent=cloudReady()?"Cloud AI available":"Guided help ready";
     $("#status-dot").className="status-dot offline";
-    notify("Type your refrigerator symptoms below, or choose Refrigerator help. This is guided help, not live AI.","info");
+    notify(cloudReady()?"General AI is available through Puter. On your first question, Puter may ask you to sign in; it uses your free allowance, then optional visitor-paid top-ups.":"External cloud AI unavailable. Only guided refrigerator help is active.","info");
   }
+  updateFeatureAvailability();
   updateSend();
 }
 async function ask(retry=false) {
-  if(!(connected || guidedReady)||busy)return;
+  if(!(connected || cloudReady() || guidedReady)||busy)return;
   const q=input.value.trim();
   if(!retry && !q)return;
   notify("");
@@ -148,6 +156,8 @@ async function ask(retry=false) {
       const payload=await response.json();
       if(!response.ok || !payload.answer)throw new Error(payload.error||"No answer received");
       answer=String(payload.answer).slice(0,12000);
+    } else if (cloudReady()) {
+      answer=await globalThis.AskShanXCloud.answer(messages.slice(-16));
     } else if (guidedReady) {
       const latest=messages[messages.length-1]?.content||q;
       answer=globalThis.AskShanXLocal.answer(latest,messages.slice(0,-1));
