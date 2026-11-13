@@ -111,7 +111,19 @@ function render() {
       copy.addEventListener("click", async () => {
         try {await navigator.clipboard.writeText(m.content); copy.textContent="Copied";} catch {notify("Could not copy this answer.");}
       });
-      actions.append(speak,copy);wrap.append(actions,answerDetails(m));
+      const download=document.createElement("button");
+      download.type="button";download.textContent="Download";
+      download.title="Save this answer as a text file";
+      download.addEventListener("click",()=>window.AskShanXExport?.answer(m.content));
+      const code=window.AskShanXExport?.firstCode(m.content);
+      if(code){
+        const codeBtn=document.createElement("button");
+        codeBtn.type="button";codeBtn.textContent="Save code";
+        codeBtn.title="Save first code block as a source file";
+        codeBtn.addEventListener("click",()=>window.AskShanXExport?.code(m.content));
+        actions.append(speak,copy,download,codeBtn);
+      }else actions.append(speak,copy,download);
+      wrap.append(actions,answerDetails(m));
     }
     row.append(wrap);
     convo.append(row);
@@ -205,7 +217,8 @@ let sendAfterSpeech=false;
 function showMic(){
   const active=micRequested||listening;
   mic.classList.toggle("listening",active);
-  mic.innerHTML=active?"■ <span>Stop</span>":"🎙 <span>Voice</span>";
+  mic.textContent=active?"■":"🎙";
+  mic.title=active?"Stop voice dictation":"Start voice dictation";
   mic.setAttribute("aria-label",active?"Stop voice dictation":"Start voice dictation");
   mic.setAttribute("aria-pressed",String(active));
   updateSend();
@@ -305,6 +318,8 @@ newChat.addEventListener("click",()=>{
 $("#settings-button").addEventListener("click",()=>dialog.showModal());
 $("#mobile-settings").addEventListener("click",()=>dialog.showModal());
 $("#close-settings").addEventListener("click",()=>dialog.close());
+$("#export-chat-md").addEventListener("click",()=>window.AskShanXExport?.conversation(messages,"md"));
+$("#export-chat-json").addEventListener("click",()=>window.AskShanXExport?.conversation(messages,"json"));
 clearHistory.addEventListener("click",()=>{
   if(micRequested||listening)stopListening(false);
   if(messages.length && !confirm("Clear saved chat history on this device?"))return;

@@ -35,6 +35,7 @@
 <script src="ovh-chat.js" defer></script>
 
 <script src="media-attachments.js" defer></script>
+<script src="ask-shanx-export.js" defer></script>
 <script src="app-voice.js" defer></script>
 
 <script src="voice-controls.js" defer></script>
@@ -141,7 +142,10 @@
 
         <textarea rows="1" id="question" placeholder="Ask ShanX a question…" autocomplete="off" maxlength="6000" enterkeyhint="send"></textarea>
 
-        <input type="file" id="media-input" accept="image/*,video/*" hidden aria-label="Choose a photo or video">
+        <input type="file" id="media-input" accept="image/*,video/*" hidden aria-label="Browse photos and videos">
+        <input type="file" id="choose-photo-input" accept="image/*" hidden aria-label="Choose photo">
+        <input type="file" id="take-photo-input" accept="image/*" capture="environment" hidden aria-label="Take photo using camera">
+        <input type="file" id="record-video-input" accept="video/*" capture="environment" hidden aria-label="Record video using camera">
         <div id="attachment-tray" class="attachment-tray" hidden>
           <div id="attachment-preview" class="attachment-preview"></div>
           <div class="attachment-meta">
@@ -152,10 +156,19 @@
         </div>
         <div class="composer-actions">
 
-          <button type="button" class="attach-btn" id="add-media" title="Attach photo or video" aria-label="Attach photo or video">＋</button>
+          <div class="attachment-chooser">
+            <button type="button" class="attach-btn" id="add-media" title="Add photo or video" aria-label="Add photo or video" aria-haspopup="true" aria-expanded="false" aria-controls="attachment-menu">＋</button>
+            <div id="attachment-menu" class="attachment-menu" aria-label="Add an attachment" role="group" hidden>
+              <button type="button" id="take-photo">📷 Take photo</button>
+              <button type="button" id="choose-photo">🖼️ Choose photo</button>
+              <button type="button" id="record-video">🎥 Record video</button>
+              <button type="button" id="browse-files">📁 Browse files</button>
+              <p>Video questions use one still frame, not the full recording.</p>
+            </div>
+          </div>
           <div class="composer-right">
 
-            <button type="button" class="voice-btn" id="mic" title="Speak your question" aria-label="Speak your question">🎙 <span>Voice</span></button>
+            <button type="button" class="voice-btn" id="mic" title="Start voice dictation" aria-label="Start voice dictation" aria-pressed="false">🎙</button>
 
             <button type="submit" class="send-btn" id="send" disabled><span>Ask ShanX</span><span aria-hidden="true">↗</span></button>
 
@@ -194,6 +207,9 @@
     <section class="setting-row"><div><strong>Install on this device</strong><p>Keep ASK SHANX a tap away. Add it to your home screen.</p></div><button type="button" class="secondary-btn" id="install-button">Install</button></section>
 
     <section class="setting-row"><div><strong>Conversation history</strong><p>Your conversations are saved in this browser. Clear them anytime.</p></div><button type="button" class="danger-btn" id="clear-history">Clear history</button></section>
+    <section class="setting-row export-setting"><div><strong>Download your chat</strong><p>Export a readable Markdown transcript or a JSON backup. Files are generated directly on your device.</p></div>
+      <div class="export-actions"><button type="button" class="secondary-btn" id="export-chat-md">Markdown</button><button type="button" class="secondary-btn" id="export-chat-json">JSON</button></div>
+    </section>
 
     <section class="setting-row voice-setting">
 

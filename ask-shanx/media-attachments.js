@@ -2,6 +2,21 @@
 /* ASK SHANX media attachment: local preview; explicit cloud transfer only on Send. */
 (function(root) {
   const input = document.querySelector("#media-input");
+  const takePhoto = document.querySelector("#take-photo-input");
+  const choosePhoto = document.querySelector("#choose-photo-input");
+  const recordVideo = document.querySelector("#record-video-input");
+  const menu = document.querySelector("#attachment-menu");
+  const inputs = [input,takePhoto,choosePhoto,recordVideo];
+  function resetInputs(){for(const field of inputs)if(field)field.value="";}
+  function closeMenu(){
+    if(menu)menu.hidden=true;
+    add?.setAttribute?.("aria-expanded","false");
+  }
+  function toggleMenu(){
+    if(!menu){input?.click();return;}
+    menu.hidden=!menu.hidden;
+    add?.setAttribute?.("aria-expanded",String(!menu.hidden));
+  }
   const add = document.querySelector("#add-media");
   const remove = document.querySelector("#remove-media");
   const tray = document.querySelector("#attachment-tray");
@@ -16,7 +31,7 @@
   function clear() {
     if (selected) root.URL.revokeObjectURL(selected.url);
     selected = null;
-    input.value = "";
+    resetInputs();
     preview.replaceChildren();
     tray.hidden = true;
     changed();
@@ -32,7 +47,7 @@
       preview.replaceChildren();
       if (selected) root.URL.revokeObjectURL(selected.url);
       selected = null;
-      input.value = "";
+      resetInputs();
       changed();
       return;
     }
@@ -123,8 +138,27 @@
       cleanup();
     }
   }
-  add?.addEventListener("click",()=>input.click());
-  input?.addEventListener("change",()=>pick(input.files?.[0]));
+  add?.addEventListener("click",toggleMenu);
+  for(const [selector,field] of [
+    ["#take-photo",takePhoto],
+    ["#choose-photo",choosePhoto],
+    ["#record-video",recordVideo],
+    ["#browse-files",input]
+  ])document.querySelector(selector)?.addEventListener("click",()=>{
+    closeMenu();
+    field?.click();
+  });
+  for(const field of inputs)field?.addEventListener("change",()=>{
+    const file=field.files?.[0];
+    if(file)pick(file);
+    resetInputs();
+  });
+  document.addEventListener?.("pointerdown",e=>{
+    if(menu&&!menu.hidden&&!menu.contains(e.target)&&e.target!==add&&!add?.contains?.(e.target))closeMenu();
+  });
+  document.addEventListener?.("keydown",e=>{
+    if(e.key==="Escape"&&menu&&!menu.hidden){closeMenu();add?.focus?.();}
+  });
   remove?.addEventListener("click",clear);
   root.AskShanXMedia=Object.freeze({
     has:()=>!!selected,
