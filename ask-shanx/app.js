@@ -3,6 +3,7 @@ const $ = (s) => document.querySelector(s);
 const $$ = (s) => [...document.querySelectorAll(s)];
 const STORAGE = "ask-shanx-v1-conversation";
 const API_BASE = location.pathname.startsWith("/ask-shanx/") ? "/ask-shanx" : "";
+const guidedReady = typeof globalThis.AskShanXLocal?.answer === "function";
 const MODE = "ask-shanx-v1-mode";
 const app = $("#app");
 const convo = $("#conversation");
@@ -83,11 +84,11 @@ function render() {
 }
 function setBusy(v) {
   busy=v;
-  send.disabled = v || !connected || !input.value.trim();
-  send.querySelector("span").textContent = v ? "Thinking…" : "Ask AI";
+  send.disabled = v || !(connected || guidedReady) || !input.value.trim();
+  send.querySelector("span").textContent = v ? "Thinking…" : "Ask Shan X";
   input.disabled=v;
 }
-function updateSend() {send.disabled = busy || !connected || !input.value.trim();}
+function updateSend() {send.disabled = busy || !(connected || guidedReady) || !input.value.trim();}
 function resizeInput() {
   input.style.height = "auto";
   input.style.height = Math.min(135,input.scrollHeight)+"px";
@@ -99,30 +100,30 @@ async function checkStatus() {
     const s=await r.json();
     connected = s.connected === true;
     backend = String(s.provider || "Configured AI");
-    const detail = connected ? ("Ready • "+(s.model||"AI")+" • "+(s.localOnly?"local MONSTER":"remote AI")) : "No AI backend is connected. Questions won't be sent.";
-    $("#status-text").textContent = connected ? "AI connected" : "AI offline";
+    const detail = connected ? ("Ready • "+(s.model||"AI")+" • "+(s.localOnly?"local MONSTER":"remote AI")) : "Type a question for free guided refrigerator help. Live model chat is not connected yet.";
+    $("#status-text").textContent = connected ? "Cloud AI connected" : "Guided help ready";
     $("#status-detail").textContent = detail;
     $("#engine-info").textContent = detail;
-    $("#footer-context").textContent = s.localOnly ? "MONSTER local preview" : "Hosted AI connection";
+    $("#footer-context").textContent = connected ? (s.localOnly ? "Local AI connection" : "Hosted AI connection") : "No-cost guided help";
     $("#header-status").textContent = "";
     const dot = document.createElement("span");dot.className="status-dot "+(connected?"online":"offline");
-    $("#header-status").append(dot,document.createTextNode(connected?"AI connected":"AI offline"));
+    $("#header-status").append(dot,document.createTextNode(connected?"Cloud AI connected":"Guided help ready"));
     $("#status-dot").className="status-dot "+(connected?"online":"offline");
-    if(!connected) notify("Live AI chat is not connected yet. The refrigerator guided checker works without it.","info");
+    if(!connected) notify("You can type refrigerator questions now using free guided help. This is not a live AI model.","info");
     else if(!busy) notify("");
   } catch {
     connected=false;
-    $("#status-text").textContent="Connection unavailable";
-    $("#status-detail").textContent="This app can't reach an AI server.";
-    $("#engine-info").textContent="Not connected.";
-    $("#header-status").textContent="● Offline";
+    $("#status-text").textContent="Guided help ready";
+    $("#status-detail").textContent="Free guided refrigerator help is ready. The cloud AI model is not connected.";
+    $("#engine-info").textContent="Rule-based guided help only. Live cloud AI: not connected.";
+    $("#header-status").textContent="Guided help ready";
     $("#status-dot").className="status-dot offline";
-    notify("Live AI server is unavailable. Refrigerator guided help still works here.","info");
+    notify("Type your refrigerator symptoms below, or choose Refrigerator help. This is guided help, not live AI.","info");
   }
   updateSend();
 }
 async function ask(retry=false) {
-  if(!connected||busy)return;
+  if(!(connected || guidedReady)||busy)return;
   const q=input.value.trim();
   if(!retry && !q)return;
   notify("");
@@ -140,11 +141,18 @@ async function ask(retry=false) {
   pending.append(avatar,bubble);
   convo.append(pending);scroll.scrollTop=scroll.scrollHeight;
   try {
-    const conversation=messages.slice(-24);
-    const response=await fetch(API_BASE+"/api/chat",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({messages:conversation}),signal:AbortSignal.timeout(160000)});
-    const payload=await response.json();
-    if(!response.ok || !payload.answer)throw new Error(payload.error||"No answer received");
-    messages.push({role:"assistant",content:String(payload.answer).slice(0,12000)});
+    let answer;
+    if (connected) {
+      const conversation=messages.slice(-24);
+      const response=await fetch(API_BASE+"/api/chat",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({messages:conversation}),signal:AbortSignal.timeout(160000)});
+      const payload=await response.json();
+      if(!response.ok || !payload.answer)throw new Error(payload.error||"No answer received");
+      answer=String(payload.answer).slice(0,12000);
+    } else if (guidedReady) {
+      const latest=messages[messages.length-1]?.content||q;
+      answer=globalThis.AskShanXLocal.answer(latest,messages.slice(0,-1));
+    } else throw new Error("No help engine is connected");
+    messages.push({role:"assistant",content:answer});
     save();render();
   } catch(e) {
     notify("Answer unavailable: "+(e?.message||"Unknown error")+". Your question remains in this conversation.");
