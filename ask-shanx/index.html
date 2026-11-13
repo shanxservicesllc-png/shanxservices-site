@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#081516">
-<meta name="description" content="ASK SHAN X: Powered by X13 AI | ShanX Services. Ask questions, hear answers, wherever you are.">
+<meta name="description" content="ASK SHAN X is the general-purpose ShanX Services assistant powered by X13 AI. Ask about everyday life, technology, home troubleshooting, and creative ideas.">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="ASK SHAN X">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -13,6 +13,8 @@
 <link rel="apple-touch-icon" href="icon.svg">
 <link rel="stylesheet" href="styles.css">
 <title>ASK SHAN X | Powered by X13 AI | ShanX Services</title>
+<script src="https://js.puter.com/v2/" defer></script>
+<script src="cloud-chat.js" defer></script>
 <script src="offline-help.js" defer></script>
 <script src="app.js" defer></script>
 <script src="fridge-guide.js" defer></script>
@@ -58,14 +60,14 @@
       <div class="chat-content" id="conversation" role="log" aria-live="polite" aria-relevant="additions">
         <section class="welcome" id="welcome">
           <div class="hero-orb" aria-hidden="true"><div class="hero-core"><span>S</span></div><div class="ring ring-one"></div><div class="ring ring-two"></div></div>
-          <div class="hello-flag">MEET YOUR EVERYDAY INTELLIGENCE</div>
+          <div class="hello-flag">ASK SHAN X • YOUR EVERYDAY ASSISTANT</div>
           <h2>Big questions.<br><span>Clear answers.</span></h2>
-          <p>Ask Shan X for help. Free guided refrigerator conversations work now; broader cloud AI chat will be added once connected.</p>
+          <p>ASK SHAN X answers everyday questions using external cloud AI. You may be asked to sign in with Puter to use your own free allowance. Refrigerator guided help remains available without an account.</p>
           <div class="prompts" id="prompts">
             <button type="button" data-suggestion="My Whirlpool side-by-side refrigerator is humming but not getting cold. Help me troubleshoot safely, one question at a time."><span>✦</span> Refrigerator help</button>
-            <button type="button" data-suggestion="Give me three creative ideas for an original video game."><span>◇</span> Spark an idea</button>
-            <button type="button" data-suggestion="Teach me a surprising fact about space."><span>✳</span> Surprise me</button>
-            <button type="button" data-suggestion="Help me plan a productive day with time to relax."><span>◷</span> Plan my day</button>
+            <button type="button" data-requires-ai="true" title="Cloud AI may ask you to sign in" data-suggestion="Help me brainstorm an original game idea."><span>◇</span> Creative ideas · AI pending</button>
+            <button type="button" data-requires-ai="true" title="Cloud AI may ask you to sign in" data-suggestion="Teach me a surprising fact about space."><span>✳</span> Learning · AI pending</button>
+            <button type="button" data-requires-ai="true" title="Cloud AI may ask you to sign in" data-suggestion="Help me plan a productive day with time to relax."><span>◷</span> Daily planning · AI pending</button>
           </div>
           <div class="mini-callout"><div class="mini-icon">◉</div><div><strong>Say it your way.</strong><span>Tap the microphone to dictate a question. Voice availability depends on your browser.</span></div></div>
         </section>
@@ -75,7 +77,7 @@
       <div id="notice" class="notice" role="status" hidden></div>
       <form class="composer" id="question-form">
         <label for="question" class="sr-only">Your question</label>
-        <textarea rows="1" id="question" placeholder="Describe what’s happening with your refrigerator…" autocomplete="off" maxlength="6000" enterkeyhint="send"></textarea>
+        <textarea rows="1" id="question" placeholder="Ask Shan X a question…" autocomplete="off" maxlength="6000" enterkeyhint="send"></textarea>
         <div class="composer-actions">
           <button type="button" class="voice-btn" id="mic" title="Speak your question" aria-label="Speak your question">🎙 <span>Voice</span></button>
           <button type="button" class="voice-btn" id="stop-speech" title="Stop spoken answer" hidden>■ Stop speaking</button>
@@ -89,12 +91,12 @@
 <dialog id="settings-dialog" aria-labelledby="settings-title">
   <div class="dialog-inner">
     <div class="dialog-top"><h2 id="settings-title">Settings & privacy</h2><button id="close-settings" type="button" class="icon-button" aria-label="Close settings">×</button></div>
-    <p class="muted">ASK SHAN X is Powered by X13 AI | ShanX Services. The Home, Go and Mini layouts share the same AI endpoint.</p>
+    <p class="muted">ASK SHAN X is Powered by X13 AI | ShanX Services. The Home, Go and Mini layouts share the same cloud AI service and local fallback.</p>
     <section class="setting-row"><div><strong>Install on this device</strong><p>Add ASK SHAN X to your home screen. On iPhone, use Safari → Share → Add to Home Screen.</p></div><button type="button" class="secondary-btn" id="install-button">Install</button></section>
     <section class="setting-row"><div><strong>Conversation history</strong><p>Saved only in this browser on this device. No account or cross-device syncing is configured.</p></div><button type="button" class="danger-btn" id="clear-history">Clear history</button></section>
     <section class="setting-row"><div><strong>AI engine</strong><p id="engine-info">Checking connection…</p></div></section>
     <section class="setting-row"><div><strong>Planned, not active</strong><p>Physical Home, Go and Mini devices. X13 integration. RABBITRY research. Cloud sync.</p></div></section>
-    <div class="dialog-note">Privacy note: when you ask a question, its conversation context is sent to the configured AI endpoint to produce an answer. Avoid entering passwords or other secrets.</div>
+    <div class="dialog-note">Privacy: Cloud questions and recent chat are sent to Puter and its chosen AI provider. Puter sign-in may be required. Each visitor receives an individual free allowance; beyond that Puter may offer visitor-paid top-ups. ShanX Services does not receive the account password or pay for visitor tokens. Do not share private or sensitive information.</div>
   </div>
 </dialog>
 </body>
