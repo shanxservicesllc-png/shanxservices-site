@@ -13,10 +13,9 @@
 <link rel="apple-touch-icon" href="icon.svg">
 <link rel="stylesheet" href="styles.css">
 <title>ASK SHAN X | Powered by X13 AI | ShanX Services</title>
-<script src="https://js.puter.com/v2/" defer></script>
-<script src="cloud-chat.js?rev=20261113-2" defer></script>
+<script src="ovh-chat.js" defer></script>
 <script src="offline-help.js?rev=20261113-2" defer></script>
-<script src="app.js?rev=20261113-2" defer></script>
+<script src="app-general.js" defer></script>
 <script src="fridge-guide.js" defer></script>
 </head>
 <body>
@@ -62,7 +61,7 @@
           <div class="hero-orb" aria-hidden="true"><div class="hero-core"><span>S</span></div><div class="ring ring-one"></div><div class="ring ring-two"></div></div>
           <div class="hello-flag">ASK SHAN X • YOUR EVERYDAY ASSISTANT</div>
           <h2>Big questions.<br><span>Clear answers.</span></h2>
-          <p>ASK SHAN X answers everyday questions using external cloud AI. You may be asked to sign in with Puter to use your own free allowance. Refrigerator guided help remains available without an account.</p>
+          <p>ASK SHAN X is your general-purpose cloud assistant for questions about almost anything. No account is required. Free usage is limited; refrigerator help is just one example.</p>
           <div class="prompts" id="prompts">
             <button type="button" data-suggestion="My Whirlpool side-by-side refrigerator is humming but not getting cold. Help me troubleshoot safely, one question at a time."><span>✦</span> Refrigerator help</button>
             <button type="button" data-requires-ai="true" title="Cloud AI may ask you to sign in" data-suggestion="Help me brainstorm an original game idea."><span>◇</span> Creative ideas · AI pending</button>
@@ -96,7 +95,7 @@
     <section class="setting-row"><div><strong>Conversation history</strong><p>Saved only in this browser on this device. No account or cross-device syncing is configured.</p></div><button type="button" class="danger-btn" id="clear-history">Clear history</button></section>
     <section class="setting-row"><div><strong>AI engine</strong><p id="engine-info">Checking connection…</p></div></section>
     <section class="setting-row"><div><strong>Planned, not active</strong><p>Physical Home, Go and Mini devices. X13 integration. RABBITRY research. Cloud sync.</p></div></section>
-    <div class="dialog-note">Privacy: Cloud questions and recent chat are sent to Puter and its chosen AI provider. Puter sign-in may be required. Each visitor receives an individual free allowance; beyond that Puter may offer visitor-paid top-ups. ShanX Services does not receive the account password or pay for visitor tokens. Do not share private or sensitive information.</div>
+    <div class="dialog-note">Privacy: General questions and recent chat messages are sent to OVHcloud AI Endpoints for an answer. No account, API key or local GPU is used. Anonymous free access is limited to 2 requests per minute per IP. Avoid sharing passwords or private information.</div>
   </div>
 </dialog>
 </body>
