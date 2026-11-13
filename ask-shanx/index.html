@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#081516">
+<meta name="description" content="ASK SHAN X: Powered by X13 AI | ShanX Services. Ask questions, hear answers, wherever you are.">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="ASK SHAN X">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon.svg">
+<link rel="stylesheet" href="styles.css">
+<title>ASK SHAN X | Powered by X13 AI | ShanX Services</title>
+<script src="app.js" defer></script>
+<script src="fridge-guide.js" defer></script>
+</head>
+<body>
+<div class="app" id="app" data-mode="go">
+  <aside class="rail" aria-label="App navigation">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true"><span>S</span><i></i></div>
+      <div class="brand-copy"><strong>ASK <em>SHAN X</em></strong><small>Powered by X13 AI | ShanX Services</small></div>
+    </div>
+    <div class="rail-label">YOUR ASSISTANT</div>
+    <nav class="mode-picker" aria-label="Device interface mode">
+      <button type="button" class="mode active" data-switch="go"><span class="mode-symbol">◈</span><span class="mode-text"><strong>Go</strong><small>Everyday questions</small></span></button>
+      <button type="button" class="mode" data-switch="home"><span class="mode-symbol">▣</span><span class="mode-text"><strong>Home</strong><small>Desktop experience</small></span></button>
+      <button type="button" class="mode" data-switch="mini"><span class="mode-symbol">◉</span><span class="mode-text"><strong>Mini</strong><small>Voice-first layout</small></span></button>
+    </nav>
+    <div class="rail-space"></div>
+    <div class="status-panel">
+      <div class="status-title">SYSTEM CONNECTION</div>
+      <div class="status-line"><span class="status-dot checking" id="status-dot"></span><span id="status-text">Checking AI…</span></div>
+      <p id="status-detail">Checking your secure AI connection.</p>
+    </div>
+    <button class="plain-button rail-settings" id="settings-button" type="button">⚙ &nbsp; Settings & privacy</button>
+    <div class="rail-footer">ONE BRAIN. THREE EXPERIENCES.</div>
+  </aside>
+  <main class="workspace">
+    <header class="topbar">
+      <div class="mobile-brand"><div class="small-mark">S</div><b>ASK <span>SHAN X</span></b></div>
+      <div class="top-left"><div class="eyebrow">YOUR INTELLIGENT ASSISTANT</div><h1>Ask Shan X<span class="accent">.</span></h1></div>
+      <div class="top-actions">
+        <span class="brain-status" id="header-status"><span class="status-dot checking"></span> Connecting</span>
+        <button type="button" class="icon-button" id="new-chat" title="Start a new conversation" aria-label="New conversation">↺</button>
+        <button type="button" class="icon-button mobile-settings" id="mobile-settings" title="Settings" aria-label="Open settings">⚙</button>
+      </div>
+    </header>
+    <div class="mobile-modes" role="group" aria-label="Device interface mode">
+      <button type="button" data-switch="go" class="active">Go</button>
+      <button type="button" data-switch="home">Home</button>
+      <button type="button" data-switch="mini">Mini</button>
+    </div>
+    <section class="chat-scroll" id="chat-scroll" aria-label="Chat conversation" tabindex="0">
+      <div class="chat-content" id="conversation" role="log" aria-live="polite" aria-relevant="additions">
+        <section class="welcome" id="welcome">
+          <div class="hero-orb" aria-hidden="true"><div class="hero-core"><span>S</span></div><div class="ring ring-one"></div><div class="ring ring-two"></div></div>
+          <div class="hello-flag">MEET YOUR EVERYDAY INTELLIGENCE</div>
+          <h2>Big questions.<br><span>Clear answers.</span></h2>
+          <p>Got a question? <strong>ASK SHAN X.</strong> Type it, say it, and get an answer from the AI connected to this app.</p>
+          <div class="prompts" id="prompts">
+            <button type="button" data-suggestion="My Whirlpool side-by-side refrigerator is humming but not getting cold. Help me troubleshoot safely, one question at a time."><span>✦</span> Refrigerator help</button>
+            <button type="button" data-suggestion="Give me three creative ideas for an original video game."><span>◇</span> Spark an idea</button>
+            <button type="button" data-suggestion="Teach me a surprising fact about space."><span>✳</span> Surprise me</button>
+            <button type="button" data-suggestion="Help me plan a productive day with time to relax."><span>◷</span> Plan my day</button>
+          </div>
+          <div class="mini-callout"><div class="mini-icon">◉</div><div><strong>Say it your way.</strong><span>Tap the microphone to dictate a question. Voice availability depends on your browser.</span></div></div>
+        </section>
+      </div>
+    </section>
+    <div class="composer-wrap">
+      <div id="notice" class="notice" role="status" hidden></div>
+      <form class="composer" id="question-form">
+        <label for="question" class="sr-only">Your question</label>
+        <textarea rows="1" id="question" placeholder="Ask Shan X anything…" autocomplete="off" maxlength="6000" enterkeyhint="send"></textarea>
+        <div class="composer-actions">
+          <button type="button" class="voice-btn" id="mic" title="Speak your question" aria-label="Speak your question">🎙 <span>Voice</span></button>
+          <button type="button" class="voice-btn" id="stop-speech" title="Stop spoken answer" hidden>■ Stop speaking</button>
+          <button type="submit" class="send-btn" id="send" disabled><span>Ask Shan X</span><span aria-hidden="true">↗</span></button>
+        </div>
+      </form>
+      <div class="privacy-strip"><span>✧</span> Conversation history stays on this device <span class="privacy-divider">•</span> <span id="footer-context">MONSTER local preview</span></div>
+    </div>
+  </main>
+</div>
+<dialog id="settings-dialog" aria-labelledby="settings-title">
+  <div class="dialog-inner">
+    <div class="dialog-top"><h2 id="settings-title">Settings & privacy</h2><button id="close-settings" type="button" class="icon-button" aria-label="Close settings">×</button></div>
+    <p class="muted">ASK SHAN X is Powered by X13 AI | ShanX Services. The Home, Go and Mini layouts share the same AI endpoint.</p>
+    <section class="setting-row"><div><strong>Install on this device</strong><p>Add ASK SHAN X to your home screen. On iPhone, use Safari → Share → Add to Home Screen.</p></div><button type="button" class="secondary-btn" id="install-button">Install</button></section>
+    <section class="setting-row"><div><strong>Conversation history</strong><p>Saved only in this browser on this device. No account or cross-device syncing is configured.</p></div><button type="button" class="danger-btn" id="clear-history">Clear history</button></section>
+    <section class="setting-row"><div><strong>AI engine</strong><p id="engine-info">Checking connection…</p></div></section>
+    <section class="setting-row"><div><strong>Planned, not active</strong><p>Physical Home, Go and Mini devices. X13 integration. RABBITRY research. Cloud sync.</p></div></section>
+    <div class="dialog-note">Privacy note: when you ask a question, its conversation context is sent to the configured AI endpoint to produce an answer. Avoid entering passwords or other secrets.</div>
+  </div>
+</dialog>
+</body>
+</html>
