@@ -1,0 +1,12 @@
+/* ASK SHAN X voice controls, always reachable while speaking */
+.speech-dock{position:fixed;right:max(15px,env(safe-area-inset-right));top:100px;z-index:1200;display:flex;align-items:center;gap:10px;padding:10px 12px;background:#133327;border:1px solid #77d69a;border-radius:14px;box-shadow:0 14px 40px #000b;color:#e7ffed;font-size:12px;max-width:calc(100vw - 30px)}
+.speech-dock button{border:1px solid #77a789;border-radius:9px;min-height:42px;padding:7px 13px;font-weight:800;font-size:13px}
+.speech-dock .speech-pause{background:#284d35;color:#eaffea}
+.speech-dock .speech-stop{background:#cf664e;color:#fff;border-color:#f6a18c}
+.speech-now{font-weight:750;letter-spacing:.01em}
+.voice-setting{align-items:flex-start}
+.voice-setting>div{width:100%}
+#voice-choice{display:block;margin-top:12px;width:100%;max-width:100%;padding:10px;background:#19362a;color:#ecf9ec;border:1px solid #5e8d6b;border-radius:9px;font:inherit;font-size:13px}
+.voice-preview-actions{display:flex;flex-wrap:wrap;gap:10px;margin:11px 0}
+@media(max-width:680px){.speech-dock{top:75px;left:12px;right:12px;justify-content:space-between;gap:7px;padding:9px}.speech-dock button{padding:7px 10px;min-height:44px;font-size:13px}.speech-now{font-size:11px}}
+[hidden]{display:none!important}

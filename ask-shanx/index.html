@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#081516">
+<meta name="robots" content="noindex,nofollow,noarchive">
 <meta name="description" content="ASK SHAN X is the general-purpose ShanX Services assistant powered by X13 AI. Ask about everyday life, technology, home troubleshooting, and creative ideas.">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="ASK SHAN X">
@@ -12,10 +13,12 @@
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icon.svg">
 <link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="voice-controls.css">
 <title>ASK SHAN X | Powered by X13 AI | ShanX Services</title>
 <script src="ovh-chat.js" defer></script>
 <script src="offline-help.js?rev=20261113-2" defer></script>
-<script src="app-general.js" defer></script>
+<script src="app-voice.js" defer></script>
+<script src="voice-controls.js" defer></script>
 <script src="fridge-guide.js" defer></script>
 </head>
 <body>
@@ -79,13 +82,17 @@
         <textarea rows="1" id="question" placeholder="Ask Shan X a question…" autocomplete="off" maxlength="6000" enterkeyhint="send"></textarea>
         <div class="composer-actions">
           <button type="button" class="voice-btn" id="mic" title="Speak your question" aria-label="Speak your question">🎙 <span>Voice</span></button>
-          <button type="button" class="voice-btn" id="stop-speech" title="Stop spoken answer" hidden>■ Stop speaking</button>
           <button type="submit" class="send-btn" id="send" disabled><span>Ask Shan X</span><span aria-hidden="true">↗</span></button>
         </div>
       </form>
       <div class="privacy-strip"><span>✧</span> Conversation history stays on this device <span class="privacy-divider">•</span> <span id="footer-context">Free guided help</span></div>
     </div>
   </main>
+  <div id="speech-dock" class="speech-dock" role="group" aria-label="Speaking controls" hidden>
+    <span class="speech-now">🔊 ASK SHAN X speaking</span>
+    <button type="button" class="speech-pause" id="pause-speech">⏸ Pause</button>
+    <button type="button" class="speech-stop" id="stop-speech">■ Stop</button>
+  </div>
 </div>
 <dialog id="settings-dialog" aria-labelledby="settings-title">
   <div class="dialog-inner">
@@ -93,6 +100,18 @@
     <p class="muted">ASK SHAN X is Powered by X13 AI | ShanX Services. The Home, Go and Mini layouts share the same cloud AI service and local fallback.</p>
     <section class="setting-row"><div><strong>Install on this device</strong><p>Add ASK SHAN X to your home screen. On iPhone, use Safari → Share → Add to Home Screen.</p></div><button type="button" class="secondary-btn" id="install-button">Install</button></section>
     <section class="setting-row"><div><strong>Conversation history</strong><p>Saved only in this browser on this device. No account or cross-device syncing is configured.</p></div><button type="button" class="danger-btn" id="clear-history">Clear history</button></section>
+    <section class="setting-row voice-setting">
+      <div><strong>Voice for spoken answers</strong>
+      <p id="voice-help">Choose an available voice on this device. Auto favors natural-sounding male voices when present; availability varies by browser.</p>
+      <label for="voice-choice" class="sr-only">Voice</label>
+      <select id="voice-choice" aria-label="Spoken answer voice"><option value="">Auto: prefer male voice</option></select>
+      <div class="voice-preview-actions">
+        <button type="button" class="secondary-btn" id="voice-preview">▶ Preview voice</button>
+        <button type="button" class="secondary-btn" id="voice-stop-preview">■ Stop preview</button>
+      </div>
+      <p>Using your own recorded voice requires a separate consent-based voice-cloning engine. No voice recording is uploaded here.</p>
+      </div>
+    </section>
     <section class="setting-row"><div><strong>AI engine</strong><p id="engine-info">Checking connection…</p></div></section>
     <section class="setting-row"><div><strong>Planned, not active</strong><p>Physical Home, Go and Mini devices. X13 integration. RABBITRY research. Cloud sync.</p></div></section>
     <div class="dialog-note">Privacy: General questions and recent chat messages are sent to OVHcloud AI Endpoints for an answer. No account, API key or local GPU is used. Anonymous free access is limited to 2 requests per minute per IP. Avoid sharing passwords or private information.</div>
