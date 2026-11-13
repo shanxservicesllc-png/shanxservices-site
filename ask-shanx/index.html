@@ -13,6 +13,7 @@
 <link rel="apple-touch-icon" href="icon.svg">
 <link rel="stylesheet" href="styles.css">
 <title>ASK SHAN X | Powered by X13 AI | ShanX Services</title>
+<script src="offline-help.js" defer></script>
 <script src="app.js" defer></script>
 <script src="fridge-guide.js" defer></script>
 </head>
@@ -59,7 +60,7 @@
           <div class="hero-orb" aria-hidden="true"><div class="hero-core"><span>S</span></div><div class="ring ring-one"></div><div class="ring ring-two"></div></div>
           <div class="hello-flag">MEET YOUR EVERYDAY INTELLIGENCE</div>
           <h2>Big questions.<br><span>Clear answers.</span></h2>
-          <p>Got a question? <strong>ASK SHAN X.</strong> Type it, say it, and get an answer from the AI connected to this app.</p>
+          <p>Ask Shan X for help. Free guided refrigerator conversations work now; broader cloud AI chat will be added once connected.</p>
           <div class="prompts" id="prompts">
             <button type="button" data-suggestion="My Whirlpool side-by-side refrigerator is humming but not getting cold. Help me troubleshoot safely, one question at a time."><span>✦</span> Refrigerator help</button>
             <button type="button" data-suggestion="Give me three creative ideas for an original video game."><span>◇</span> Spark an idea</button>
@@ -74,14 +75,14 @@
       <div id="notice" class="notice" role="status" hidden></div>
       <form class="composer" id="question-form">
         <label for="question" class="sr-only">Your question</label>
-        <textarea rows="1" id="question" placeholder="Ask Shan X anything…" autocomplete="off" maxlength="6000" enterkeyhint="send"></textarea>
+        <textarea rows="1" id="question" placeholder="Describe what’s happening with your refrigerator…" autocomplete="off" maxlength="6000" enterkeyhint="send"></textarea>
         <div class="composer-actions">
           <button type="button" class="voice-btn" id="mic" title="Speak your question" aria-label="Speak your question">🎙 <span>Voice</span></button>
           <button type="button" class="voice-btn" id="stop-speech" title="Stop spoken answer" hidden>■ Stop speaking</button>
           <button type="submit" class="send-btn" id="send" disabled><span>Ask Shan X</span><span aria-hidden="true">↗</span></button>
         </div>
       </form>
-      <div class="privacy-strip"><span>✧</span> Conversation history stays on this device <span class="privacy-divider">•</span> <span id="footer-context">MONSTER local preview</span></div>
+      <div class="privacy-strip"><span>✧</span> Conversation history stays on this device <span class="privacy-divider">•</span> <span id="footer-context">Free guided help</span></div>
     </div>
   </main>
 </div>
