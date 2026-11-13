@@ -1,0 +1,17 @@
+{
+  "name": "ASK SHAN X | Powered by X13 AI",
+  "short_name": "ASK SHAN X",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "theme_color": "#081516",
+  "background_color": "#081516",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any",
+      "purpose": "any"
+    }
+  ]
+}
