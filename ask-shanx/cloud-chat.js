@@ -45,6 +45,6 @@
     model:MODEL,
     mode:"visitor-pays-with-free-allowance",
     noOwnerGpu:true,
-[REDACTED SENSITIVE LINE]
+    noOwnerApiKey:true
   });
 })(globalThis);
