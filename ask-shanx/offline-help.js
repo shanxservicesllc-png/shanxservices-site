@@ -14,6 +14,8 @@
       .filter(x => x && x.role === "assistant")
       .map(x => txt(x.content)).slice(-3).join(" ");
     if (!q) return say("Tell me what's happening with your refrigerator. I'll ask one question at a time.");
+    if (mentions(q, /both sides (are |is )?war\b|both compartments? (are |is )?war\b/) && prior.includes("freezer"))
+      return say("Did you mean both sides are warm? If so, how long has the refrigerator been plugged back in since cleaning: less than 24 hours or longer?");
     if (mentions(q, /model number|serial|model sticker|model tag/))
       return say("On many Whirlpool side-by-side refrigerators, the model-number label is inside the fresh-food compartment along a side wall or door frame. A photo of the label can help identify the exact manual. Don't share serial numbers publicly if you don't need to.");
     if (mentions(q, /smoke|sparks|burning smell|fire|shock|exposed wire|leaking refrigerant/))
