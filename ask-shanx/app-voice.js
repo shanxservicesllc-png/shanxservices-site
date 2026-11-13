@@ -2,8 +2,6 @@
 const $ = (s) => document.querySelector(s);
 const $$ = (s) => [...document.querySelectorAll(s)];
 const STORAGE = "ask-shanx-v1-conversation";
-const API_BASE = location.pathname.startsWith("/ask-shanx/") ? "/ask-shanx" : "";
-const guidedReady = typeof globalThis.AskShanXLocal?.answer === "function";
 const cloudReady = () => globalThis.AskShanXCloud?.available() === true;
 const MODE = "ask-shanx-v1-mode";
 const app = $("#app");
@@ -17,12 +15,10 @@ const mic = $("#mic");
 const stopSpeech = $("#stop-speech");
 const dialog = $("#settings-dialog");
 let messages = [];
-let connected = false;
 let busy = false;
 let listening = false;
 let speechRecognition = null;
 let installPrompt = null;
-let backend = "";
 try {
   const saved = JSON.parse(localStorage.getItem(STORAGE) || "[]");
   if (Array.isArray(saved)) messages = saved.filter(m => (m.role === "user" || m.role === "assistant") && typeof m.content === "string" && m.content.length <= 6000).slice(-70);
@@ -85,53 +81,30 @@ function render() {
 }
 function setBusy(v) {
   busy=v;
-  send.disabled = v || !(connected || cloudReady() || guidedReady) || !input.value.trim();
+  send.disabled = v || !cloudReady() || !input.value.trim();
   send.querySelector("span").textContent = v ? "Thinking…" : "Ask Shan X";
   input.disabled=v;
 }
-function updateFeatureAvailability() {
-  document.querySelectorAll("[data-requires-ai]").forEach(button => {
-    button.disabled = !(connected || cloudReady());
-    button.title = connected || cloudReady() ? "Ask Shan X using cloud AI (account sign-in may be required)" : "Requires the live general AI connection";
-  });
-}
-function updateSend() {send.disabled = busy || !(connected || cloudReady() || guidedReady) || !input.value.trim();}
+function updateSend() {send.disabled = busy || !cloudReady() || !input.value.trim();}
 function resizeInput() {
   input.style.height = "auto";
   input.style.height = Math.min(135,input.scrollHeight)+"px";
 }
-async function checkStatus() {
-  try {
-    const r=await fetch(API_BASE+"/api/status",{cache:"no-store",signal:AbortSignal.timeout(7000)});
-    if(!r.ok)throw new Error("Service unavailable");
-    const s=await r.json();
-    connected = s.connected === true;
-    backend = String(s.provider || "Configured AI");
-    const detail = connected ? ("Ready • "+(s.model||"AI")+" • "+(s.localOnly?"local MONSTER":"remote AI")) : "ASK SHAN X is for any topic. Only the refrigerator guide is active until live general AI is connected.";
-    $("#status-text").textContent = connected ? "Cloud AI connected" : "Guided help ready";
-    $("#status-detail").textContent = detail;
-    $("#engine-info").textContent = detail;
-    $("#footer-context").textContent = connected ? (s.localOnly ? "Local AI connection" : "Hosted AI connection") : "No-cost guided help";
-    $("#header-status").textContent = "";
-    const dot = document.createElement("span");dot.className="status-dot "+(connected?"online":"offline");
-    $("#header-status").append(dot,document.createTextNode(connected?"Cloud AI connected":"Guided help ready"));
-    $("#status-dot").className="status-dot "+(connected?"online":"offline");
-    if(!connected) notify("ASK SHAN X handles general questions using a free external cloud AI service.","info");
-    else if(!busy) notify("");
-  } catch {
-    connected=false;
-    $("#status-text").textContent=cloudReady()?"Free cloud AI ready":"Guided help ready";
-    $("#status-detail").textContent=cloudReady()?"Anonymous OVHcloud AI (Llama 3.3 70B): no sign-in, 2 requests per minute per IP.":"General-purpose ASK SHAN X: external AI could not load. Guided refrigerator help is available.";
-    $("#engine-info").textContent=cloudReady()?"OVHcloud AI Endpoints: free anonymous Llama 3.3, no ShanX GPU or API key.":"Rule-based refrigerator guide only. Cloud AI unavailable.";
-    $("#header-status").textContent=cloudReady()?"Free AI ready":"Guided help ready";
-    $("#status-dot").className="status-dot "+(cloudReady()?"online":"offline");
-    notify(cloudReady()?"General AI is available through the free anonymous OVHcloud model. No account; provider limit: 2 requests per minute per IP.":"External cloud AI unavailable. Only guided refrigerator help is active.","info");
-  }
-  updateFeatureAvailability();
+function checkStatus() {
+  const ready=cloudReady();
+  $("#status-text").textContent=ready?"Ready to help":"Connection unavailable";
+  $("#status-detail").textContent=ready?"Ask whatever is on your mind.":"Check your connection and try again.";
+  $("#footer-context").textContent="ASK SHAN X";
+  $("#header-status").textContent="";
+  const indicator=document.createElement("span");
+  indicator.className="status-dot "+(ready?"online":"offline");
+  $("#header-status").append(indicator,document.createTextNode(ready?"Ready":"Offline"));
+  $("#status-dot").className=indicator.className;
+  if(ready&&!busy)notify("");
   updateSend();
 }
 async function ask(retry=false) {
-  if(!(connected || cloudReady() || guidedReady)||busy)return;
+  if(!cloudReady()||busy)return;
   const q=input.value.trim();
   if(!retry && !q)return;
   notify("");
@@ -150,18 +123,7 @@ async function ask(retry=false) {
   convo.append(pending);scroll.scrollTop=scroll.scrollHeight;
   try {
     let answer;
-    if (connected) {
-      const conversation=messages.slice(-24);
-      const response=await fetch(API_BASE+"/api/chat",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({messages:conversation}),signal:AbortSignal.timeout(160000)});
-      const payload=await response.json();
-      if(!response.ok || !payload.answer)throw new Error(payload.error||"No answer received");
-      answer=String(payload.answer).slice(0,12000);
-    } else if (cloudReady()) {
-      answer=await globalThis.AskShanXCloud.answer(messages.slice(-16));
-    } else if (guidedReady) {
-      const latest=messages[messages.length-1]?.content||q;
-      answer=globalThis.AskShanXLocal.answer(latest,messages.slice(0,-1));
-    } else throw new Error("No help engine is connected");
+    answer=await globalThis.AskShanXCloud.answer(messages.slice(-16));
     messages.push({role:"assistant",content:answer});
     save();render();
   } catch(e) {
@@ -197,11 +159,10 @@ function startListening() {
     if(words){input.value = (input.value.trim()+" "+words).trim();resizeInput();updateSend();input.focus();}
   };
   speechRecognition.onerror=(e)=>notify("Voice input: "+String(e.error||"unavailable")+". You can type your question.");
-  speechRecognition.onend=()=>{listening=false;mic.classList.remove("listening");mic.innerHTML="🎙 <span>Voice</span>";if(connected)notify("")};
+  speechRecognition.onend=()=>{listening=false;mic.classList.remove("listening");mic.innerHTML="🎙 <span>Voice</span>";if(cloudReady())notify("")};
   try{speechRecognition.start()}catch{notify("Unable to start voice input in this browser.")}
 }
 $$("[data-switch]").forEach(btn=>btn.addEventListener("click",()=>setMode(btn.dataset.switch)));
-$$("[data-suggestion]").forEach(btn=>btn.addEventListener("click",()=>{input.value=btn.dataset.suggestion;resizeInput();updateSend();input.focus()}));
 $("#question-form").addEventListener("submit",(e)=>{e.preventDefault();ask()});
 input.addEventListener("input",()=>{resizeInput();updateSend()});
 input.addEventListener("keydown",(e)=>{
@@ -229,7 +190,7 @@ $("#install-button").addEventListener("click",async()=>{
 });
 window.addEventListener("online",checkStatus);
 window.addEventListener("focus",checkStatus);
-window.addEventListener("offline",()=>{connected=false;updateSend();notify("You're offline. Saved history is still available.","info")});
+window.addEventListener("offline",()=>{updateSend();notify("You are offline. Your conversations are saved.","info")});
 try {setMode(localStorage.getItem(MODE)|| (window.innerWidth>=960?"home":"go"))}catch{setMode("go")}
 render();resizeInput();checkStatus();
 if("serviceWorker" in navigator && location.protocol!=="file:"){

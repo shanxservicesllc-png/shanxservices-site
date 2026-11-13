@@ -1,122 +1,77 @@
 "use strict";
-/* Browser speech controls only: no recordings uploaded or voice cloning. */
-(function setupVoice(root) {
+/* ASK SHAN X spoken-answer controls */
+(function(root) {
   const synth = root.speechSynthesis;
-  const dock = document.querySelector("#speech-dock");
-  const stop = document.querySelector("#stop-speech");
-  const pause = document.querySelector("#pause-speech");
-  const picker = document.querySelector("#voice-choice");
-  const preview = document.querySelector("#voice-preview");
-  const previewStop = document.querySelector("#voice-stop-preview");
-  const help = document.querySelector("#voice-help");
-  const KEY = "ask-shanx-spoken-voice-v1";
-  let selected = "";
-  let session = 0;
-  try { selected = localStorage.getItem(KEY) || ""; } catch {}
   const supported = !!synth && typeof root.SpeechSynthesisUtterance === "function";
+  const dock = document.querySelector("#speech-dock");
+  const stopButton = document.querySelector("#stop-speech");
+  const pauseButton = document.querySelector("#pause-speech");
+  const previewButton = document.querySelector("#voice-preview");
+  const previewStopButton = document.querySelector("#voice-stop-preview");
+  let activeUtterance = null;
 
-  function englishVoices() {
-    if (!supported) return [];
-    return synth.getVoices().filter(v => /^en([-_]|$)/i.test(v.lang||""));
-  }
-  function rank(v) {
-    const name=v.name||"";
-    let score = /^en[-_]us/i.test(v.lang) ? 15 : 0;
-    if (/natural|neural|premium|enhanced/i.test(name)) score+=15;
-    const maleNames=/andrew|guy|david|mark|daniel|alex|aaron|matthew|michael|james|brian|ryan|john|george|arthur|oliver|henry|thomas|tom|male/i;
-    if (maleNames.test(name.toLowerCase())) score+=70;
-    if (/robot|compact/i.test(name)) score-=12;
-    return score;
-  }
-  const keyOf = v => v.voiceURI || v.name+" / "+v.lang;
-  function bestVoice() {
-    const voices=englishVoices();
-    const chosen=selected && voices.find(v=>keyOf(v)===selected);
-    if (chosen) return chosen;
-    return voices.sort((a,b)=>rank(b)-rank(a))[0] || null;
-  }
-  function populate() {
-    if (!picker) return;
-    const voices=englishVoices().sort((a,b)=>rank(b)-rank(a)||a.name.localeCompare(b.name));
-    const current=selected;
-    picker.replaceChildren();
-    const auto=document.createElement("option");
-    auto.value=""; auto.textContent="Auto: prefer natural male-sounding voice";
-    picker.append(auto);
-    for (const voice of voices) {
-      const option=document.createElement("option");
-      option.value=keyOf(voice);
-      option.textContent=voice.name+" ("+voice.lang+")";
-      picker.append(option);
+  function visible(on) {
+    if(dock) dock.hidden = !on;
+    if(stopButton) stopButton.hidden = !on;
+    if(pauseButton) {
+      pauseButton.hidden = !on;
+      pauseButton.textContent = "⏸ Pause";
     }
-    picker.value=voices.some(v=>keyOf(v)===current) ? current : "";
-    if(help) help.textContent=voices.length
-      ? "Voice names and quality depend on your phone or browser. Select one and tap Preview. Auto prefers male-named natural voices when available."
-      : "No English voices reported yet. The browser default may still work; try Preview or check your device speech settings.";
-  }
-  function show(active) {
-    if (dock) dock.hidden=!active;
-    if (stop) stop.hidden=!active;
-    if (pause) {pause.hidden=!active;pause.textContent="⏸ Pause";}
   }
   function stopSpeech() {
-    session++;
-    if (supported) {
-      try{synth.cancel()}catch{}
-    }
-    show(false);
+    activeUtterance = null;
+    try { if(supported) synth.cancel(); } catch {}
+    visible(false);
   }
-  function read(text) {
-    if (!supported) {
-      const notice=document.querySelector("#notice");
-      if(notice){notice.hidden=false;notice.textContent="This browser does not support spoken answers.";}
+  function preferVoice() {
+    if(!supported) return null;
+    const list = synth.getVoices().filter(v=>/^en([-_]|$)/i.test(v.lang||""));
+    const names = /\b(andrew|david|daniel|mark|guy|matthew|aaron|brian|james|george|arthur|alex|male)\b/i;
+    return list.find(v=>names.test(v.name||"")&&/natural|enhanced|neural/i.test(v.name||""))
+        || list.find(v=>names.test(v.name||""))
+        || list.find(v=>v.default)
+        || list[0] || null;
+  }
+  function read(value) {
+    if(!supported) {
+      const note=document.querySelector("#notice");
+      if(note) {note.hidden=false;note.textContent="Spoken playback is unavailable in this browser.";}
       return false;
     }
-    if (!text || !String(text).trim()) return false;
+    const text=String(value||"").trim();
+    if(!text) return false;
     stopSpeech();
-    const runId=++session;
-    const u = new root.SpeechSynthesisUtterance(String(text).slice(0,3500));
-    u.lang="en-US";
-    const voice=bestVoice();
-    if(voice){u.voice=voice;u.lang=voice.lang||"en-US";}
-    u.rate=.96;
-    u.pitch=.94;
-    u.onend=()=>{if(runId===session)show(false)};
-    u.onerror=()=>{if(runId===session)show(false)};
-    show(true);
-    try {synth.speak(u);return true}
-    catch {show(false);return false}
+    const speech = new root.SpeechSynthesisUtterance(text.slice(0,3500));
+    const voice = preferVoice();
+    if(voice) {speech.voice=voice;speech.lang=voice.lang||"en-US";}
+    else speech.lang="en-US";
+    speech.rate=.97;
+    speech.pitch=.9;
+    activeUtterance=speech;
+    speech.onend=()=>{if(activeUtterance===speech){activeUtterance=null;visible(false)}};
+    speech.onerror=()=>{if(activeUtterance===speech){activeUtterance=null;visible(false)}};
+    visible(true);
+    try {synth.speak(speech);return true}
+    catch {activeUtterance=null;visible(false);return false}
   }
   function pauseResume() {
-    if(!supported) return;
+    if(!supported||!activeUtterance) return;
     if(synth.paused) {
       synth.resume();
-      if(pause)pause.textContent="⏸ Pause";
+      if(pauseButton)pauseButton.textContent="⏸ Pause";
     } else if(synth.speaking) {
       synth.pause();
-      if(pause)pause.textContent="▶ Resume";
+      if(pauseButton)pauseButton.textContent="▶ Resume";
     }
   }
-  picker?.addEventListener("change",()=>{
-    selected=picker.value||"";
-    try{localStorage.setItem(KEY,selected)}catch{}
-    stopSpeech();
-  });
-  preview?.addEventListener("click",()=>read("Hey, I'm ASK SHAN X. Ask me anything. Let's figure it out together."));
-  previewStop?.addEventListener("click",stopSpeech);
-  pause?.addEventListener("click",pauseResume);
+  previewButton?.addEventListener("click",()=>read("Welcome to Ask Shan X. What can I help you with today?"));
+  previewStopButton?.addEventListener("click",stopSpeech);
+  pauseButton?.addEventListener("click",pauseResume);
   document.addEventListener("keydown",e=>{
-    if(e.key==="Escape" && !document.querySelector("#settings-dialog")?.open)stopSpeech();
+    if(e.key==="Escape"&&!document.querySelector("#settings-dialog")?.open)stopSpeech();
   });
   root.addEventListener("pagehide",stopSpeech);
-  if(supported) {
-    populate();
-    synth.addEventListener?.("voiceschanged",populate);
-  } else {
-    if(picker)picker.disabled=true;
-    if(preview)preview.disabled=true;
-    if(help)help.textContent="Speech is unavailable in this browser.";
-  }
-  root.AskShanXSpeech=Object.freeze({read,stop:stopSpeech,pauseResume,voices:englishVoices});
-  show(false);
+  if(previewButton&&!supported)previewButton.disabled=true;
+  root.AskShanXSpeech=Object.freeze({read,stop:stopSpeech,pauseResume});
+  visible(false);
 })(window);

@@ -16,10 +16,8 @@
 <link rel="stylesheet" href="voice-controls.css">
 <title>ASK SHAN X | Powered by X13 AI | ShanX Services</title>
 <script src="ovh-chat.js" defer></script>
-<script src="offline-help.js?rev=20261113-2" defer></script>
 <script src="app-voice.js" defer></script>
 <script src="voice-controls.js" defer></script>
-<script src="fridge-guide.js" defer></script>
 </head>
 <body>
 <div class="app" id="app" data-mode="go">
@@ -36,11 +34,11 @@
     </nav>
     <div class="rail-space"></div>
     <div class="status-panel">
-      <div class="status-title">SYSTEM CONNECTION</div>
+      <div class="status-title">ASSISTANT STATUS</div>
       <div class="status-line"><span class="status-dot checking" id="status-dot"></span><span id="status-text">Checking AI…</span></div>
-      <p id="status-detail">Checking your secure AI connection.</p>
+      <p id="status-detail">Ready for your questions.</p>
     </div>
-    <button class="plain-button rail-settings" id="settings-button" type="button">⚙ &nbsp; Settings & privacy</button>
+    <button class="plain-button rail-settings" id="settings-button" type="button">⚙ &nbsp; Settings</button>
     <div class="rail-footer">ONE BRAIN. THREE EXPERIENCES.</div>
   </aside>
   <main class="workspace">
@@ -64,12 +62,12 @@
           <div class="hero-orb" aria-hidden="true"><div class="hero-core"><span>S</span></div><div class="ring ring-one"></div><div class="ring ring-two"></div></div>
           <div class="hello-flag">ASK SHAN X • YOUR EVERYDAY ASSISTANT</div>
           <h2>Big questions.<br><span>Clear answers.</span></h2>
-          <p>ASK SHAN X is your general-purpose cloud assistant for questions about almost anything. No account is required. Free usage is limited; refrigerator help is just one example.</p>
-          <div class="prompts" id="prompts">
-            <button type="button" data-suggestion="My Whirlpool side-by-side refrigerator is humming but not getting cold. Help me troubleshoot safely, one question at a time."><span>✦</span> Refrigerator help</button>
-            <button type="button" data-requires-ai="true" title="Cloud AI may ask you to sign in" data-suggestion="Help me brainstorm an original game idea."><span>◇</span> Creative ideas · AI pending</button>
-            <button type="button" data-requires-ai="true" title="Cloud AI may ask you to sign in" data-suggestion="Teach me a surprising fact about space."><span>✳</span> Learning · AI pending</button>
-            <button type="button" data-requires-ai="true" title="Cloud AI may ask you to sign in" data-suggestion="Help me plan a productive day with time to relax."><span>◷</span> Daily planning · AI pending</button>
+          <p>Ask Shan X about everyday questions, practical advice, new ideas, and more.</p>
+          <div class="prompts capabilities" aria-label="Topics ASK SHAN X can help with">
+            <div class="topic"><span>✦</span> General assistance</div>
+            <div class="topic"><span>◇</span> Creative ideas</div>
+            <div class="topic"><span>✳</span> Learn something</div>
+            <div class="topic"><span>◷</span> Everyday planning</div>
           </div>
           <div class="mini-callout"><div class="mini-icon">◉</div><div><strong>Say it your way.</strong><span>Tap the microphone to dictate a question. Voice availability depends on your browser.</span></div></div>
         </section>
@@ -85,7 +83,7 @@
           <button type="submit" class="send-btn" id="send" disabled><span>Ask Shan X</span><span aria-hidden="true">↗</span></button>
         </div>
       </form>
-      <div class="privacy-strip"><span>✧</span> Conversation history stays on this device <span class="privacy-divider">•</span> <span id="footer-context">Free guided help</span></div>
+      <div class="privacy-strip"><span>✧</span> Conversation history stays on this device <span class="privacy-divider">•</span> <span id="footer-context">ASK SHAN X</span></div>
     </div>
   </main>
   <div id="speech-dock" class="speech-dock" role="group" aria-label="Speaking controls" hidden>
@@ -96,25 +94,20 @@
 </div>
 <dialog id="settings-dialog" aria-labelledby="settings-title">
   <div class="dialog-inner">
-    <div class="dialog-top"><h2 id="settings-title">Settings & privacy</h2><button id="close-settings" type="button" class="icon-button" aria-label="Close settings">×</button></div>
-    <p class="muted">ASK SHAN X is Powered by X13 AI | ShanX Services. The Home, Go and Mini layouts share the same cloud AI service and local fallback.</p>
-    <section class="setting-row"><div><strong>Install on this device</strong><p>Add ASK SHAN X to your home screen. On iPhone, use Safari → Share → Add to Home Screen.</p></div><button type="button" class="secondary-btn" id="install-button">Install</button></section>
-    <section class="setting-row"><div><strong>Conversation history</strong><p>Saved only in this browser on this device. No account or cross-device syncing is configured.</p></div><button type="button" class="danger-btn" id="clear-history">Clear history</button></section>
+    <div class="dialog-top"><h2 id="settings-title">Settings</h2><button id="close-settings" type="button" class="icon-button" aria-label="Close settings">×</button></div>
+    <p class="muted">Personalize your experience and manage your conversations.</p>
+    <section class="setting-row"><div><strong>Install on this device</strong><p>Keep ASK SHAN X a tap away. Add it to your home screen.</p></div><button type="button" class="secondary-btn" id="install-button">Install</button></section>
+    <section class="setting-row"><div><strong>Conversation history</strong><p>Your conversations are saved in this browser. Clear them anytime.</p></div><button type="button" class="danger-btn" id="clear-history">Clear history</button></section>
     <section class="setting-row voice-setting">
-      <div><strong>Voice for spoken answers</strong>
-      <p id="voice-help">Choose an available voice on this device. Auto favors natural-sounding male voices when present; availability varies by browser.</p>
-      <label for="voice-choice" class="sr-only">Voice</label>
-      <select id="voice-choice" aria-label="Spoken answer voice"><option value="">Auto: prefer male voice</option></select>
-      <div class="voice-preview-actions">
-        <button type="button" class="secondary-btn" id="voice-preview">▶ Preview voice</button>
-        <button type="button" class="secondary-btn" id="voice-stop-preview">■ Stop preview</button>
-      </div>
-      <p>Using your own recorded voice requires a separate consent-based voice-cloning engine. No voice recording is uploaded here.</p>
+      <div><strong>Spoken answers</strong>
+        <p>Use Read aloud on a reply. Pause or stop it whenever you like.</p>
+        <div class="voice-preview-actions">
+          <button type="button" class="secondary-btn" id="voice-preview">▶ Try voice</button>
+          <button type="button" class="secondary-btn" id="voice-stop-preview">■ Stop</button>
+        </div>
       </div>
     </section>
-    <section class="setting-row"><div><strong>AI engine</strong><p id="engine-info">Checking connection…</p></div></section>
-    <section class="setting-row"><div><strong>Planned, not active</strong><p>Physical Home, Go and Mini devices. X13 integration. RABBITRY research. Cloud sync.</p></div></section>
-    <div class="dialog-note">Privacy: General questions and recent chat messages are sent to OVHcloud AI Endpoints for an answer. No account, API key or local GPU is used. Anonymous free access is limited to 2 requests per minute per IP. Avoid sharing passwords or private information.</div>
+    <div class="dialog-note"><strong>Privacy</strong><p>Your questions and recent chat are processed to provide answers. Avoid sharing passwords, payment details, or other sensitive information.</p></div>
   </div>
 </dialog>
 </body>
