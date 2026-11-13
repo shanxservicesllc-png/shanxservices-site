@@ -2,6 +2,7 @@
 const $ = (s) => document.querySelector(s);
 const $$ = (s) => [...document.querySelectorAll(s)];
 const STORAGE = "ask-shanx-v1-conversation";
+const DETAIL_STORAGE = "ask-shanx-advanced-details-v1";
 const cloudReady = () => globalThis.AskShanXCloud?.available() === true;
 const desktop = window.matchMedia("(min-width: 1100px)");
 const OVH_REPLY = "ovh-llama-3.3";
@@ -20,16 +21,21 @@ const dialog = $("#settings-dialog");
 const retryButton = $("#retry-question");
 const newChat = $("#new-chat");
 const clearHistory = $("#clear-history");
+const detailsToggle = $("#advanced-details-toggle");
 let messages = [];
 let busy = false;
 let listening = false;
 let speechRecognition = null;
 let installPrompt = null;
+let advancedDetails=false;
+try { advancedDetails=localStorage.getItem(DETAIL_STORAGE)==="true"; }catch{}
+app.dataset.advanced=String(advancedDetails);
+if(detailsToggle)detailsToggle.checked=advancedDetails;
 try {
   const saved = JSON.parse(localStorage.getItem(STORAGE) || "[]");
   if (Array.isArray(saved)) messages = saved.filter(m =>
     (m?.role === "user" || m?.role === "assistant") &&
-    typeof m.content === "string" && m.content.length <= (m.role === "assistant" ? 8000 : 6000)
+    typeof m.content === "string" && m.content.length <= (m.role === "assistant" ? 14000 : 6000)
   ).slice(-70);
 } catch {}
 function save() {
@@ -47,6 +53,36 @@ function notify(message, type="error") {
   notice.style.borderColor = type === "info" ? "#406e4e" : "#9a5f4b";
 }
 function applyResponsiveMode(){ app.dataset.mode=desktop.matches?"home":"go"; }
+function updateAdvancedMetadata(){
+  const box=$("#runtime-metadata");
+  if(box)box.hidden=!advancedDetails;
+  if(!advancedDetails)return;
+  const provider=globalThis.AskShanXCloud;
+  const out=$("#runtime-metadata-text");
+  if(out)out.textContent=
+    "Cloud provider: "+(provider?.provider||"UNKNOWN")+
+    "; model: "+(provider?.model||"UNKNOWN")+
+    "; connection: "+(provider?.available?.()?"browser online, provider request unverified":"not available from this browser")+
+    "; LOOP BOX integration: NOT CONFIGURED; runtime availability UNVERIFIED.";
+  const v=globalThis.AskShanXSpeech?.metadata?.();
+  const target=$("#voice-debug-detail");
+  if(target)target.textContent=v
+    ? "Browser voices reported: "+v.reportedVoices+
+      "; selected: "+(v.selected||"none")+
+      "; language: "+(v.language||"unknown")+
+      "; local voice: "+String(v.localService)+
+      "; voice ID: "+(v.uri||"unknown")+
+      ". Actual sound differences depend on the device/browser synthesizer."
+    : "Browser voice metadata: UNVERIFIED.";
+}
+detailsToggle?.addEventListener("change",()=>{
+  advancedDetails=!!detailsToggle.checked;
+  app.dataset.advanced=String(advancedDetails);
+  try{localStorage.setItem(DETAIL_STORAGE,String(advancedDetails));}catch{}
+  updateAdvancedMetadata();
+});
+window.addEventListener("ask-shanx-voice-change",updateAdvancedMetadata);
+updateAdvancedMetadata();
 function disclosure(label, content) {
   const details = document.createElement("details");
   const summary = document.createElement("summary");
@@ -123,6 +159,8 @@ function render() {
         codeBtn.addEventListener("click",()=>window.AskShanXExport?.code(m.content));
         actions.append(speak,copy,download,codeBtn);
       }else actions.append(speak,copy,download);
+      const fileCard=window.AskShanXFiles?.card(m.content);
+      if(fileCard)wrap.append(fileCard);
       wrap.append(actions,answerDetails(m));
     }
     row.append(wrap);

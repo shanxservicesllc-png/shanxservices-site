@@ -12,6 +12,12 @@
   });
   function firstCode(answer) {
     if(typeof answer!=="string")return null;
+    const files=root.AskShanXFiles?.filesFromAnswer?.(answer);
+    if(files?.length){
+      const f=files[0];
+      const extension=f.name.includes(".")?f.name.split(".").pop():"txt";
+      return {content:f.content,extension,language:f.language};
+    }
     const match=answer.match(/(?:^|\n)\s*\x60{3,}([^\n\x60]*)\n([\s\S]*?)\n\s*\x60{3,}(?=\s|$)/);
     if(!match||!match[2]?.trim())return null;
     const tag=(match[1]||"").trim().split(/\s+/)[0].toLowerCase();

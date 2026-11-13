@@ -36,6 +36,7 @@
 
 <script src="media-attachments.js" defer></script>
 <script src="ask-shanx-export.js" defer></script>
+<script src="ask-shanx-files.js" defer></script>
 <script src="app-voice.js" defer></script>
 
 <script src="voice-controls.js" defer></script>
@@ -235,6 +236,11 @@
 
     </section>
 
+    <section class="setting-row advanced-setting">
+      <div><strong>Advanced Details</strong><p>Show technical information, model evidence and runtime metadata only when you want it.</p></div>
+      <label class="details-control"><input type="checkbox" id="advanced-details-toggle" aria-controls="runtime-metadata"> Show</label>
+    </section>
+    <div id="runtime-metadata" class="advanced-metadata" hidden><strong>Runtime metadata</strong><p id="runtime-metadata-text">Not yet checked.</p><p id="voice-debug-detail"></p></div>
     <div class="dialog-note"><strong>Privacy</strong><p>Your questions and recent chat are processed to provide answers. Avoid sharing passwords, payment details, or other sensitive information.</p></div>
 
   </div>

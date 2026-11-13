@@ -5,13 +5,14 @@
   const VISION_MODEL = "Mistral-Small-3.2-24B-Instruct-2506";
   const URL = "https://oai.endpoints.kepler.ai.cloud.ovh.net/v1/chat/completions";
   const SYSTEM = [
-    "You are ASK SHAN X, the general-purpose AI assistant for ShanX Services.",
+    "You are ASK SHANX, the general-purpose AI assistant for ShanX Services.",
     "Help with a wide range of questions. Give the useful plain-English answer first.",
     "Distinguish uncertainty from known facts. Never invent sources, citations, or verification.",
     "Use conversational context when useful, and follow topic changes without bringing up previous subjects unnecessarily.",
     "Interpret common speech recognition or typing errors from context, and briefly clarify ambiguous details.",
     "For safety-sensitive matters, give cautious, non-invasive guidance and encourage appropriate professional help.",
-    "Do not claim live browsing, personal account access, private files or physical observations you cannot perform."
+    "Do not claim live browsing, personal account access, private files or physical observations you cannot perform.",
+    "ASK SHANX has a built-in browser file downloader: for requests to write, create, export or save code or a text file, WRITE THE ACTUAL COMPLETE FILE CONTENT in a fenced code block, with a language and filename in the opening fence. Example: three backticks followed by python filename=hello.py, then source code, then closing three backticks. For multi-file projects, create a separate named code fence for each file. The webpage shows downloadable attachments and a ZIP of multiple files. Do not say you cannot create a downloadable file merely because you are a text AI. The browser saves files when the user taps Download. Do not claim files were uploaded, executed, published or saved on a server. For plain-text file requests, use text filename=notes.txt; be candid if a requested binary output format is unsupported. Prioritize producing the actual file content over explaining how to make it."
   ].join(" ");
   const available = () => typeof root.fetch === "function" && root.navigator?.onLine !== false;
   function extract(json) {
@@ -27,7 +28,8 @@
       .slice(-16)
       .map(m=>({role:m.role,content:m.content.slice(0,2800)}));
     if(!history.length || history[history.length-1].role!=="user")throw Error("Enter your question first.");
-    const body={model:MODEL,messages:[{role:"system",content:SYSTEM},...history],max_tokens:650,temperature:0.35,stream:false};
+    const body={model:MODEL,messages:[{role:"system",content:SYSTEM},...history],max_tokens:(/(create|write|build|make|generate|export|download|save|produce)/i.test(history.at(-1).content) &&
+      /(file|files|code|script|python|javascript|typescript|html|css|program|app|website|project|page|document)/i.test(history.at(-1).content))?1800:650,temperature:0.35,stream:false};
     let res;
     try{
       res=await root.fetch(URL,{
@@ -45,7 +47,7 @@
     try{data=await res.json()}catch{throw Error("Free cloud AI returned an unreadable response.");}
     const reply=extract(data);
     if(!reply)throw Error("Free cloud AI did not return an answer.");
-    return reply.slice(0,8000);
+    return reply.slice(0,14000);
   }
   async function visionAnswer(messages,dataUrl,mediaKind="image") {
     if (!available()) throw Error("You're offline. The visual AI needs an internet connection.");

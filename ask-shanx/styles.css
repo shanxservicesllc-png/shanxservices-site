@@ -81,3 +81,25 @@
 .attachment-menu p{margin:5px 6px 2px;font-size:10px;line-height:1.45;color:#adcbb4}
 .composer-right .voice-btn{height:40px;width:40px;min-width:40px;padding:0!important;border-radius:10px;font-size:21px!important;line-height:1;display:grid;place-items:center}
 .composer-right .voice-btn.listening{font-size:21px!important}
+
+/* Answer attachments: downloadable, generated on device, never auto-executed. */
+.generated-files{display:flex;flex-direction:column;align-items:stretch;gap:7px;margin:10px 0 7px;padding:12px;background:#14271f;border:1px solid #466b52;border-radius:12px;max-width:min(100%,520px)}
+.generated-files strong{font-size:12px;color:#c8f4d7}
+.generated-file-link{display:flex;align-items:center;min-height:36px;padding:9px 11px;color:#c7ebd1;text-decoration:none;border:1px solid #375840;border-radius:9px;background:#1b3528;font-size:12px;overflow-wrap:anywhere}
+.generated-file-link:hover,.generated-file-link:focus-visible{color:#fff;background:#2b553b;outline:2px solid #91d9a3;outline-offset:1px}
+.generated-zip{background:#31503a;border-color:#79af87;font-weight:700}
+@media(max-width:680px){.generated-files{padding:9px}.generated-file-link{font-size:11px}}
+
+/* PBN V5: uncluttered defaults and spaced export actions */
+.export-setting{align-items:flex-start;flex-wrap:wrap}
+.export-setting>div:first-child{flex:1 1 190px;min-width:0}
+.export-actions{display:flex;flex-wrap:wrap;align-items:center;gap:12px;max-width:100%}
+.export-actions .secondary-btn{flex:0 0 auto;margin:0}
+.voice-preview-actions{display:flex;flex-wrap:wrap;gap:10px}
+.advanced-setting{align-items:center}
+.details-control{display:inline-flex;align-items:center;gap:8px;white-space:nowrap;font-size:12px;cursor:pointer;color:#dbf4e0}
+.details-control input{accent-color:#7de0a5;width:18px;height:18px}
+.advanced-metadata{padding:12px;border:1px solid #395e47;background:#14291f;border-radius:11px;font-size:11px;line-height:1.5;color:#b3d4be;overflow-wrap:anywhere}
+.advanced-metadata p{margin:6px 0}
+.app:not([data-advanced="true"]) .answer-details{display:none!important}
+@media(max-width:480px){.export-setting{display:flex;flex-direction:column;gap:10px}.export-actions{justify-content:flex-start;gap:12px}.advanced-setting{flex-wrap:wrap}}

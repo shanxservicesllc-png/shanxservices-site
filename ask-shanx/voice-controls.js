@@ -50,7 +50,7 @@
       for (const v of installed) {
         const option = document.createElement("option");
         option.value = key(v);
-        option.textContent = (v.name || "Device voice") + " (" + (v.lang || "language unknown") + ")";
+        option.textContent = v.name || "Device voice";
         picker.append(option);
       }
       const preferred = installed.find(v => key(v) === current)
@@ -62,8 +62,9 @@
     }
     if (previewButton) previewButton.disabled = installed.length === 0;
     if (status) status.textContent = installed.length
-      ? "Selected: " + (selectedVoice()?.name || "Device voice") + ". " + installed.length + " installed device voice(s), no model download."
+      ? "Selected: " + (selectedVoice()?.name || "Device voice") + "."
       : "No installed voices reported by this browser. Text answers still work.";
+    root.dispatchEvent?.(new Event("ask-shanx-voice-change"));
   }
   function selectedVoice() {
     const chosen = picker?.value || savedVoice;
@@ -121,6 +122,7 @@
     try { root.localStorage?.setItem(STORAGE_KEY, savedVoice); } catch {}
     stop();
     if(status) status.textContent="Selected: "+(selectedVoice()?.name||"Device voice");
+    root.dispatchEvent?.(new Event("ask-shanx-voice-change"));
     // Preview immediately so the owner can hear whether Android honors this voice.
     read("This is your selected ASK SHANX voice.");
   });
@@ -138,6 +140,12 @@
     root.addEventListener("load", refreshVoices);
   }
   refreshVoices();
-  root.AskShanXSpeech = Object.freeze({read, stop, pauseResume, refreshVoices, engine:"installed-device-voice"});
+  function metadata(){
+    const v=selectedVoice();
+    return {engine:"browser speech synthesis",reportedVoices:installed.length,
+      selected:v?.name||null,language:v?.lang||null,uri:v?.voiceURI||null,
+      localService:v?.localService??null,default:v?.default??null};
+  }
+  root.AskShanXSpeech = Object.freeze({read, stop, pauseResume, refreshVoices, metadata, engine:"installed-device-voice"});
   showDock(false);
 })(window);
