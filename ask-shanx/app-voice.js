@@ -54,26 +54,33 @@ function notify(message, type="error") {
 }
 function applyResponsiveMode(){ app.dataset.mode=desktop.matches?"home":"go"; }
 function updateAdvancedMetadata(){
-  const box=$("#runtime-metadata");
-  if(box)box.hidden=!advancedDetails;
+  const extras=$("#technical-downloads");
+  if(extras)extras.hidden=!advancedDetails;
+  const panel=$("#runtime-metadata");
+  if(panel)panel.hidden=!advancedDetails;
   if(!advancedDetails)return;
   const provider=globalThis.AskShanXCloud;
-  const out=$("#runtime-metadata-text");
-  if(out)out.textContent=
-    "Cloud provider: "+(provider?.provider||"UNKNOWN")+
-    "; model: "+(provider?.model||"UNKNOWN")+
-    "; connection: "+(provider?.available?.()?"browser online, provider request unverified":"not available from this browser")+
-    "; LOOP BOX integration: NOT CONFIGURED; runtime availability UNVERIFIED.";
-  const v=globalThis.AskShanXSpeech?.metadata?.();
-  const target=$("#voice-debug-detail");
-  if(target)target.textContent=v
-    ? "Browser voices reported: "+v.reportedVoices+
-      "; selected: "+(v.selected||"none")+
-      "; language: "+(v.language||"unknown")+
-      "; local voice: "+String(v.localService)+
-      "; voice ID: "+(v.uri||"unknown")+
-      ". Actual sound differences depend on the device/browser synthesizer."
-    : "Browser voice metadata: UNVERIFIED.";
+  const known=(provider?.provider&&provider?.model)
+    ?"AI answer service: "+provider.provider+"; model: "+provider.model+".":"";
+  const providerDetail=$("#runtime-metadata-text");
+  if(providerDetail){
+    providerDetail.hidden=!known;
+    providerDetail.textContent=known;
+  }
+  const speech=globalThis.AskShanXSpeech?.metadata?.();
+  const voiceDetail=$("#voice-debug-detail");
+  const voicesAvailable=!!(speech&&speech.reportedVoices>0);
+  if(voiceDetail){
+    voiceDetail.hidden=!voicesAvailable;
+    voiceDetail.textContent=voicesAvailable
+      ?"Device voices: "+speech.reportedVoices+
+       "; selected: "+(speech.selected||"Device voice")+
+       (speech.language?"; language: "+speech.language:"")+
+       (speech.uri?"; voice ID: "+speech.uri:"")+
+       "; on-device: "+String(speech.localService)+"."
+      :"";
+  }
+  if(panel)panel.hidden=!known&&!voicesAvailable;
 }
 detailsToggle?.addEventListener("change",()=>{
   advancedDetails=!!detailsToggle.checked;
@@ -356,6 +363,7 @@ newChat.addEventListener("click",()=>{
 $("#settings-button").addEventListener("click",()=>dialog.showModal());
 $("#mobile-settings").addEventListener("click",()=>dialog.showModal());
 $("#close-settings").addEventListener("click",()=>dialog.close());
+$("#export-chat-txt").addEventListener("click",()=>window.AskShanXExport?.conversation(messages,"txt"));
 $("#export-chat-md").addEventListener("click",()=>window.AskShanXExport?.conversation(messages,"md"));
 $("#export-chat-json").addEventListener("click",()=>window.AskShanXExport?.conversation(messages,"json"));
 clearHistory.addEventListener("click",()=>{

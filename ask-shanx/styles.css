@@ -103,3 +103,10 @@
 .advanced-metadata p{margin:6px 0}
 .app:not([data-advanced="true"]) .answer-details{display:none!important}
 @media(max-width:480px){.export-setting{display:flex;flex-direction:column;gap:10px}.export-actions{justify-content:flex-start;gap:12px}.advanced-setting{flex-wrap:wrap}}
+
+/* Public Settings: plain-language chat download by default; technical formats opt-in. */
+.export-actions{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.technical-downloads{display:flex;flex-wrap:wrap;align-items:center;gap:12px}
+.technical-downloads[hidden]{display:none!important}
+.export-actions button{white-space:nowrap;max-width:100%}
+@media(max-width:480px){.export-actions,.technical-downloads{width:100%;gap:10px}}

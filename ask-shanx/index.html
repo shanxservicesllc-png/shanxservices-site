@@ -208,8 +208,14 @@
     <section class="setting-row"><div><strong>Install on this device</strong><p>Keep ASK SHANX a tap away. Add it to your home screen.</p></div><button type="button" class="secondary-btn" id="install-button">Install</button></section>
 
     <section class="setting-row"><div><strong>Conversation history</strong><p>Your conversations are saved in this browser. Clear them anytime.</p></div><button type="button" class="danger-btn" id="clear-history">Clear history</button></section>
-    <section class="setting-row export-setting"><div><strong>Download your chat</strong><p>Export a readable Markdown transcript or a JSON backup. Files are generated directly on your device.</p></div>
-      <div class="export-actions"><button type="button" class="secondary-btn" id="export-chat-md">Markdown</button><button type="button" class="secondary-btn" id="export-chat-json">JSON</button></div>
+    <section class="setting-row export-setting"><div><strong>Download your chat</strong><p>Save a readable copy of this conversation to your device.</p></div>
+      <div class="export-actions">
+        <button type="button" class="secondary-btn" id="export-chat-txt">Download Chat</button>
+        <div class="technical-downloads" id="technical-downloads" hidden aria-label="Additional download formats">
+          <button type="button" class="secondary-btn" id="export-chat-md">Markdown (.md)</button>
+          <button type="button" class="secondary-btn" id="export-chat-json">JSON (.json)</button>
+        </div>
+      </div>
     </section>
 
     <section class="setting-row voice-setting">
@@ -237,7 +243,7 @@
     </section>
 
     <section class="setting-row advanced-setting">
-      <div><strong>Advanced Details</strong><p>Show technical information, model evidence and runtime metadata only when you want it.</p></div>
+      <div><strong>Advanced Details</strong><p>Show extra download formats and technical details for available features.</p></div>
       <label class="details-control"><input type="checkbox" id="advanced-details-toggle" aria-controls="runtime-metadata"> Show</label>
     </section>
     <div id="runtime-metadata" class="advanced-metadata" hidden><strong>Runtime metadata</strong><p id="runtime-metadata-text">Not yet checked.</p><p id="voice-debug-detail"></p></div>

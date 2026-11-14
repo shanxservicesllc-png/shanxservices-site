@@ -62,6 +62,15 @@
         JSON.stringify({application:"ASK SHANX",exportedAt:new Date().toISOString(),messages:rows},null,2)+"\n",
         "application/json");
     }
+    if(format==="txt"){
+      const lines=["ASK SHANX Conversation",""];
+      for(const m of rows){
+        lines.push(m.role==="assistant"?"ASK SHANX:":"You:");
+        if(m.attachment)lines.push("Attachment: "+m.attachment+" (media not included)");
+        lines.push(m.content,"");
+      }
+      return download(filename("conversation","txt"),lines.join("\n"),"text/plain");
+    }
     const lines=["# ASK SHANX Conversation","","Exported from this browser.",""];
     for(const m of rows) {
       lines.push("## "+(m.role==="assistant"?"ASK SHANX":"You"),"");
