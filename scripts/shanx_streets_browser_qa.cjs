@@ -17,6 +17,19 @@ window.__X13_QA={
     const cartProbe=cart?{x:cart.x,z:cart.z}:null;
     add('food-cart-solid',!!(cartProbe&&pushFromBuildings(cartProbe,1.0)),
       cart?'Scene cart position '+cart.x+','+cart.z:'No cart action');
+    const prop=streetProps.find(p=>p.kind==='hotdog');
+    if(prop){
+      const original={active:prop.active,broken:prop.broken,
+        z:prop.root.rotation.z,y:prop.root.position.y};
+      try{
+        const collapsed=collapseStreetProp(prop,22);
+        add('food-cart-breaks',collapsed&&prop.broken&&!prop.active,
+          'Cart can collapse after speed-dependent impact');
+      }finally{
+        prop.active=original.active;prop.broken=original.broken;
+        prop.root.rotation.z=original.z;prop.root.position.y=original.y;
+      }
+    }else add('food-cart-breaks',false,'No registered food cart');
     const p=npcList.find(p=>p.hp>0);
     if(!p){add('living-citizen-contact',false,'No NPC available');
       add('downed-citizen-contact',false,'No NPC available');
@@ -51,6 +64,21 @@ window.__X13_QA={
       updateFootPolice(.016);
       add('downed-officer-prone',Math.abs(officer.rig.root.rotation.x)>0.4,
         'Root X rotation = '+officer.rig.root.rotation.x.toFixed(3));
+      const savedPosition={x:officer.x,z:officer.z,
+        cool:officer.vehicleHitCooldown};
+      try{
+        officer.x=10005;officer.z=10000;officer.vehicleHitCooldown=0;
+        officer.rig.root.visible=true;
+        const car={x:10009,z:10000,h:Math.PI/2,speed:20,mode:'player',
+          health:100,hover:false,hoverLanding:false,hoverHeight:0,
+          type:'car',disabled:false};
+        const collision=checkCarPedestrianSweep(car,10000,10000);
+        add('downed-officer-contact',collision&&car.speed<20,
+          'Swept car stops or slows on downed officer');
+      }finally{
+        officer.x=savedPosition.x;officer.z=savedPosition.z;
+        officer.vehicleHitCooldown=savedPosition.cool;
+      }
     }finally{
       wanted=prevWanted;officer.hp=old.hp;officer.down=old.down;officer.active=old.active;
       officer.rig.root.rotation.x=old.rootX;officer.rig.figure.rotation.z=old.figZ;
