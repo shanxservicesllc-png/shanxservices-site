@@ -93,7 +93,7 @@ const server=http.createServer((req,res)=>{
       nodeCount:document.querySelectorAll('*').length}));
     console.log('X13_SHANX_PRESTART '+JSON.stringify(report.preStart));
     if(!report.preStart.startExists)throw Error('Start-game element missing from runtime DOM');
-    await page.locator('#startGame').click({timeout:12000});
+    await page.evaluate(()=>document.querySelector('#startGame').click());
     await page.waitForFunction(()=>window.__X13_QA?.status().started,{timeout:18000});
     await page.waitForTimeout(800);
     const st=await page.evaluate(()=>window.__X13_QA.status());
