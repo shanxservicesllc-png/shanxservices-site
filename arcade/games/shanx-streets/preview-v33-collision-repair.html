@@ -2118,7 +2118,7 @@ function updateFootPolice(dt){
   if(!o.active){o.active=true;o.hp=o.maxHp;o.down=0;o.stun=0;o.shotWait=1.4+i*.35;setCitizenFade(o.rig,1);officerPosition(o)}
   if(o.down>0){
    o.down=Math.max(0,o.down-dt);
-   o.rig.root.rotation.x=lerp(o.rig.root.rotation.x,-Math.PI*.48,Math.min(1,dt*16));
+   o.rig.root.rotation.x=-Math.PI*.48;
    o.rig.figure.rotation.z=lerp(o.rig.figure.rotation.z,.08,Math.min(1,dt*16));
    o.rig.root.position.set(o.x,groundY(o.x,o.z)+.12,o.z);
    setCitizenFade(o.rig,Math.min(1,o.down/1.7));
