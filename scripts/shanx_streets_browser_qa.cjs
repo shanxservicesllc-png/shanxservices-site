@@ -5,7 +5,7 @@ const fs=require('node:fs'),http=require('node:http'),path=require('node:path');
 const {chromium}=require('playwright');
 const input=path.resolve(__dirname,'../arcade/games/shanx-streets/index.html');
 const html=fs.readFileSync(input,'utf8');
-const hook=String.raw\`
+const hook=String.raw`
 window.__X13_QA={
   status:()=>({started:hasStarted,paused:gamePaused,persons:npcList.length,
     vehicleCount:vehicles.length,webgl:!!renderer.getContext(),
@@ -59,7 +59,7 @@ window.__X13_QA={
     return report;
   }
 };
-\`;
+`;
 let count=0;
 const fixture=html.replace(/(<script\b[^>]*type="module"[^>]*>)([\s\S]*?)(<\/script>)/i,
   (_,start,body,end)=>{count++;return start+body+'\n'+hook+end});
