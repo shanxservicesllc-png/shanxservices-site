@@ -86,6 +86,14 @@ const server=http.createServer((req,res)=>{
     await page.goto(url,{waitUntil:'domcontentloaded',timeout:35000});
     await page.waitForFunction(()=>!!window.__X13_QA,{timeout:65000});
     report.smoke=true;
+    report.preStart=await page.evaluate(()=>({title:document.title,
+      bodyLength:document.body?.innerHTML?.length||0,
+      startExists:!!document.getElementById('startGame'),
+      btnIds:[...document.querySelectorAll('button')].slice(0,14).map(b=>b.id),
+      nodeCount:document.querySelectorAll('*').length}));
+    console.log('X13_SHANX_PRESTART '+JSON.stringify(report.preStart));
+    await page.screenshot({path:'/tmp/shanx-streets-desktop.png'});
+    if(!report.preStart.startExists)throw Error('Start-game element missing from runtime DOM');
     await page.locator('#startGame').click({timeout:12000});
     await page.waitForFunction(()=>window.__X13_QA?.status().started,{timeout:18000});
     await page.waitForTimeout(800);
