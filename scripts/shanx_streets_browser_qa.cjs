@@ -92,7 +92,6 @@ const server=http.createServer((req,res)=>{
       btnIds:[...document.querySelectorAll('button')].slice(0,14).map(b=>b.id),
       nodeCount:document.querySelectorAll('*').length}));
     console.log('X13_SHANX_PRESTART '+JSON.stringify(report.preStart));
-    await page.screenshot({path:'/tmp/shanx-streets-desktop.png'});
     if(!report.preStart.startExists)throw Error('Start-game element missing from runtime DOM');
     await page.locator('#startGame').click({timeout:12000});
     await page.waitForFunction(()=>window.__X13_QA?.status().started,{timeout:18000});
@@ -100,12 +99,12 @@ const server=http.createServer((req,res)=>{
     const st=await page.evaluate(()=>window.__X13_QA.status());
     report.desktop=true;report.render=st.webgl&&st.persons>0&&st.vehicleCount>0;
     report.state=st;
-    await page.screenshot({path:'/tmp/shanx-streets-desktop.png'});
+    try{await page.screenshot({path:'/tmp/shanx-streets-desktop.png',timeout:6000,animations:'disabled'});}catch(e){report.desktopScreenshot='unavailable: '+String(e).slice(0,130)}
     report.tests=await page.evaluate(()=>window.__X13_QA.checks());
     await page.setViewportSize({width:390,height:844});
     await page.waitForTimeout(500);
     report.mobile=await page.evaluate(()=>!!window.__X13_QA.status().webgl);
-    await page.screenshot({path:'/tmp/shanx-streets-mobile.png'});
+    try{await page.screenshot({path:'/tmp/shanx-streets-mobile.png',timeout:6000,animations:'disabled'});}catch(e){report.mobileScreenshot='unavailable: '+String(e).slice(0,130)}
     report.pageErrors=errors;
     console.log('X13_SHANX_BROWSER_QA '+JSON.stringify(report));
     if(!report.render||!report.mobile||report.tests.some(t=>!t.passed)||errors.length){
