@@ -3,7 +3,7 @@
 // Extend the repo's existing Chrome QA approach; do not modify the published HTML.
 const fs=require('node:fs'),http=require('node:http'),path=require('node:path');
 const {chromium}=require('playwright');
-const input=path.resolve(__dirname,'../arcade/games/shanx-streets/index.html');
+const input=process.env.SHANX_QA_FILE?path.resolve(process.cwd(),process.env.SHANX_QA_FILE):path.resolve(__dirname,'../arcade/games/shanx-streets/index.html');
 const html=fs.readFileSync(input,'utf8');
 const hook=String.raw`
 window.__X13_QA={
