@@ -1677,6 +1677,20 @@ function triggerBust(){if(bustedClock>0)return;
 }
 
 const MS=[{n:'Courier run',car:0,heat:0,t:110,r:180},{n:'Taxi fare',car:1,heat:0,t:80,r:250},{n:'Getaway',car:1,heat:1,t:95,r:420},{n:'Street race',car:1,heat:0,t:50,r:500},{n:'Sky courier (fly!)',car:0,heat:0,t:70,r:300},{n:'Big heist',car:1,heat:1,t:120,r:800},{n:'Frankstown delivery',car:1,heat:0,t:125,r:275},{n:'Homewood shop pickup',car:0,heat:0,t:115,r:180},{n:'Park supply run',car:1,heat:0,t:120,r:340},{n:'Community courier',car:0,heat:0,t:130,r:230},{n:'East End night run',car:1,heat:0,t:95,r:380},{n:'Neighborhood express',car:1,heat:0,t:105,r:550}];
+/* Seven regional assignments supplement all twelve original Homewood missions. */
+MS.push(
+ {n:'East End neighborhood delivery',car:1,heat:0,t:215,r:460,region:'east'},
+ {n:'Hill Courts supply run',car:1,heat:0,t:235,r:520,region:'hill'},
+ {n:'Golden Triangle express',car:1,heat:0,t:250,r:620,region:'downtown'},
+ {n:'North Shore riverfront pickup',car:1,heat:0,t:250,r:570,region:'north'},
+ {n:'South Side community courier',car:1,heat:0,t:235,r:560,region:'south'},
+ {n:'West End neighborhood run',car:1,heat:0,t:270,r:660,region:'west'},
+ {n:'Three Rivers scenic delivery',car:1,heat:0,t:300,r:750,region:'north'}
+);
+const REGIONAL_MISSION_HUBS={
+ east:{x:-650,z:10},hill:{x:-1190,z:60},downtown:{x:-1830,z:85},
+ north:{x:-1770,z:650},south:{x:-1700,z:-640},west:{x:-2670,z:-60}
+};
 try{const save=JSON.parse(localStorage.getItem('x13-streets-merged-v1'));if(save&&save.version===1){gameMoney=+save.money||2450;missionIndex=Math.max(0,+save.mission||0)}}catch(e){}
 function saveProgress(){try{localStorage.setItem('x13-streets-merged-v1',JSON.stringify({version:1,money:gameMoney,mission:missionIndex}))}catch(e){}}
 const you=()=>mode==='car'?pv:P;
@@ -2498,6 +2512,17 @@ const missionMarker=new THREE.Group();const pillar=new THREE.Mesh(new THREE.Cyli
 const ring=new THREE.Mesh(new THREE.TorusGeometry(2.8,.15,9,26),new THREE.MeshBasicMaterial({color:0xf4c459}));ring.rotation.x=Math.PI/2;ring.position.y=.35;missionMarker.add(ring);
 const diamond=new THREE.Mesh(new THREE.OctahedronGeometry(1.12),new THREE.MeshStandardMaterial({color:0xffd56e,emissive:0x936a22,emissiveIntensity:1}));diamond.position.y=3.2;missionMarker.add(diamond);scene.add(missionMarker);
 function missionPoint(){
+ const mission=MS[missionIndex%MS.length],base=mission.region&&REGIONAL_MISSION_HUBS[mission.region];
+ if(base){
+  for(let i=0;i<55;i++){
+   const rx=base.x+rnd(-180,180),rz=base.z+rnd(-160,160);
+   const x=Math.round(rx/PITCH)*PITCH+(Math.random()<.5?-1:1)*(ROADW/2+3);
+   const z=rz,point={x,z};
+   if(x<EXT_WEST+25||x>EXT_EAST-25||z<EXT_SOUTH+25||z>EXT_NORTH-25)continue;
+   if(riverObstacle(x,z)||pushFromBuildings(point,.8))continue;
+   return{x,z};
+  }
+ }
  const distant=missionIndex>0&&missionIndex%4===3;
  const x=distant?pick([-800,-1120,-1440,-1760,-2000]):pick(C.slice(1,-1));
  const z=distant?pick([-160,-80,0,80,160]):pick(C.slice(1,-1));
@@ -2613,6 +2638,10 @@ function installGarageAndLanding(){
  for(const side of [-1,1])box(.2,6.3,.25,gold,side*6.9,3.3,7.2);
  interactSign('SHANX AUTO CUSTOMS',garage,0,6.6,7.65,13);
  worldActions.push({x:gx,z:-76,range:16,label:'CUSTOMIZE CAR',kind:'garage'});
+ // Housing-project mission boards are discoverable in the actual world.
+ for(const court of projectCenters){
+  worldActions.push({x:court.x,z:court.z+29,range:12,label:'START '+court.label+' MISSION',kind:'projectMission',region:court.district});
+ }
  worldActions.push({x:-1600,z:520,range:16,label:'EXPLORE RIVER LANDING',kind:'landing'});
 }
 function nearestAction(){if(mode!=='foot'||P.fly||P.alt>1.2)return null;
@@ -2629,6 +2658,11 @@ function performAction(){if(!hasStarted||gamePaused)return false;
  const a=nearestAction();if(!a){toast('No interaction nearby · explore for shops and carts');return false}
  if(a.kind==='door'||a.kind==='exitShop'){buildingInteract();return true}
  if(a.kind==='cash'){gameMoney+=a.t.amount;a.t.time=0;saveProgress();toast('PICKED UP $'+a.t.amount);return true}
+ if(a.kind==='projectMission'){
+   const i=MS.findIndex(m=>m.region===a.region);
+   if(i<0)return false;
+   missionIndex=i;saveProgress();resetMission();toast('DISTRICT MISSION SELECTED · '+MS[i].n);return true;
+ }
  if(a.kind==='bench'){P.hp=Math.min(100,P.hp+16);toast('Rested · health restored');return true}
  if(a.kind==='landing'){toast('Three Rivers Landing · riverboats and bridges to explore');return true}
  if(a.kind==='garage'){
