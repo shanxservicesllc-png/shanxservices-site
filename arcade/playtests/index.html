@@ -72,6 +72,6 @@ const get=id=>document.getElementById(id).value.trim();
 if(!get('message'))return;
 const subject='SXS Playtest Feedback: '+get('game');
 const body='Game: '+get('game')+'\nRating: '+get('rating')+'\nDevice: '+(get('device')||'Not provided')+'\n\nFeedback:\n'+get('message')+'\n\nSent voluntarily by a game playtester.';
-location.href='mailto:henry.shannon@shanxservices.com?subject='+encodeURIComponent(subject)+'&body='+encodeURIComponent(body);
+location.href='mailto:shanx@shanxservices.com?subject='+encodeURIComponent(subject)+'&body='+encodeURIComponent(body);
 });
 </script></body></html>

@@ -102,7 +102,7 @@
       </div>
       <button class="big" id="startBtn">START YOUR RUN →</button>
       <div class="hint">Phone/tablet: drag in ANY direction to move your car. Keyboard: arrow keys or W A S D. Catch green energy dots and dodge traffic.</div>
-      <details class="sprint-feedback" id="sprintFeedback"><summary>💌 SUGGEST A CHANGE / REPORT A BUG</summary><p>Tell us how Street Sprint could be better. Your email app opens a draft; you must press Send there. Email feedback identifies the sender, so it is not anonymous.</p><textarea id="sprintFeedbackText" maxlength="1200" placeholder="More cars, less traffic, different controls, bugs you found..."></textarea><a id="sprintFeedbackSend" href="mailto:henry.shannon@shanxservices.com?subject=Street%20Sprint%20feedback">✉️ EMAIL MY FEEDBACK ↗</a><div id="sprintFeedbackStatus" class="sprint-feedback-status" role="status" aria-live="polite"></div></details>
+      <details class="sprint-feedback" id="sprintFeedback"><summary>💌 SUGGEST A CHANGE / REPORT A BUG</summary><p>Tell us how Street Sprint could be better. Your email app opens a draft; you must press Send there. Email feedback identifies the sender, so it is not anonymous.</p><textarea id="sprintFeedbackText" maxlength="1200" placeholder="More cars, less traffic, different controls, bugs you found..."></textarea><a id="sprintFeedbackSend" href="mailto:shanx@shanxservices.com?subject=Street%20Sprint%20feedback">✉️ EMAIL MY FEEDBACK ↗</a><div id="sprintFeedbackStatus" class="sprint-feedback-status" role="status" aria-live="polite"></div></details>
       <a class="lab-return" href="../index.html">← BACK TO ARCADE LAB</a>
     </div>
   </div>
@@ -132,7 +132,7 @@
   let appliedRaceSettings=raceSettings();
   function feedbackUrl(){
     const subject='Street Sprint: Game feedback',body='I played Street Sprint!\n\nDifficulty: '+raceDifficulty.options[raceDifficulty.selectedIndex].text+'\nRoad speed: '+raceSpeed.options[raceSpeed.selectedIndex].text+'\nTraffic: '+raceTraffic.options[raceTraffic.selectedIndex].text+'\nObstacles: '+raceObstacles.options[raceObstacles.selectedIndex].text+'\n\nMy feedback:\n'+feedbackText.value.trim();
-    return 'mailto:henry.shannon@shanxservices.com?subject='+encodeURIComponent(subject)+'&body='+encodeURIComponent(body);
+    return 'mailto:shanx@shanxservices.com?subject='+encodeURIComponent(subject)+'&body='+encodeURIComponent(body);
   }
   function updateFeedback(){feedbackSend.href=feedbackUrl()}
   feedbackText.addEventListener('input',updateFeedback);

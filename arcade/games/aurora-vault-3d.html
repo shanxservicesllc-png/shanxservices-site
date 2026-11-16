@@ -90,7 +90,7 @@ h1{font-family:Georgia,Cambria,"Times New Roman",serif;font-weight:500;letter-sp
 </div>
 <label for="sxsFeedbackText">Your comments</label>
 <textarea id="sxsFeedbackText" maxlength="1200" placeholder="What happened, or what would make this better?"></textarea>
-<a id="sxsFeedbackSend" class="sxs-send" href="mailto:henry.shannon@shanxservices.com?subject=Aurora%20Vault%203D%20Playtest%20Feedback">✉ Email my feedback ↗</a>
+<a id="sxsFeedbackSend" class="sxs-send" href="mailto:shanx@shanxservices.com?subject=Aurora%20Vault%203D%20Playtest%20Feedback">✉ Email my feedback ↗</a>
 <p id="sxsFeedbackStatus" role="status" aria-live="polite"></p>
 </section>
 
@@ -159,7 +159,7 @@ h1{font-family:Georgia,Cambria,"Times New Roman",serif;font-weight:500;letter-sp
 /* Email-draft feedback only: no automatic network send or remote logging. */
 (()=>{'use strict';
 const box=document.getElementById('sxsFeedbackText'),name=document.getElementById('sxsFeedbackTester'),type=document.getElementById('sxsFeedbackType'),send=document.getElementById('sxsFeedbackSend'),status=document.getElementById('sxsFeedbackStatus');
-function update(){send.href='mailto:henry.shannon@shanxservices.com?subject='+encodeURIComponent('Aurora Vault 3D v1.2 playtest feedback')+'&body='+encodeURIComponent('Game: Aurora Vault 3D v1.2\nTester: '+(name.value.trim()||'Not provided')+'\nCategory: '+type.value+'\n\nFeedback:\n'+box.value.trim());}
+function update(){send.href='mailto:shanx@shanxservices.com?subject='+encodeURIComponent('Aurora Vault 3D v1.2 playtest feedback')+'&body='+encodeURIComponent('Game: Aurora Vault 3D v1.2\nTester: '+(name.value.trim()||'Not provided')+'\nCategory: '+type.value+'\n\nFeedback:\n'+box.value.trim());}
 [box,name,type].forEach(el=>{el.addEventListener('input',update);el.addEventListener('change',update)});
 send.addEventListener('click',ev=>{if(!box.value.trim()){ev.preventDefault();status.textContent='Please write your feedback before sending.';box.focus();return}update();status.textContent='Your email app should open a draft. Press Send there to deliver your feedback.'});
 update();

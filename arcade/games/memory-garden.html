@@ -129,7 +129,7 @@ header{padding:8px 9px 22px}header p{font-size:15px}
 <div><label for="feedbackText">YOUR SUGGESTION</label><textarea id="feedbackText" placeholder="For example: I'd like 16 cards and some animal pictures!" maxlength="1200" rows="4" aria-describedby="feedbackHelp"></textarea></div>
 </div>
 <p id="feedbackHelp" class="feedback-help">Tap the email button after writing your idea. Your email app opens a draft; tap <strong>Send</strong> there to deliver it. Suggestions are private, not public comments. Please don't include private or sensitive information.</p>
-<div class="feedback-actions"><a id="feedbackSend" class="feedback-email" href="mailto:henry.shannon@shanxservices.com?subject=Memory%20Garden%20Feedback">✉️ Email My Suggestion ↗</a>
+<div class="feedback-actions"><a id="feedbackSend" class="feedback-email" href="mailto:shanx@shanxservices.com?subject=Memory%20Garden%20Feedback">✉️ Email My Suggestion ↗</a>
 <button class="feedback-copy" id="feedbackCopy" type="button">📋 Copy Suggestion</button></div>
 <div id="feedbackStatus" role="status" aria-live="polite" class="feedback-status"></div>
 </section>
@@ -233,7 +233,7 @@ function feedbackBody(){
   return 'Hello! I played Memory Garden and have a suggestion.\n\nGame level: '+level.options[level.selectedIndex].text+'\nTopic: '+feedbackKind.value+'\n\nMy suggestion:\n'+feedbackText.value.trim()+'\n\nThank you!';
 }
 function feedbackMailto(){
-  return 'mailto:henry.shannon@shanxservices.com?subject='+encodeURIComponent('Memory Garden: '+feedbackKind.value)+'&body='+encodeURIComponent(feedbackBody());
+  return 'mailto:shanx@shanxservices.com?subject='+encodeURIComponent('Memory Garden: '+feedbackKind.value)+'&body='+encodeURIComponent(feedbackBody());
 }
 function updateFeedback(){feedbackSend.href=feedbackMailto()}
 feedbackText.addEventListener('input',()=>{updateFeedback();feedbackStatus.textContent=''});

@@ -76,7 +76,7 @@ canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none}
 </div>
 <label for="sxsFeedbackText">Your comments</label>
 <textarea id="sxsFeedbackText" maxlength="1200" placeholder="What worked well, or what needs fixing?"></textarea>
-<a id="sxsFeedbackSend" href="mailto:henry.shannon@shanxservices.com?subject=ShanX%20Speed%20and%20Swing%20Feedback">✉ Email my feedback ↗</a>
+<a id="sxsFeedbackSend" href="mailto:shanx@shanxservices.com?subject=ShanX%20Speed%20and%20Swing%20Feedback">✉ Email my feedback ↗</a>
 <p id="sxsFeedbackStatus" role="status" aria-live="polite"></p>
 </section>
 
@@ -495,7 +495,7 @@ function shut(){panel.hidden=true;backdrop.hidden=true;float.setAttribute('aria-
 [intro,float].forEach(el=>el.addEventListener('click',open));[close,backdrop].forEach(el=>el.addEventListener('click',shut));
 panel.addEventListener('keydown',ev=>{ev.stopPropagation();if(ev.key==='Escape'){ev.preventDefault();shut();}});
 panel.addEventListener('keyup',ev=>ev.stopPropagation());
-function update(){send.href='mailto:henry.shannon@shanxservices.com?subject='+encodeURIComponent('ShanX Speed and Swing 3D V4 playtest feedback')+'&body='+encodeURIComponent('Game: ShanX Speed and Swing 3D V4\nTester: '+(tester.value.trim()||'Not provided')+'\nCategory: '+kind.value+'\n\nFeedback:\n'+box.value.trim());}
+function update(){send.href='mailto:shanx@shanxservices.com?subject='+encodeURIComponent('ShanX Speed and Swing 3D V4 playtest feedback')+'&body='+encodeURIComponent('Game: ShanX Speed and Swing 3D V4\nTester: '+(tester.value.trim()||'Not provided')+'\nCategory: '+kind.value+'\n\nFeedback:\n'+box.value.trim());}
 [box,tester,kind].forEach(el=>{el.addEventListener('input',update);el.addEventListener('change',update);});
 send.addEventListener('click',ev=>{if(!box.value.trim()){ev.preventDefault();status.textContent='Write a comment first.';box.focus();return}update();status.textContent='Your email draft should open. Press Send in your email app to deliver.'});
 update();

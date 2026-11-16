@@ -137,7 +137,7 @@
     <div class="difficultyLabel">Bot Difficulty</div><div class="difficulty"><button class="diffbtn" data-diff="easy">EASY</button><button class="diffbtn active" data-diff="normal">NORMAL</button><button class="diffbtn" data-diff="hard">HARD</button><button class="diffbtn" data-diff="insane">INSANE</button></div><div class="mapLabel">Choose Map</div><div class="maps"><button class="mapbtn active" data-map="city">FOAM CITY</button><button class="mapbtn" data-map="backyard">BACKYARD FORTS</button><button class="mapbtn" data-map="warehouse">WAREHOUSE RUSH</button></div><button id="startBtn" class="startbtn">ENTER FOAM CITY · NORMAL</button>
     <div class="controls">Desktop: WASD + mouse + click. Tablet/phone: LEFT joystick moves, RIGHT joystick turns and looks up or down, FIRE shoots.</div>
     <div class="note">Experimental foam-bot game inspired by Chase. Alpha build with stylized game artwork.</div>
-<details class="foam-feedback" id="foamFeedback"><summary>💌 FEEDBACK / SUGGEST A CHANGE</summary><p>What would make Foam Blaster more fun? Tell us about maps, robots, controls, or things not working. Parents and grown-ups can send ideas through their email app. Please don't include children's personal information. Sending email reveals your email address, so it is not anonymous.</p><textarea id="foamFeedbackText" placeholder="For example: More robot colors, bigger arenas, or different maps..." maxlength="1200"></textarea><a class="submit" id="foamFeedbackSend" href="mailto:henry.shannon@shanxservices.com?subject=Foam%20Blaster%20Feedback">✉️ EMAIL MY FEEDBACK ↗</a><div class="status" id="foamFeedbackStatus" role="status" aria-live="polite"></div></details>
+<details class="foam-feedback" id="foamFeedback"><summary>💌 FEEDBACK / SUGGEST A CHANGE</summary><p>What would make Foam Blaster more fun? Tell us about maps, robots, controls, or things not working. Parents and grown-ups can send ideas through their email app. Please don't include children's personal information. Sending email reveals your email address, so it is not anonymous.</p><textarea id="foamFeedbackText" placeholder="For example: More robot colors, bigger arenas, or different maps..." maxlength="1200"></textarea><a class="submit" id="foamFeedbackSend" href="mailto:shanx@shanxservices.com?subject=Foam%20Blaster%20Feedback">✉️ EMAIL MY FEEDBACK ↗</a><div class="status" id="foamFeedbackStatus" role="status" aria-live="polite"></div></details>
     <a class="lab-return" href="../index.html">← BACK TO ARCADE LAB</a>
   </div>
 </div>
@@ -241,7 +241,7 @@ const foamFeedbackText=$('foamFeedbackText'),foamFeedbackSend=$('foamFeedbackSen
 function foamFeedbackUrl(){
   const subject='Foam Blaster: Game feedback';
   const body='Hello! Here is my suggestion for Foam Blaster.\n\nMap: '+MAPS[mapKey].label+'\nDifficulty: '+diff.label+'\n\nSuggestion:\n'+foamFeedbackText.value.trim();
-  return 'mailto:henry.shannon@shanxservices.com?subject='+encodeURIComponent(subject)+'&body='+encodeURIComponent(body);
+  return 'mailto:shanx@shanxservices.com?subject='+encodeURIComponent(subject)+'&body='+encodeURIComponent(body);
 }
 foamFeedbackText.addEventListener('input',()=>{foamFeedbackSend.href=foamFeedbackUrl();foamFeedbackStatus.textContent=''});
 foamFeedbackSend.addEventListener('click',e=>{
