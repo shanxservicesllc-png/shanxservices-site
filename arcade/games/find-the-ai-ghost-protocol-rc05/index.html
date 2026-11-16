@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"><meta name="theme-color" content="#050b18"><title>FIND THE AI: GHOST PROTOCOL | RC05 FLIGHT TEST | ShanX Interactive</title><link rel="icon" href="data:,">
+<style>
+:root{--cyan:#47f8e4;--gold:#f5d38b;--magenta:#fb69db;--ink:#040a16;--panel:#071527ed}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#020711;color:#ebffff;font-family:system-ui,"Segoe UI",Arial,sans-serif;touch-action:none}button{font:inherit;cursor:pointer;color:inherit}
+#game{position:absolute;inset:0;width:100%;height:100%;touch-action:none;display:block}
+#vignette{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 75% 70% at 52% 49%,transparent 20%,#01040f73 83%,#01030bf2)}
+#scanFx{position:absolute;inset:0;pointer-events:none;opacity:0;background:radial-gradient(circle at 50% 48%,#34fff31a 0%,transparent 36%,#42ffe046 55%,transparent 65%);transition:opacity .23s;z-index:3}
+body.scanning #scanFx{opacity:1}
+#hud{position:absolute;inset:0;pointer-events:none;display:none;z-index:5}#hud.show{display:block}
+#top{position:absolute;top:calc(env(safe-area-inset-top) + 12px);left:12px;right:12px;display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.chip{border:1px solid #4cf5d45a;background:linear-gradient(120deg,#0a2438ed,#081526dc);box-shadow:0 3px 24px #000a,inset 0 1px 1px #d6ffeb14;border-radius:14px;padding:10px 12px;backdrop-filter:blur(9px)}
+.tag{font-size:9px;letter-spacing:1.8px;font-weight:900;color:var(--cyan)}.title{font-size:18px;font-weight:1000;letter-spacing:-.5px}.sub{font-size:11px;color:#b2d3df}
+#healthBlock{text-align:right;min-width:122px}#health{height:8px;border-radius:8px;background:#203444;border:1px solid #64849c;overflow:hidden;margin-top:6px}#healthFill{height:100%;width:100%;background:linear-gradient(90deg,#ff576d,#ffdc8a);box-shadow:0 0 15px #ff5678}
+#progress{position:absolute;left:12px;right:12px;top:calc(env(safe-area-inset-top) + 83px);display:flex;justify-content:space-between;align-items:center;gap:8px}
+#objective{max-width:min(75vw,560px);font-weight:800;letter-spacing:.25px;text-shadow:0 3px 9px #000;font-size:12px;color:#e1fbff}
+#keys{white-space:nowrap;color:var(--gold);font-size:12px;font-weight:900;text-shadow:0 3px 9px #000}
+#message{position:absolute;top:27%;left:50%;transform:translateX(-50%);max-width:min(90vw,600px);background:#061628da;border:1px solid #55d7ed5b;box-shadow:0 6px 35px #0009;border-radius:14px;padding:13px 17px;text-align:center;opacity:0;transition:opacity .22s;font-size:13px;color:#dcffff;font-weight:750;line-height:1.5}
+#message.visible{opacity:1}
+#dialogue{position:absolute;left:50%;top:calc(env(safe-area-inset-top) + 126px);transform:translateX(-50%);max-width:min(94vw,560px);text-align:center;font-weight:850;font-size:clamp(12px,2.5vw,16px);color:#f9b6f5;text-shadow:0 2px 10px #000,0 0 14px #c422b75b;line-height:1.4}
+#bottom{position:absolute;bottom:calc(env(safe-area-inset-bottom) + 14px);left:12px;right:12px;display:flex;align-items:end;justify-content:space-between;gap:12px}
+#dpad{display:grid;grid-template-columns:repeat(3,56px);grid-template-rows:repeat(3,56px);gap:3px;pointer-events:auto}#dpad .blank{visibility:hidden}
+.ctl{border:1px solid #73e4e474;border-radius:16px;background:linear-gradient(135deg,#123d51ee,#061a2fee);color:white;font-weight:950;font-size:22px;box-shadow:0 7px 17px #0008,inset 0 1px #fff3;touch-action:none;min-width:53px;min-height:53px}
+.ctl.pressed{background:#1c8891e8;transform:scale(.94)}
+#actions{display:flex;align-items:end;gap:8px;pointer-events:auto}
+.action{width:clamp(68px,17vw,90px);height:clamp(68px,17vw,90px);border-radius:24px;background:linear-gradient(145deg,#11617ee8,#07172de8);color:#e8ffff;border:1px solid #58ffe798;box-shadow:0 6px 24px #0009,inset 0 1px 5px #ffffff33;font-size:12px;font-weight:1000;letter-spacing:.3px;touch-action:none}
+.action small{display:block;font-size:9px;color:#a8dfe5;margin-top:3px}
+#pulse{background:linear-gradient(145deg,#7d327fb8,#122e65e8);border-color:#fd79f6}
+#interact{background:linear-gradient(145deg,#b68a37d9,#3b2415e8);border-color:#ffe7a2}
+#minimap{position:absolute;right:12px;top:calc(env(safe-area-inset-top) + 116px);width:113px;height:113px;border:1px solid #5ccdd27a;border-radius:13px;background:#03101fd5;box-shadow:0 7px 25px #000b;image-rendering:pixelated}
+#toolbar{position:absolute;top:calc(env(safe-area-inset-top) + 236px);right:12px;display:flex;flex-direction:column;gap:8px;pointer-events:auto}
+.miniBtn{width:43px;height:41px;background:#0b2638db;border:1px solid #61d5df69;border-radius:12px;font-size:17px}
+#inventory{position:absolute;bottom:calc(env(safe-area-inset-bottom) + 16px);left:50%;transform:translateX(-50%);font-size:10px;color:#defbfa;background:#071626bb;border:1px solid #3bd8cf44;border-radius:8px;padding:7px 9px;text-align:center;max-width:38vw}
+.screen{position:absolute;inset:0;z-index:12;background:radial-gradient(ellipse at 50% 40%,#163151ed,#020713f5 85%);display:grid;place-items:center;overflow:auto;padding:20px 14px calc(20px + env(safe-area-inset-bottom));backdrop-filter:blur(6px)}
+.screen.hidden{display:none}
+.panel{width:min(96vw,490px);max-height:93vh;overflow:auto;text-align:center;border:1px solid #38dec176;border-radius:25px;background:linear-gradient(155deg,#102a40f0,#070d20f5 80%);box-shadow:0 28px 80px #000d,inset 0 1px 1px #ffffff30;padding:26px 23px}
+.brand{font-size:10px;color:var(--cyan);font-weight:950;letter-spacing:3px}
+h1{font-size:clamp(49px,12vw,78px);font-weight:1000;letter-spacing:-5px;line-height:.84;margin:23px 0 14px;text-shadow:0 6px 18px #041826;color:#f4ffff}
+h1 span{color:var(--gold);text-shadow:0 0 31px #e8b95b88}
+h2{font-size:clamp(25px,7vw,39px);line-height:1.05;margin:13px 0;color:white}
+p{font-size:13px;color:#bed5e5;line-height:1.6;margin:12px 0}.lead{color:#eefcff;font-size:15px;font-weight:800}.thin{font-size:11px;color:#8eb7c5}
+.features{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:20px 0}.features div{border:1px solid #4acecb66;background:#07182798;border-radius:11px;padding:9px 4px;font-size:10px;font-weight:900}.features b{display:block;color:var(--gold);font-size:18px;margin-bottom:5px}
+.cta{width:100%;min-height:58px;border:1px solid #b8fff6;border-radius:15px;background:linear-gradient(96deg,#36f2da,#f4d38d);color:#052339;font-weight:1000;font-size:16px;letter-spacing:.6px;box-shadow:0 8px 30px #12c0d34d;margin-top:9px}
+.alt{background:#153147;color:#d9fbff;border-color:#46889f}
+#puzzle{z-index:15}#choices{display:grid;gap:9px;margin-top:17px}
+.choice{border:1px solid #54e6d46b;background:#0c2941;border-radius:12px;min-height:49px;font-weight:950;font-size:14px}
+.choice:active{background:#208a8e}
+#puzzleClue{font-size:16px;color:var(--gold);font-weight:900}
+#load{position:absolute;inset:0;display:grid;place-items:center;background:#041223;z-index:20;font-size:12px;color:#81eedc;letter-spacing:2px;font-weight:950}
+@media(max-width:600px){#dpad{grid-template-columns:repeat(3,49px);grid-template-rows:repeat(3,49px);gap:1px}.ctl{min-width:49px;min-height:49px}.action{width:67px;height:67px;border-radius:18px;font-size:11px}#inventory{bottom:calc(env(safe-area-inset-bottom) + 7px);font-size:9px;max-width:34vw;padding:5px}#minimap{width:91px;height:91px}#toolbar{top:calc(env(safe-area-inset-top) + 214px)}}
+@media(max-height:660px){#top .title{font-size:14px}#progress{top:calc(env(safe-area-inset-top) + 69px)}#dialogue{top:calc(env(safe-area-inset-top) + 108px)}#minimap{width:78px;height:78px}#toolbar{top:calc(env(safe-area-inset-top) + 207px)}#dpad{grid-template-columns:repeat(3,43px);grid-template-rows:repeat(3,43px)}.ctl{min-width:43px;min-height:43px}.action{width:63px;height:63px}.panel{padding:17px}h1{font-size:47px;margin:12px 0}}
+@media(max-width:480px){
+ #bottom{left:7px;right:7px;gap:2px}
+ #dpad{grid-template-columns:repeat(3,43px);grid-template-rows:repeat(3,43px);gap:1px}
+ .ctl{min-width:43px;min-height:43px;font-size:18px;border-radius:11px}
+ #actions{gap:4px}
+ .action{width:53px;height:59px;border-radius:14px;font-size:10px}
+ .action small{font-size:8px}
+ #inventory{bottom:calc(env(safe-area-inset-bottom) + 162px);max-width:220px;width:fit-content;white-space:nowrap;font-size:9px}
+ #dialogue{top:calc(env(safe-area-inset-top) + 128px);max-width:calc(100vw - 25px)}
+ #minimap{width:88px;height:88px}
+ #toolbar{top:calc(env(safe-area-inset-top) + 200px)}
+ #objective{max-width:75vw;font-size:11px}
+ #keys{font-size:10px}
+ }
+
+/* RC02 | screen-aligned analog movement on tablets and phones */
+#joystick{position:relative;width:clamp(110px,18vw,144px);height:clamp(110px,18vw,144px);flex:none;touch-action:none;pointer-events:auto;overscroll-behavior:contain;border:2px solid #5cffe8be;border-radius:50%;background:radial-gradient(circle at 38% 31%,#2e78935b,#0d2b43ec 63%,#081626ef);box-shadow:inset 0 0 26px #46ffda20,0 8px 28px #000b,inset 0 2px 4px #d9fff326}
+#joystick.is-active{border-color:#f5dc98;box-shadow:inset 0 0 20px #5cfad24e,0 0 25px #75f9d34b}
+#joy-ring{position:absolute;inset:16%;border:1px dashed #b1f9f28a;border-radius:50%;pointer-events:none}
+#joy-knob{position:absolute;left:50%;top:50%;width:45%;height:45%;border:2px solid #c6ffefee;border-radius:50%;transform:translate(-50%,-50%);background:radial-gradient(circle at 32% 25%,#76fff0,#20798f 55%,#0b4355);box-shadow:0 4px 14px #00192be0,inset 0 1px 8px #ffffff57;pointer-events:none;will-change:transform}
+#joy-caption{position:absolute;bottom:-14px;left:0;right:0;text-align:center;color:#dcfcf8b8;font-weight:900;font-size:9px;letter-spacing:1.5px;pointer-events:none}
+@media(max-width:480px){#joystick{width:106px;height:106px}#bottom{left:7px;right:7px;gap:3px}#actions{gap:4px}.action{width:53px;height:59px}#inventory{bottom:calc(env(safe-area-inset-bottom) + 150px)}}
+@media(max-height:520px){#joystick{width:98px;height:98px}#inventory{bottom:calc(env(safe-area-inset-bottom) + 137px)}}
+#fpsReticle{display:none;position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);pointer-events:none;z-index:4;font-size:34px;color:#abfff5;text-shadow:0 0 18px #00ffe8}
+#fpsHint{display:none;position:fixed;right:12px;bottom:calc(env(safe-area-inset-bottom) + 128px);z-index:5;color:#b9f6f2;font-size:10px;letter-spacing:.4px;pointer-events:none;max-width:200px;text-align:right;text-shadow:0 2px 8px black}
+body.fpsmode #fpsReticle,body.fpsmode #fpsHint{display:block}
+body.phasing #fpsReticle{color:#ffb3fa;text-shadow:0 0 23px #ef2dff}
+#bolt{background:linear-gradient(145deg,#1578a4dd,#0b275cee);border-color:#80faff}
+#phase{background:linear-gradient(145deg,#8039a4df,#1b1652dd);border-color:#ee9cff}
+@media(max-width:650px){#actions{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}.action{width:52px;height:50px;border-radius:13px;font-size:10px}#fpsHint{display:none!important}#inventory{bottom:calc(env(safe-area-inset-bottom) + 160px)}}
+@media(max-height:450px){#actions{display:flex;flex-wrap:wrap;justify-content:flex-end;max-width:320px}.action{width:52px;height:48px}#fpsHint{display:none!important}}
+
+/* ShanX owner standard: one selectable input profile, no onscreen controls in gamepad or desktop mode. */
+body[data-device-mode="controller"] #joystick,
+body[data-device-mode="controller"] #actions,
+body[data-device-mode="computer"] #joystick,
+body[data-device-mode="computer"] #actions{display:none!important}
+body[data-device-mode="controller"] #bottom,body[data-device-mode="computer"] #bottom{pointer-events:none}
+#deviceSetup{margin:13px 0 7px;padding:11px;border:1px solid #4b9aa79c;border-radius:13px;background:#061527ae;text-align:left}
+#deviceSetup label{color:#a6fff0;font-size:11px;font-weight:900;display:block;margin:7px 0 4px}
+#deviceSetup select{width:100%;padding:9px 10px;border-radius:10px;border:1px solid #62ded4;background:#0b2d43;color:white;font:inherit;font-size:13px}
+#controllerStatus{color:#f2d694;font-size:11px;margin-top:8px;min-height:17px}
+/* Only Controller mode should offer gamepad hardware choices or a button map.
+   Phone/Tablet/Computer mode hides those options immediately, including after mode switches. */
+body:not([data-device-mode="controller"]) #deviceSetup label[for="controllerProfile"],
+body:not([data-device-mode="controller"]) #controllerProfile,
+body:not([data-device-mode="controller"]) #controllerStatus,
+body:not([data-device-mode="controller"]) #showControls,
+body:not([data-device-mode="controller"]) #showHudControls {display:none!important}
+
+/* Full-width desktop title screen, compact enough not to require scrolling at normal PC sizes. */
+#menu .panel{width:min(96vw,1100px);max-height:calc(100dvh - 22px);padding:clamp(14px,2.2vw,28px);display:grid;grid-template-columns:minmax(0,.95fr) minmax(0,1fr);gap:clamp(14px,2.4vw,36px);align-items:center;text-align:left}
+#menu .menuPitch,#menu .menuSetup{min-width:0}
+#menu .menuPitch h1{line-height:.87;margin:13px 0;font-size:clamp(45px,5.6vw,76px)}
+#menu .menuPitch .lead{line-height:1.45}
+#menu .menuPitch .features{margin:14px 0}
+#menu .menuPitch p{font-size:clamp(11px,1.25vw,14px);line-height:1.45}
+#menu #deviceSetup{margin:0 0 12px}
+#menu .menuSetup .thin{font-size:11px;line-height:1.45;text-align:left;margin:12px 0 0}
+#menu #start{width:100%}
+#showControls{margin-top:10px;min-height:40px;width:100%;border:1px solid #81f9e3;background:#12364c;color:#d5fff5;border-radius:11px;font-weight:900;cursor:pointer}
+#controllerGuide{z-index:50}
+#controllerGuide .panel{width:min(95vw,820px);max-height:calc(100dvh - 24px);padding:22px;text-align:left}
+#controllerGuide h2{font-size:24px;letter-spacing:1px;text-align:center;margin:2px 0 8px}
+#controllerGuide .controlsGrid{display:grid;grid-template-columns:1fr 1fr;gap:6px 18px;margin:12px 0}
+#controllerGuide .controlsGrid div{display:flex;gap:8px;justify-content:space-between;border-bottom:1px solid #5bc5bd44;padding:5px 2px;font-size:13px}
+#controllerGuide .controlsGrid b{color:#f7d78c;white-space:nowrap}
+#controllerGuide .controlsGrid span{text-align:right}
+#controllerGuide .guideFoot{font-size:12px;color:#c0f5ed;line-height:1.4}
+#controllerGuide #closeControls{display:block;margin:10px auto 0;max-width:300px}
+#controllerInfoBadge{position:absolute;left:12px;top:calc(env(safe-area-inset-top) + 110px);color:#c6fff0;background:#061526c9;border:1px solid #6dffdd78;border-radius:7px;padding:5px 7px;font-size:11px;z-index:5;display:none;pointer-events:none}
+body[data-device-mode="controller"] #controllerInfoBadge{display:block}
+@media(max-width:740px){#menu .panel{display:block;width:min(96vw,640px);max-height:92dvh;overflow:auto;padding:16px}#menu .menuPitch h1{font-size:48px}#menu .menuPitch .lead{margin:7px 0}#menu .menuPitch .features{margin:8px 0}#controllerGuide .controlsGrid{grid-template-columns:1fr}}
+@media(max-height:760px) and (min-width:741px){#menu .panel{padding:15px 22px;gap:18px}#menu .menuPitch h1{font-size:52px;margin:6px 0}#menu .menuPitch .features{margin:8px 0}#menu .menuPitch p{margin:7px 0}#menu .menuSetup .thin{font-size:10px}}
+/* Same mobility features on touchscreens. Avoid filling the phone with controller-only labels. */
+#mobilityDeck{position:absolute;left:36%;bottom:calc(env(safe-area-inset-bottom) + 85px);display:flex;gap:5px;flex-wrap:wrap;max-width:230px;z-index:7;pointer-events:auto}
+.mobility{border:1px solid #5cffe5c0;border-radius:11px;background:#07405cdd;color:#e6ffff;min-height:42px;padding:6px 10px;font-size:12px;font-weight:900;touch-action:none}
+#hyperHold{background:#4d2072da;border-color:#f0afff}
+#flyToggle{background:#135875e9;border-color:#7ce5ff}
+#flyUp,#flyDown{background:#243f69e7;display:none}
+body.orb-flying #flyUp,body.orb-flying #flyDown{display:inline-flex;align-items:center}
+body[data-device-mode="computer"] #mobilityDeck,body[data-device-mode="controller"] #mobilityDeck{display:none!important}
+#mobilityLabel{position:absolute;bottom:calc(env(safe-area-inset-bottom) + 48px);left:36%;background:#092035b8;border:1px solid #3bbad588;color:#bffaf5;border-radius:9px;padding:5px 8px;font-size:11px;pointer-events:none;display:none}
+body.orb-flying #mobilityLabel{display:block}
+@media(max-width:700px){#mobilityDeck{left:32%;bottom:calc(env(safe-area-inset-bottom) + 116px);max-width:185px} .mobility{font-size:10px;min-height:35px;padding:5px 7px}}
+@media(max-width:480px){#mobilityDeck{left:34%;bottom:calc(env(safe-area-inset-bottom) + 128px);max-width:145px}.mobility{min-height:34px;font-size:10px}}
+
+/* RC04 ShanX single-joystick touchscreen standard. ONE right-thumb command cluster.
+   Middle 94+ pixel strip intentionally stays empty for swipe-to-look. */
+#bottom{bottom:calc(env(safe-area-inset-bottom,0px) + 13px);left:10px;right:10px;gap:12px;align-items:flex-end}
+#actions{display:grid;grid-template-columns:repeat(3,54px);grid-template-rows:repeat(3,53px);gap:10px;align-items:stretch;justify-items:stretch;flex:none;width:auto;max-width:none;pointer-events:auto}
+#mobilityDeck{display:contents!important;position:static;max-width:none}
+#actions .action,#actions .mobility{box-sizing:border-box;width:54px;height:53px;min-width:0;min-height:0;margin:0;padding:5px 3px;display:flex;flex-direction:column;justify-content:center;align-items:center;border-radius:14px;line-height:1.13;font-size:11px;letter-spacing:.05px}
+#actions .action small{display:none}
+#flyToggle{grid-row:1;grid-column:1}
+#hyperHold{grid-row:1;grid-column:2}
+#flyUp{grid-row:1;grid-column:3}
+#bolt{grid-row:2;grid-column:1}
+#pulse{grid-row:2;grid-column:2}
+#phase{grid-row:2;grid-column:3}
+#scan{grid-row:3;grid-column:1}
+#interact{grid-row:3;grid-column:2}
+#flyDown{grid-row:3;grid-column:3}
+#actions #flyUp,#actions #flyDown{display:none}
+body.orb-flying #actions #flyUp,body.orb-flying #actions #flyDown{display:flex}
+#mobilityLabel,body.orb-flying #mobilityLabel{left:auto;right:10px;bottom:calc(env(safe-area-inset-bottom,0px) + 218px);display:none}
+body.orb-flying #mobilityLabel{display:block}
+#inventory{top:calc(env(safe-area-inset-top,0px) + 167px);left:10px;bottom:auto;transform:none;max-width:min(51vw,235px);white-space:normal;font-size:9px;line-height:1.3;pointer-events:none}
+body[data-device-mode="computer"] #actions,body[data-device-mode="controller"] #actions,
+body[data-device-mode="computer"] #mobilityDeck,body[data-device-mode="controller"] #mobilityDeck{display:none!important}
+@media(max-width:480px){
+ #bottom{left:7px;right:7px}
+ #actions{grid-template-columns:repeat(3,52px);grid-template-rows:repeat(3,50px);gap:9px}
+ #actions .action,#actions .mobility{width:52px;height:50px;font-size:10px;border-radius:12px}
+ #inventory{top:calc(env(safe-area-inset-top,0px) + 163px);bottom:auto;max-width:48vw}
+ #mobilityLabel,body.orb-flying #mobilityLabel{right:7px;bottom:calc(env(safe-area-inset-bottom,0px) + 198px)}
+}
+@media(max-height:450px) and (orientation:landscape){
+ #bottom{bottom:calc(env(safe-area-inset-bottom,0px) + 8px)}
+ #actions{grid-template-columns:repeat(3,49px);grid-template-rows:repeat(3,44px);gap:8px}
+ #actions .action,#actions .mobility{width:49px;height:44px;font-size:9px;border-radius:11px}
+ #toolbar{top:calc(env(safe-area-inset-top,0px) + 4px);right:calc(12px + 164px);flex-direction:row}
+ #mobilityLabel,body.orb-flying #mobilityLabel{bottom:calc(env(safe-area-inset-bottom,0px) + 166px)}
+ #inventory{top:calc(env(safe-area-inset-top,0px) + 83px);max-width:35vw}
+}
+@media(min-width:760px) and (min-height:500px){
+ #actions{grid-template-columns:repeat(3,65px);grid-template-rows:repeat(3,56px);gap:11px}
+ #actions .action,#actions .mobility{width:65px;height:56px;font-size:11px}
+ #mobilityLabel,body.orb-flying #mobilityLabel{bottom:calc(env(safe-area-inset-bottom,0px) + 228px)}
+}
+/* Do not leave legacy mobility container in the center of the screen. */
+
+</style></head><body>
+<canvas id="game" aria-label="Ghost Protocol robot first person game world"></canvas><div id="fpsReticle" aria-hidden="true">⊕</div><div id="fpsHint" aria-hidden="true">DRAG TO LOOK • BOLT TO TARGET DRONES • PHASE THROUGH WALLS</div><div id="vignette"></div><div id="controllerInfoBadge">L3 SPRINT · D-PAD CAMERA · Y BUTTON MAP</div><div id="scanFx"></div>
+<div id="hud">
+<div id="top"><div class="chip"><div class="tag">GHOST PROTOCOL · THREE WORLDS</div><div class="title" id="sector">01 · THE SIGNAL</div><div class="sub" id="score">SCORE 000000</div></div><div class="chip" id="healthBlock"><div class="tag">INTEGRITY</div><div class="title"><span id="hp">100</span>%</div><div id="health"><div id="healthFill"></div></div></div></div>
+<div id="progress"><div id="objective">Find the fragments. Trace the ghost.</div><div id="keys">FRAGMENTS 0/3</div></div>
+<canvas id="minimap" width="119" height="119" aria-label="navigation map"></canvas>
+<div id="toolbar"><button id="pause" class="miniBtn" title="Pause">Ⅱ</button><button id="audio" class="miniBtn" title="Sound toggle">♫</button><button id="view" class="miniBtn" title="Change camera angle: default straight overhead">▦</button><button id="showHudControls" class="miniBtn" title="Controller button map">?</button></div>
+<div id="dialogue"></div><div id="message"></div>
+<div id="bottom"><div id="joystick" role="application" aria-label="Analog movement joystick: drag the stick in any direction"><div id="joy-ring"></div><div id="joy-knob"></div><span id="joy-caption">MOVE</span></div>
+<div id="actions" aria-label="Right-thumb action controls">
+<button class="action" id="bolt" aria-label="Electric Bolt">BOLT<small>B</small></button>
+<button class="action" id="pulse">PULSE<small>SPACE</small></button>
+<button class="action" id="phase">PHASE<small>F</small></button>
+<button class="action" id="scan">SCAN<small>Q</small></button>
+<button class="action" id="interact">USE<small>E</small></button>
+<div id="mobilityDeck" aria-label="Robot flight and hyper controls">
+<button id="flyToggle" class="mobility" type="button" aria-label="Enable or disable flight">FLY</button>
+<button id="hyperHold" class="mobility" type="button" aria-label="Hold for hyper speed">HYPER</button>
+<button id="flyUp" class="mobility" type="button" aria-label="Ascend while flying">UP ▲</button>
+<button id="flyDown" class="mobility" type="button" aria-label="Descend while flying">DOWN ▼</button>
+</div></div></div>
+<div id="mobilityLabel" aria-live="polite">ALT <span id="altitude">0</span>m</div>
+<div id="inventory">⚡ <span id="charge">3</span> PULSES · 🛡 <span id="shield">0</span> SHIELDS · <span id="credits">0</span> CR · BOLT <span id="power">1</span></div>
+</div>
+<div class="screen" id="menu"><div class="panel"><div class="menuPitch"><div class="brand">SHANX INTERACTIVE · GHOST PROTOCOL RC03</div>
+<h1>FIND<br><span>THE AI</span></h1><div class="brand" style="color:#e3a3f6">ROBOT SEEKER · THREE DISTINCT WORLDS</div>
+<p class="lead">Three playable stages: escape the Signal Maze, disable relays in Neon District, and explore AI Streets, the first open-world district. The CLOSAI fortress is planned for Level 10.</p>
+<div class="features"><div><b>01</b>SIGNAL MAZE</div><div><b>02</b>NEON DISTRICT</div><div><b>03</b>AI STREETS</div></div>
+<p>LEVEL 1: Solve Signal Maze traces. LEVEL 2: Fight through Neon District. LEVEL 3: Explore a large neighborhood, defeat stronger enemies, collect credits, upgrade the robot and disable district relays. Later worlds and indoor missions are in development.</p></div><div class="menuSetup">
+<div id="deviceSetup"><label for="deviceMode">PLAY ON</label><select id="deviceMode"><option value="phone">Phone / touch</option><option value="tablet">Tablet / touch</option><option value="computer">Computer / keyboard and mouse</option><option value="controller">Controller / gamepad</option></select><label for="controllerProfile">CONTROLLER PROFILE</label><select id="controllerProfile"><option value="xbox">Xbox / XInput</option><option value="playstation">PlayStation / DualSense</option><option value="switch">Nintendo / Switch</option><option value="generic">Generic standard gamepad</option></select><div id="controllerStatus">Select an input mode</div></div>
+<div style="margin:12px auto;max-width:340px"><label for="sectorCode" style="display:block;color:#a6fff0;font-size:13px;margin:4px">SECTOR PASSWORD (OPTIONAL)</label><input id="sectorCode" autocomplete="off" autocapitalize="characters" placeholder="SIGNAL · CITY · STREETS" style="display:block;width:100%;padding:12px;border:1px solid #69ffee;border-radius:12px;background:#071627;color:#fff;text-align:center;font:inherit"/><div id="codeStatus" style="font-size:12px;color:#f8d998;margin:6px">Leave blank to start Sector 1</div></div><button id="start" class="cta">LAUNCH GHOST PROTOCOL ▶</button><button id="showControls" type="button">🎮 VIEW CONTROLLER BUTTON MAP</button><p class="thin">Computer: WASD move · SHIFT sprint · mouse drag look · wheel zoom · V view · B bolt · F phase · SPACE pulse · E use.<br>Controller: analog stick pressure controls speed · LT hyper boost · LB fly/land · RB up and B down during flight · RT bolt · D-pad camera · A confirms.</p></div></div></div>
+<div class="screen hidden" id="controllerGuide" aria-label="Controller button map">
+<div class="panel">
+<div class="brand" style="text-align:center">GHOST PROTOCOL · SHANX CONTROL STANDARD</div>
+<h2>🎮 CONTROLLER BUTTON MAP</h2>
+<div id="mappingProfile" class="brand" style="text-align:center;color:#9effee">XBOX / STANDARD GAMEPAD</div>
+<div class="controlsGrid">
+<div><b>LEFT STICK</b><span>Move ROBOT</span></div><div><b>L3 / LEFT CLICK</b><span>Sprint ON / OFF</span></div>
+<div><b>RIGHT STICK</b><span>Look / Aim</span></div><div><b>R3 / RIGHT CLICK</b><span>Reset camera direction</span></div>
+<div><b>RT / R2 / ZR</b><span>Electric BOLT</span></div><div><b>LT / L2 / ZL</b><span>Hold HYPER BOOST</span></div>
+<div><b>RB / R1 / R</b><span>PULSE / FLY UP (hold)</span></div><div><b>LB / L1 / L</b><span>FLY / LAND</span></div>
+<div><b>A / CROSS</b><span>USE · confirm · next level</span></div><div><b>B / CIRCLE</b><span>PHASE / FLY DOWN (hold)</span></div>
+<div><b>X / SQUARE</b><span>SCAN</span></div><div><b>Y / TRIANGLE</b><span>Show button map</span></div>
+<div><b>D-PAD LEFT / RIGHT</b><span>Previous / next camera</span></div><div><b>D-PAD UP / DOWN</b><span>Overhead / first-person</span></div>
+<div><b>VIEW / SELECT</b><span>Show button map</span></div><div><b>MENU / START</b><span>Pause / resume</span></div>
+</div>
+<div class="guideFoot">Start by choosing your controller type on the game menu. The buttons follow the browser's standard gamepad positions. HID controllers with nonstandard mappings may need calibration. In a puzzle, use the D-pad to choose an answer and A to select it. While flying: RB/R1 ascends, B/Circle descends, and LT/L2 boosts. On touch: FLY, HYPER, UP, and DOWN are available without a controller.</div>
+<button id="closeControls" class="cta" type="button">A / ENTER · CONTINUE PLAYING</button>
+</div></div>
+<div class="screen hidden" id="puzzle"><div class="panel"><div class="brand">X13 // PROOF BEFORE DONE</div><h2 id="puzzleTitle">DEBUG TERMINAL</h2><p id="puzzleDesc">Recover the corrupted key to isolate the ghost.</p><div id="puzzleClue"></div><div id="choices"></div><button id="leavePuzzle" class="cta alt">DISCONNECT</button></div></div>
+<div class="screen hidden" id="results"><div class="panel"><div class="brand" id="endTag">SIGNAL LOST</div><h2 id="endTitle">SYSTEM FAILURE</h2><p id="endText"></p><button id="next" class="cta">RECONNECT ▶</button><button id="home" class="cta alt">RETURN TO TITLE</button></div></div>
+<div id="load">INITIALIZING X13 3D ENGINE...</div>
+<script type="module" src="./game.js?v=ghost-protocol-rc05-horizontal-20261116"></script></body></html>
