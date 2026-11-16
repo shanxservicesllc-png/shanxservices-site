@@ -146,6 +146,40 @@ window.__X13_QA={
         else localStorage.setItem('shanx-signature-upgrades-v34',snapshot.store);
       }
     }
+
+    if(typeof window.__X13_V35_DISTRICTS==='function'){
+      const count=outerSites.length;
+      add('outer-district-facades',count>250&&!!outerFacades.material.map,
+        count+' outer buildings with shared façade texture');
+      add('instanced-roof-caps',outerRoofs.count===count,
+        outerRoofs.count+' roof caps for '+count+' outer buildings');
+      const sample=outerColliderList.find(b=>b.x< -670&&b.x> -1400&&Math.abs(b.z)<400);
+      const point=sample?{x:sample.x,z:sample.z}:null;
+      add('outer-building-physics',!!(point&&pushFromBuildings(point,1.1)),
+        sample?'Tested physical outer building at '+sample.x+','+sample.z:'No sample');
+      add('project-housing-courtyards',projectCenters.length>=4,
+        projectCenters.length+' distributed project-style residential developments');
+      const projectActions=worldActions.filter(a=>a.kind==='projectMission');
+      add('housing-mission-boards',projectActions.length===projectCenters.length&&projectActions.length>=4,
+        projectActions.length+' actual interactable mission stations');
+      add('outer-city-population',npcList.length>300,npcList.length+' pedestrian actors');
+      const regions=[...new Set(MS.filter(m=>m.region).map(m=>m.region))];
+      add('regional-mission-expansion',regions.length>=6&&MS.length>=19,
+        MS.length+' missions covering '+regions.join(','));
+      const originalMission=missionIndex;
+      try{
+        const i=MS.findIndex(m=>m.region==='west');
+        if(i>=0)missionIndex=i;
+        const p=missionPoint();
+        add('regional-waypoint-generation',i>=0&&p.x< -2200&&p.x>EXT_WEST&&
+          p.z>EXT_SOUTH&&p.z<EXT_NORTH&&!riverObstacle(p.x,p.z),
+          'Generated a West End in-world mission waypoint');
+      }finally{missionIndex=originalMission}
+      const bay={x:GARAGE_BAY.x,z:GARAGE_BAY.z};
+      const blocked=pushFromBuildings(bay,1.2);
+      add('garage-bay-world-clear',!blocked,
+        blocked?'Garage bay conflicts with building collisions':'Garage lane clear after expanded physics');
+    }
     return report;
   }
 };
