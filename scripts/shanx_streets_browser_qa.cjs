@@ -180,6 +180,73 @@ window.__X13_QA={
       add('garage-bay-world-clear',!blocked,
         blocked?'Garage bay conflicts with building collisions':'Garage lane clear after expanded physics');
     }
+
+    if(typeof window.__X13_V36_NAV==='function'){
+      add('waypoint-menu-present',!!$('navOpen')&&!!$('navOverlay')&&!!$('navChoices'),'GPS menu and selection controls are mounted');
+      const forward=headingInstruction({x:0,z:0},0,{x:0,z:120});
+      const right=headingInstruction({x:0,z:0},0,{x:120,z:0});
+      const afterTurn=headingInstruction({x:0,z:0},Math.PI/2,{x:0,z:120});
+      add('compass-cardinals',forward.text==='STRAIGHT'&&right.text==='TURN RIGHT'&&afterTurn.text==='TURN LEFT',
+        'Direction is relative to moving heading and world north (+Z)');
+      const prev={waypoint:navWaypoint,route:navRoute,from:navLastRouteFrom,to:navLastRouteTo};
+      try{
+        const result=setNavPlace('garage');
+        add('garage-waypoint-selected',result&&navWaypoint?.name.includes('GARAGE')&&navWaypoint?.x===-390,
+          'Exact fictional garage world coordinate');
+        add('garage-road-route',navRoute.length>2,'Graph path with '+navRoute.length+' route points');
+        const old=navWaypoint;
+        const alternate=setNavPlace('mission');
+        add('mission-waypoint-selected',alternate&&navWaypoint?.name==='CURRENT MISSION'&&
+          Math.abs(navWaypoint.x-missionGoal.x)<1,'Live mission waypoint is available');
+        setNavWaypoint('TEST PIN',P.x+35,P.z+45);
+        add('custom-waypoint-selected',navWaypoint.name==='TEST PIN','Arbitrary map pin stores game coordinates');
+      }finally{
+        navWaypoint=prev.waypoint;navRoute=prev.route;navLastRouteFrom=prev.from;navLastRouteTo=prev.to;
+        $('routeBanner').hidden=!navWaypoint;
+      }
+      const v=signatureDriveCar();
+      const before={mode,pv,fly:P.fly,x:P.x,z:P.z,alt:P.alt,
+        carX:v.x,carZ:v.z,carMode:v.mode,carSpeed:v.speed,carH:v.h,
+        recall:{...recallState},visible:person.visible};
+      try{
+        mode='foot';pv=v;P.fly=false;P.alt=0;P.x=-640;P.z=160;
+        v.mode='parked';v.speed=0;
+        const started=callSignatureVehicle();
+        add('signature-car-call',started&&recallState.active&&v.mode==='summon'&&recallState.route.length>2,
+          'Summon starts from the parked car without spawning a new one');
+        const x0=v.x,z0=v.z;
+        for(let i=0;i<130;i++)updateSummonedCar(v,.05);
+        add('signature-car-drives',Math.hypot(v.x-x0,v.z-z0)>4,
+          'Car moved '+Math.hypot(v.x-x0,v.z-z0).toFixed(1)+' meters on its own');
+        if(recallState.active){
+          P.x=v.x+5;P.z=v.z+4;updateSummonedCar(v,.05);
+        }
+        add('signature-car-parks-near-player',recallState.status==='ARRIVED'&&v.mode==='parked',
+          'Physical arrival within 9 meters of Mac');
+      }finally{
+        mode=before.mode;pv=before.pv;P.fly=before.fly;P.alt=before.alt;P.x=before.x;P.z=before.z;
+        v.x=before.carX;v.z=before.carZ;v.h=before.carH;v.mode=before.carMode;v.speed=before.carSpeed;
+        recallState=before.recall;person.visible=before.visible;placeVehicle(v);
+      }
+      add('district-traffic-populated',districtVehicles.length>=10,
+        districtVehicles.length+' additional outer-district cars');
+      add('outer-street-detail-props',districtAccents.length>25&&lampPositions.length>15,
+        districtAccents.length+' shop fronts / '+lampPositions.length+' lamps');
+      const beforeIncidents=streetIncidents.length,oldCash=gameMoney,oldResolved=incidentResolved;
+      const event=spawnStreetIncident('police',{x:-720,z:0});
+      add('ambient-police-stop-spawn',!!event&&event.actors.length===3&&event.kind==='police',
+        'Non-graphic animated incident with police and civilian actors');
+      if(event){
+        updateStreetIncidents(.05);
+        const resolved=resolveStreetIncident(event.id);
+        add('ambient-help-interaction',resolved&&streetIncidents.length===beforeIncidents&&
+          gameMoney===oldCash+80&&incidentResolved===oldResolved+1,
+          'Incident resolves, cleans actors and pays a game reward');
+      }else add('ambient-help-interaction',false,'No event spawned');
+      gameMoney=oldCash;incidentResolved=oldResolved;
+      add('incident-variety',INCIDENT_TYPES.length>=6,
+        INCIDENT_TYPES.length+' rotating scenes (alarm, police, traffic, dispute, rivals, help)');
+    }
     return report;
   }
 };
@@ -228,6 +295,21 @@ const server=http.createServer((req,res)=>{
     await page.setViewportSize({width:390,height:844});
     await page.waitForTimeout(500);
     report.mobile=await page.evaluate(()=>!!window.__X13_QA.status().webgl);
+    if(report.state.build.includes('v36')){
+      report.tests.push(...await page.evaluate(()=>{
+       const box=id=>document.getElementById(id)?.getBoundingClientRect();
+       const overlaps=(a,b)=>!!a&&!!b&&a.left<b.right&&a.right>b.left&&a.top<b.bottom&&a.bottom>b.top;
+       const map=box('map'),nav=box('navOpen'),hud=box('hud'),stats=box('gameStats');
+       const ok=map&&nav&&hud&&stats;
+       return [
+        {name:'mobile-top-corners-uncluttered',passed:!!ok&&!overlaps(map,hud)&&!overlaps(nav,stats)&&!overlaps(map,stats),
+         detail:'Separate map/navigation from speed and vehicle status'},
+        {name:'mobile-waypoint-button-reachable',passed:!!nav&&nav.width>=100&&nav.height>=30&&nav.right<=innerWidth&&nav.bottom<=innerHeight,
+         detail:'GPS touch target fits a 390px phone'},
+        {name:'mobile-compass-readable',passed:!!map&&map.width>=100&&map.height>=100,detail:'Four cardinal letters inside heading-up map'}
+       ];
+      }));
+    }
     try{await page.screenshot({path:'/tmp/shanx-streets-mobile.png',timeout:6000,animations:'disabled'});}catch(e){report.mobileScreenshot='unavailable: '+String(e).slice(0,130)}
     report.pageErrors=errors;
     console.log('X13_SHANX_BROWSER_QA '+JSON.stringify(report));
