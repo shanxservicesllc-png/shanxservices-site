@@ -27,7 +27,7 @@ jobs:
       - name: Test real ShanX Streets runtime and known collision defects
         run: node scripts/shanx_streets_browser_qa.cjs
         env:
-          SHANX_QA_FILE: arcade/games/shanx-streets/preview-v34-garage-orb.html
+          SHANX_QA_FILE: arcade/games/shanx-streets/index.html
       - name: Preserve actual browser screenshots
         if: always()
         uses: actions/upload-artifact@v4
