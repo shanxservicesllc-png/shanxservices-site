@@ -233,6 +233,8 @@ window.__X13_QA={
       add('outer-street-detail-props',districtAccents.length>25&&lampPositions.length>15,
         districtAccents.length+' shop fronts / '+lampPositions.length+' lamps');
       const beforeIncidents=streetIncidents.length,oldCash=gameMoney,oldResolved=incidentResolved;
+      const originalEventFocus={mode,x:P.x,z:P.z};
+      mode='foot';P.x=-720;P.z=0;
       const event=spawnStreetIncident('police',{x:-720,z:0});
       add('ambient-police-stop-spawn',!!event&&event.actors.length===3&&event.kind==='police',
         'Non-graphic animated incident with police and civilian actors');
@@ -244,6 +246,7 @@ window.__X13_QA={
           'Incident resolves, cleans actors and pays a game reward');
       }else add('ambient-help-interaction',false,'No event spawned');
       gameMoney=oldCash;incidentResolved=oldResolved;
+      mode=originalEventFocus.mode;P.x=originalEventFocus.x;P.z=originalEventFocus.z;
       add('incident-variety',INCIDENT_TYPES.length>=6,
         INCIDENT_TYPES.length+' rotating scenes (alarm, police, traffic, dispute, rivals, help)');
     }
