@@ -84,6 +84,68 @@ window.__X13_QA={
       officer.rig.root.rotation.x=old.rootX;officer.rig.figure.rotation.z=old.figZ;
       officer.rig.root.visible=old.visible;
     }
+
+    /* v34: test real garage access, equipment toggles, and damage ownership. */
+    if(typeof window.__X13_V34_GARAGE==='function'){
+      const sig=signatureDriveCar(),other=vehicles.find(v=>v!==sig&&v.type==='car'&&v.health>40);
+      const snapshot={mode,pv,gamePaused,garageOpened,garageWasPaused,gameMoney,
+        sx:sig.x,sz:sig.z,sv:sig.speed,sh:sig.health,sd:sig.disabled,sMode:sig.mode,
+        hover:sig.hover,landing:sig.hoverLanding,shieldCharge,orbWanted,laserPulseCooldown,
+        mods:{...signatureModes},upgrades:{...signatureUpgrades},store:localStorage.getItem('shanx-signature-upgrades-v34'),
+        otherHealth:other?.health};
+      try{
+        mode='car';pv=sig;sig.mode='player';gamePaused=false;
+        sig.x=GARAGE_BAY.x;sig.z=GARAGE_BAY.z;sig.speed=0;sig.hover=false;sig.hoverLanding=false;
+        const shopOk=openGarage();
+        add('garage-drive-in',shopOk&&garageOpened&&!$('garageOverlay').hidden,'Park signature car inside bay to open shop');
+        const moneyBefore=gameMoney;
+        const purchased=purchaseGarageUpgrade('wheels');
+        add('garage-purchase-saved',purchased&&signatureUpgrades.wheels&&gameMoney===moneyBefore-GARAGE_UPGRADES.wheels.price
+          &&JSON.parse(localStorage.getItem('shanx-signature-upgrades-v34')||'{}').wheels===true,'Wheel upgrade updates money and browser save');
+        closeGarage();
+        sig.health=45;signatureModes.invincible=true;
+        const immune=!hurtVehicle(sig,250,true)&&sig.health===100;
+        add('signature-invincibility-toggle',immune,'Invincible ON protects only signature car');
+        signatureModes.invincible=false;
+        sig.health=79;signatureUpgrades.shield=true;signatureModes.shieldOn=true;shieldCharge=100;
+        const absorbed=!hurtVehicle(sig,45,false)&&sig.health===79&&shieldCharge<100;
+        add('signature-energy-shield',absorbed,'Installed shield absorbs car damage');
+        signatureModes.shieldOn=false;signatureUpgrades.sensor=true;
+        sig.health=80;hurtVehicle(sig,100,false);
+        add('signature-protection-sensor',sig.health<80&&sig.health>70,
+          'Passive sensor allows small damage without invincibility');
+        if(other){
+          const beforeOther=other.health;
+          hurtVehicle(other,15,false);
+          add('other-cars-damageable',other.health===beforeOther-15,'Regular traffic retains damage');
+        }else add('other-cars-damageable',false,'No other drivable car found');
+        signatureUpgrades.orb=true;
+        const orbCall=callOrb();
+        add('orb-companion-recall',orbCall&&orbWanted&&!!orbCompanion,'ORB companion summoned in game');
+        signatureUpgrades.laser=true;laserPulseCooldown=0;
+        const pulsesBefore=energyPulses.length;
+        const fired=fireCarLaser();
+        add('signature-energy-emitter',fired&&energyPulses.length>pulsesBefore,'Sci-fi pulse created');
+        const oldMode=mode,oldPv=pv;
+        pv=other;mode='car';
+        const rejected=!toggleInvincible();
+        add('other-cars-cannot-invincible',rejected&&!signatureModes.invincible,'Protection restricted to Mac’s original car');
+        mode=oldMode;pv=oldPv;
+      }finally{
+        if(garageOpened)closeGarage();
+        mode=snapshot.mode;pv=snapshot.pv;gamePaused=snapshot.gamePaused;
+        garageOpened=snapshot.garageOpened;garageWasPaused=snapshot.garageWasPaused;
+        gameMoney=snapshot.gameMoney;sig.x=snapshot.sx;sig.z=snapshot.sz;sig.speed=snapshot.sv;
+        sig.health=snapshot.sh;sig.disabled=snapshot.sd;sig.mode=snapshot.sMode;
+        sig.hover=snapshot.hover;sig.hoverLanding=snapshot.landing;
+        shieldCharge=snapshot.shieldCharge;orbWanted=snapshot.orbWanted;laserPulseCooldown=snapshot.laserPulseCooldown;
+        Object.assign(signatureModes,snapshot.mods);Object.assign(signatureUpgrades,snapshot.upgrades);
+        if(other&&snapshot.otherHealth!==undefined)other.health=snapshot.otherHealth;
+        applySignatureCosmetics();syncProtectionUi();
+        if(snapshot.store===null)localStorage.removeItem('shanx-signature-upgrades-v34');
+        else localStorage.setItem('shanx-signature-upgrades-v34',snapshot.store);
+      }
+    }
     return report;
   }
 };
