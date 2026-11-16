@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<title>ShanX Streets: Collision Repair v33</title>
+<title>ShanX Streets: Auto Customs v34</title>
 <style>
 html,body{margin:0;height:100%;overflow:hidden;background:#000;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:#fff}
 canvas#c{position:fixed;inset:0;width:100%;height:100%;display:block}
@@ -304,6 +304,21 @@ body[data-ui="car"] #tabletMorePanel{max-height:66dvh;overflow-y:auto}
 #bustedOverlay[hidden]{display:none!important}
 #bustedOverlay{position:fixed;inset:0;z-index:85;display:flex;align-items:center;justify-content:center;background:#120c14c7;pointer-events:none}
 #bustedOverlay strong{font:1000 clamp(55px,13vw,170px) system-ui;color:#e7b1a5;letter-spacing:.05em;text-shadow:0 0 20px #50111b,0 9px 4px #0e0d13}
+
+#garageOverlay[hidden]{display:none!important}
+#garageOverlay{position:fixed;inset:0;z-index:115;display:flex;align-items:center;justify-content:center;padding:12px;box-sizing:border-box;background:#05121ce9;color:#eaf5fa;font:14px system-ui}
+#garageModal{width:min(770px,100%);max-height:92dvh;overflow:auto;padding:16px;border:1px solid #d2aa5d;border-radius:16px;background:#102b39}
+#garageModal h2{color:#e8c675;margin:0;font-size:23px}
+#garageModal p{font-size:12px;line-height:1.5}
+#garageItems{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:12px 0}
+.garageItem{border:1px solid #477078;background:#173d48;border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:6px}
+.garageItem strong{color:#ecd089}.garageItem small{font-size:12px;line-height:1.45;flex:1}
+.garageItem button,#garageClose,#garageOpenBtn{background:#256779;color:#f6fbff;border:1px solid #6fb3a9;border-radius:8px;padding:8px 12px;min-height:38px;font-weight:800;cursor:pointer}
+.garageItem button:disabled{opacity:.5}
+#garageOpenBtn[hidden]{display:none!important}#garageOpenBtn{position:fixed;left:50%;top:37%;transform:translateX(-50%);z-index:28;background:#146c55ed}
+#signatureProtectionHud{display:none;position:fixed;top:278px;left:12px;z-index:16;background:#082d34d9;border:1px solid #55b3b6;color:#b7fff7;border-radius:8px;padding:6px 8px;font:800 10px system-ui}
+#tabletMorePanel .signatureExtra{display:none}body[data-ui="car"] #tabletMorePanel .signatureExtra{display:block}
+@media(max-width:620px){#garageItems{grid-template-columns:1fr}#garageModal{padding:10px}#signatureProtectionHud{top:216px;left:8px}}
 </style>
 <script type="importmap">
 {"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}
@@ -320,7 +335,12 @@ body[data-ui="car"] #tabletMorePanel{max-height:66dvh;overflow-y:auto}
 <div id="zoneR" class="zone"></div>
 <div id="stickBase"><div id="stickKnob"></div></div>
 <div id="tabletTopControls"><button id="bMore" type="button" aria-label="More on-foot actions" aria-expanded="false" title="Extra actions">⋯</button><button id="bPause" type="button" aria-label="Pause game" title="Pause">Ⅱ</button></div>
-<div id="tabletMorePanel" hidden><button id="bMenuFly" type="button">FLY</button><button id="bMenuSprint" type="button" aria-pressed="false">SPRINT: OFF</button><button id="bMenuCrouch" type="button" aria-pressed="false">CROUCH: OFF</button><button class="vehicleExtra" id="touchHeadlights" type="button">💡 HEADLIGHTS</button><button class="vehicleExtra" id="touchLeftTurn" type="button">◀ LEFT SIGNAL</button><button class="vehicleExtra" id="touchRightTurn" type="button">RIGHT SIGNAL ▶</button><button class="vehicleExtra" id="touchHazards" type="button">⚠ HAZARDS</button><button class="vehicleExtra" id="touchHorn" type="button">🔊 HOLD HORN</button><button class="vehicleExtra" id="touchMusic" type="button">♫ MUSIC NEXT</button></div>
+<div id="tabletMorePanel" hidden><button id="bMenuFly" type="button">FLY</button><button id="bMenuSprint" type="button" aria-pressed="false">SPRINT: OFF</button><button id="bMenuCrouch" type="button" aria-pressed="false">CROUCH: OFF</button><button class="vehicleExtra" id="touchHeadlights" type="button">💡 HEADLIGHTS</button><button class="vehicleExtra" id="touchLeftTurn" type="button">◀ LEFT SIGNAL</button><button class="vehicleExtra" id="touchRightTurn" type="button">RIGHT SIGNAL ▶</button><button class="vehicleExtra" id="touchHazards" type="button">⚠ HAZARDS</button><button class="vehicleExtra" id="touchHorn" type="button">🔊 HOLD HORN</button><button class="vehicleExtra" id="touchMusic" type="button">♫ MUSIC NEXT</button>
+<button class="vehicleExtra signatureExtra" id="touchInvincible" type="button">◈ INVINCIBLE OFF</button>
+<button class="vehicleExtra signatureExtra" id="touchShield" type="button">⛨ SHIELD OFF</button>
+<button class="vehicleExtra signatureExtra" id="touchOrb" type="button">◉ CALL ORB</button>
+<button class="vehicleExtra signatureExtra" id="touchLaser" type="button">✦ ENERGY PULSE</button>
+<button class="vehicleExtra signatureExtra" id="touchGarage" type="button">⚙ GARAGE</button></div>
 <div id="pauseOverlay" hidden><div class="pauseInner">PAUSED<small>Explore Homewood at your pace</small><div><button id="pResume" type="button">▶ RESUME</button><button id="pHelp" type="button">? CONTROLS</button><button id="pInput" type="button">⌨ INPUT</button><button id="pControllerSettings" type="button">🎮 SETTINGS</button><button id="pRealMap" type="button">🌎 REAL MAP</button></div><div class="timeModeTitle">☀️ LIGHTING &amp; CLOCK</div><div class="timeModes" role="group" aria-label="Pause menu time of day"><button type="button" data-time-mode="normal">NORMAL CYCLE</button><button type="button" data-time-mode="day">ALWAYS DAY</button><button type="button" data-time-mode="night">ALWAYS NIGHT</button></div></div></div>
 <div id="actionDeck">
 <button id="bQuickFly" type="button" class="smallAct" aria-label="Start flight" title="Start flight">FLY</button>
@@ -360,7 +380,16 @@ body[data-ui="car"] #tabletMorePanel{max-height:66dvh;overflow-y:auto}
 <div class="settingActions"><button id="mapHomewood" type="button">HOMEWOOD</button><button id="mapDowntown" type="button">DOWNTOWN</button><button id="mapLocate" type="button">📍 USE MY LOCATION</button><button id="mapStopGps" type="button">STOP GPS</button><button id="mapClose" type="button">CLOSE MAP</button></div>
 <div id="realWorldMap" aria-label="Interactive Pittsburgh streets map"></div><div id="gpsLiveStatus" role="status">GPS is off. Real map is optional.</div><p>Map data © OpenStreetMap contributors. Location stays in this tab, is not stored with game progress, and is never sent to ShanX game servers. Map tiles are requested from their provider when opened.</p>
 </div></div>
-<div id="bustedOverlay" hidden aria-live="assertive"><strong>BUSTED</strong></div><div id="gameStats"><div class="gold" id="money">$2,450</div><div class="health" id="health">HEALTH 100%</div><div id="carCondition" style="font-size:10px;color:#f7ca80">CAR CONDITION 100%</div><div class="wanted" id="wanted">☆☆☆☆☆</div><div class="mission" id="mission">Mission initializing</div></div>
+<div id="bustedOverlay" hidden aria-live="assertive"><strong>BUSTED</strong></div><button id="garageOpenBtn" type="button" hidden>⚙ OPEN SHANX AUTO CUSTOMS</button>
+<div id="signatureProtectionHud">CAR PROTECTION · OFF</div>
+<div id="garageOverlay" hidden role="dialog" aria-modal="true" aria-label="ShanX Auto Customs">
+  <div id="garageModal"><h2>⚙ SHANX AUTO CUSTOMS</h2>
+  <p>Drive Mac's green-and-gold signature car into the service bay, stop, then install upgrades. Other cars retain regular damage.</p>
+  <strong id="garageMoney">CASH $0</strong><div id="garageItems"></div>
+  <p id="garageNote" role="status">Protection and invincibility are optional. Upgrades persist in this browser.</p>
+  <button id="garageClose" type="button">✔ BACK TO THE STREET</button></div>
+</div>
+<div id="gameStats"><div class="gold" id="money">$2,450</div><div class="health" id="health">HEALTH 100%</div><div id="carCondition" style="font-size:10px;color:#f7ca80">CAR CONDITION 100%</div><div class="wanted" id="wanted">☆☆☆☆☆</div><div class="mission" id="mission">Mission initializing</div></div>
 <div id="combatStats">PULSE HITS <span id="hitTotal">0</span> · SEARCHING · Q / SHOOT</div><div id="hitConfirm" aria-live="polite"></div>
 <div id="targetHealth" hidden aria-live="off"><div id="targetName">SCANNING</div><div id="targetHealthTrack"><div id="targetHealthFill"></div></div></div><div id="doorHelp">ENTER / E: OPEN DOOR</div><div id="targetRing"></div><div id="missionFlash"></div><div id="loadingError"></div>
 <div id="err"></div>
@@ -1348,6 +1377,7 @@ function pollGamepad(dt){
   gamepadHeld=nextHeld;return;
  }
  if(!$('realMapOverlay').hidden){if(pressed('map')||pressed('pause'))closeRealMap();gamepadHeld=nextHeld;return}
+ if(garageOpened){if(pressed('pause')||pressed('interact'))closeGarage();gamepadHeld=nextHeld;return}
  if(!$('frontMenu').hidden){if(pressed('shootFace')||pressed('pause'))$('startGame').click();gamepadHeld=nextHeld;return}
  if(!$('helpPanel').hidden){if(pressed('jumpBoost')||pressed('pause'))closeHelp();gamepadHeld=nextHeld;return}
  if(pressed('pause'))togglePause();
@@ -1356,11 +1386,17 @@ function pollGamepad(dt){
  gamepadAxisX=padAxis(+pad.axes?.[0]||0);gamepadAxisY=-padAxis(+pad.axes?.[1]||0);
  const dx=padAxis(+pad.axes?.[2]||0),dy=padAxis(+pad.axes?.[3]||0);
  if(Math.abs(dx)+Math.abs(dy)>.015)applyLook(dx*365*dt*controllerPrefs.sensitivity,dy*295*dt*controllerPrefs.sensitivity);
- if(pressed('enter')){if(mode==='foot'&&P.fly)toggleFly();else toggleCar()}
+ if(mode==='car'&&on('interact')){
+   if(pressed('enter'))callOrb();
+   if(pressed('shootTrigger'))fireCarLaser();
+   if(pressed('crouchHandbrake'))toggleShield();
+   if(pressed('cameraReset'))toggleInvincible();
+ }
+ if(pressed('enter')&&!(mode==='car'&&on('interact'))){if(mode==='foot'&&P.fly)toggleFly();else toggleCar()}
  if(pressed('punchBrake')&&mode==='foot'&&!P.fly)punch();
  if(pressed('flyHover')){if(mode==='car')toggleCarHover();else if(mode==='foot'&&!insideBuilding){uiCrouchToggle=false;toggleFly()}}
  if(pressed('crouchHandbrake')&&mode==='foot'&&!P.fly)uiCrouchToggle=!uiCrouchToggle;
- if(pressed('interact')&&!(mode==='foot'&&P.fly))performAction();
+ if(pressed('interact')&&!(mode==='foot'&&P.fly)&&!(mode==='car'&&on('shootTrigger')))performAction();
  flightBoostHeld=mode==='foot'&&P.fly&&on('interact');
  if(pressed('cameraView'))nextCameraView();if(pressed('cameraReset'))resetCamera();
  if(pressed('map'))openRealMap();
@@ -1373,14 +1409,14 @@ function pollGamepad(dt){
  btn.jump=mode==='foot'&&on('jumpBoost');
  btn.boost=mode==='car'&&on('jumpBoost');
  btn.brake=(mode==='car'||mode==='foot'&&P.fly)&&on('punchBrake')||(mode==='foot'&&!P.fly&&uiCrouchToggle);
- btn.handbrake=mode==='car'&&on('crouchHandbrake');
+ btn.handbrake=mode==='car'&&on('crouchHandbrake')&&!on('interact');
  btn.fire=on('shootFace')||on('shootTrigger');
  gamepadHeld=nextHeld;
 }
 
 const down=new Set();
 addEventListener('keydown',e=>{
-  if(e.code==='Escape'){e.preventDefault();if(!$('controlSettings').hidden){closeControllerSettings();return}if(!$('realMapOverlay').hidden){closeRealMap();return}if(!$('helpPanel').hidden){closeHelp();return}if(!$('frontMenu').hidden&&hasStarted){$('frontMenu').hidden=true;gamePaused=false;return}if(hasStarted)togglePause();return}
+  if(e.code==='Escape'){e.preventDefault();if(garageOpened){closeGarage();return}if(!$('controlSettings').hidden){closeControllerSettings();return}if(!$('realMapOverlay').hidden){closeRealMap();return}if(!$('helpPanel').hidden){closeHelp();return}if(!$('frontMenu').hidden&&hasStarted){$('frontMenu').hidden=true;gamePaused=false;return}if(hasStarted)togglePause();return}
   if(e.code==='KeyH'){e.preventDefault();if($('helpPanel').hidden)showHelp();else closeHelp();return}
   if(!hasStarted||gamePaused||!$('frontMenu').hidden||!$('helpPanel').hidden)return;
   initAudio();
@@ -1399,6 +1435,11 @@ addEventListener('keydown',e=>{
   if(e.code==='Comma')nextMusicTrack();
   if(e.code==='KeyJ'&&mode==='car')setVehicleHornInput('key',true);
   if(e.code==='KeyT')openControllerSettings();
+  if(e.code==='KeyU'&&mode==='car')openGarage();
+  if(e.code==='KeyN'&&mode==='car')toggleInvincible();
+  if(e.code==='KeyY'&&mode==='car')toggleShield();
+  if(e.code==='KeyO')callOrb();
+  if(e.code==='KeyI'&&mode==='car')fireCarLaser();
   if(e.code==='ControlLeft'||e.code==='ControlRight')btn.handbrake=true;
   if(e.code==='KeyV')nextCameraView();
   if(e.code==='KeyR')resetCamera();
@@ -1584,6 +1625,168 @@ const MS=[{n:'Courier run',car:0,heat:0,t:110,r:180},{n:'Taxi fare',car:1,heat:0
 try{const save=JSON.parse(localStorage.getItem('x13-streets-merged-v1'));if(save&&save.version===1){gameMoney=+save.money||2450;missionIndex=Math.max(0,+save.mission||0)}}catch(e){}
 function saveProgress(){try{localStorage.setItem('x13-streets-merged-v1',JSON.stringify({version:1,money:gameMoney,mission:missionIndex}))}catch(e){}}
 const you=()=>mode==='car'?pv:P;
+/* v34: owner-controlled signature garage upgrades, browser-local saves. */
+const GARAGE_BAY={x:-390,z:-76,r:15};
+const GARAGE_UPGRADES={
+ wheels:{name:'BIGGER GOLD DAYTONS',price:260,desc:'Larger gold wheels for Mac’s signature car.'},
+ monsterWheels:{name:'MONSTER WHEEL KIT',price:380,desc:'Oversized gold wheels. Requires bigger Daytons.'},
+ sensor:{name:'PROXIMITY PROTECTION SENSOR',price:280,desc:'Passive protection that absorbs most impact damage.'},
+ shield:{name:'ENERGY SHIELD',price:430,desc:'Toggleable rechargeable protective bubble.'},
+ orb:{name:'X13 ORB COMPANION LINK',price:520,desc:'Summon a glowing orb to follow Mac or his vehicle.'},
+ laser:{name:'ARCADE ENERGY EMITTER',price:560,desc:'Non-graphic sci-fi pulse for other game vehicles.'}
+};
+const signatureUpgrades={wheels:false,monsterWheels:false,sensor:false,shield:false,orb:false,laser:false};
+const signatureModes={invincible:false,shieldOn:false};
+let garageOpened=false,garageWasPaused=false,shieldCharge=100,shieldFlash=0,orbWanted=false;
+let orbCompanion=null,laserPulseCooldown=0;
+const energyPulses=[];
+try{
+ const loaded=JSON.parse(localStorage.getItem('shanx-signature-upgrades-v34')||'{}');
+ for(const k of Object.keys(signatureUpgrades))signatureUpgrades[k]=loaded[k]===true;
+}catch(_){}
+function saveSignatureUpgrades(){try{localStorage.setItem('shanx-signature-upgrades-v34',JSON.stringify(signatureUpgrades))}catch(_){}}
+function signatureDriveCar(){return typeof signatureCar==='undefined'?null:signatureCar}
+function isSignatureCar(v){return !!v&&v.signature===true&&v===signatureDriveCar()}
+function garageDistance(v){return v?Math.hypot(v.x-GARAGE_BAY.x,v.z-GARAGE_BAY.z):Infinity}
+function garageAvailable(v=mode==='car'?pv:null){
+ return !!v&&v.type==='car'&&!v.disabled&&!v.hover&&!v.hoverLanding&&garageDistance(v)<GARAGE_BAY.r&&Math.abs(v.speed)<6;
+}
+function ensureSignatureFx(){
+ const v=signatureDriveCar();if(!v||v.signatureFx)return;
+ const shell=new THREE.Mesh(new THREE.SphereGeometry(2.7,20,14),
+  new THREE.MeshBasicMaterial({color:0x42e5fa,transparent:true,opacity:.12,depthWrite:false,side:THREE.DoubleSide}));
+ shell.scale.set(1,.62,1.2);shell.position.y=.95;shell.visible=false;v.root.add(shell);
+ const sensor=new THREE.Mesh(new THREE.OctahedronGeometry(.16),new THREE.MeshBasicMaterial({color:0x54ffc5}));
+ sensor.position.set(0,1.72,-.5);v.body.add(sensor);
+ v.signatureFx={shell,sensor};applySignatureCosmetics();
+}
+function applySignatureCosmetics(){
+ const v=signatureDriveCar();if(!v)return;
+ const scale=signatureUpgrades.monsterWheels?1.48:signatureUpgrades.wheels?1.24:1;
+ for(const w of v.wheelPivots||[]){w.scale.setScalar(scale);w.position.y=.38+Math.max(0,scale-1)*.12}
+ if(v.signatureFx)v.signatureFx.sensor.visible=signatureUpgrades.sensor;
+}
+function syncProtectionUi(){
+ const v=signatureDriveCar();if(!v)return;
+ const own=mode==='car'&&isSignatureCar(pv);
+ const kind=signatureModes.invincible?'INVINCIBLE':signatureModes.shieldOn&&signatureUpgrades.shield?'SHIELD '+Math.round(shieldCharge)+'%':signatureUpgrades.sensor?'SENSOR':'NORMAL';
+ $('signatureProtectionHud').textContent='CAR '+Math.round(v.health)+'% · '+kind;
+ $('signatureProtectionHud').style.display=own?'block':'none';
+ $('touchInvincible').textContent='◈ INVINCIBLE '+(signatureModes.invincible?'ON':'OFF');
+ $('touchShield').textContent='⛨ SHIELD '+(signatureModes.shieldOn?'ON':'OFF');
+ $('touchOrb').textContent=orbWanted?'◉ DISMISS ORB':'◉ CALL ORB';
+ for(const [id,on] of [['touchInvincible',signatureModes.invincible],['touchShield',signatureModes.shieldOn]])$(id).setAttribute('aria-pressed',String(on));
+ for(const id of ['touchInvincible','touchShield','touchOrb','touchLaser'])$(id).style.display=own?'block':'none';
+ $('touchLaser').disabled=!signatureUpgrades.laser;
+}
+function toggleInvincible(){
+ if(mode!=='car'||!isSignatureCar(pv))return false;
+ signatureModes.invincible=!signatureModes.invincible;
+ if(signatureModes.invincible){pv.health=100;pv.disabled=false;pv.root.userData.wrecked=false}
+ toast('INVINCIBLE '+(signatureModes.invincible?'ON':'OFF'));syncProtectionUi();return true;
+}
+function toggleShield(){
+ if(mode!=='car'||!isSignatureCar(pv))return false;
+ if(!signatureUpgrades.shield)return toast('Install shield at garage'),false;
+ signatureModes.shieldOn=!signatureModes.shieldOn;toast('SHIELD '+(signatureModes.shieldOn?'ON':'OFF'));syncProtectionUi();return true;
+}
+function makeOrbCompanion(){
+ if(orbCompanion)return;
+ const g=new THREE.Group();
+ const core=new THREE.Mesh(new THREE.IcosahedronGeometry(.46,1),new THREE.MeshStandardMaterial({color:0x83f4e7,metalness:.48,roughness:.2,emissive:0x0eb9b9,emissiveIntensity:2}));
+ const ring=new THREE.Mesh(new THREE.TorusGeometry(.68,.045,7,30),new THREE.MeshBasicMaterial({color:0xeed783}));
+ ring.rotation.x=.7;g.add(core,ring);scene.add(g);g.visible=false;orbCompanion={group:g,ring};
+}
+function callOrb(){
+ if(!signatureUpgrades.orb)return toast('Unlock the orb at the garage'),false;
+ orbWanted=!orbWanted;if(orbWanted)makeOrbCompanion();
+ toast(orbWanted?'ORB RECALL · COMING TO MAC':'ORB ON STANDBY');syncProtectionUi();return true;
+}
+function fireCarLaser(){
+ if(mode!=='car'||!isSignatureCar(pv)||!signatureUpgrades.laser||laserPulseCooldown>0)return false;
+ laserPulseCooldown=.9;const v=pv,dx=Math.sin(v.h),dz=Math.cos(v.h);
+ const start=new THREE.Vector3(v.x+dx*2.3,v.y+1.05,v.z+dz*2.3);
+ const end=new THREE.Vector3(start.x+dx*36,start.y,start.z+dz*36);
+ let target=null,min=36;
+ for(const o of vehicles){
+  if(o===v||o.disabled||o.health<=0)continue;
+  const x=o.x-start.x,z=o.z-start.z,f=x*dx+z*dz,l=Math.abs(-x*dz+z*dx);
+  if(f>1&&f<min&&l<2.8){target=o;min=f}
+ }
+ if(target){end.set(target.x,target.y+1,target.z);hurtVehicle(target,20,false)}
+ const mesh=new THREE.Line(new THREE.BufferGeometry().setFromPoints([start,end]),new THREE.LineBasicMaterial({color:0x5bfbfa,transparent:true,opacity:.95,depthTest:false}));
+ scene.add(mesh);energyPulses.push({mesh,life:.22});soundFx(460,.09);return true;
+}
+function updateSignatureAccessories(dt){
+ laserPulseCooldown=Math.max(0,laserPulseCooldown-dt);
+ for(let i=energyPulses.length-1;i>=0;i--){
+  const o=energyPulses[i];o.life-=dt;
+  if(o.life<=0){scene.remove(o.mesh);o.mesh.geometry.dispose();o.mesh.material.dispose();energyPulses.splice(i,1)}
+  else o.mesh.material.opacity=Math.min(1,o.life/.22);
+ }
+ const v=signatureDriveCar();if(!v)return;
+ if(signatureUpgrades.shield&&signatureModes.shieldOn)shieldCharge=Math.min(100,shieldCharge+dt*5);
+ shieldFlash=Math.max(0,shieldFlash-dt);
+ if(v.signatureFx){
+  const on=signatureUpgrades.shield&&signatureModes.shieldOn&&shieldCharge>0;v.signatureFx.shell.visible=on;
+  if(on)v.signatureFx.shell.material.opacity=.09+shieldFlash*.2+Math.sin(performance.now()*.004)*.02;
+ }
+ if(orbCompanion){
+  const g=orbCompanion.group;g.visible=orbWanted&&signatureUpgrades.orb;
+  if(g.visible){
+   const p=mode==='car'?pv:P,t=performance.now()/1000;
+   const y=mode==='car'?pv.y+3.25:groundY(p.x,p.z)+Math.max(2.7,P.alt+2);
+   const goal=new THREE.Vector3(p.x+Math.cos(t*1.4)*2.4,y+Math.sin(t*2)*.25,p.z+Math.sin(t*1.4)*2.4);
+   g.position.lerp(goal,Math.min(1,dt*2.6));orbCompanion.ring.rotation.y+=dt*2;
+  }
+ }
+}
+
+function renderGarageItems(){
+ const v=signatureDriveCar();
+ $('garageMoney').textContent='CASH $'+gameMoney.toLocaleString()+' · '+(v?'CAR '+v.health+'%':'NO CAR');
+ const list=$('garageItems');list.textContent='';
+ for(const [key,item] of Object.entries(GARAGE_UPGRADES)){
+  const card=document.createElement('div');card.className='garageItem';
+  const title=document.createElement('strong');title.textContent=item.name;
+  const description=document.createElement('small');description.textContent=item.desc;
+  const buy=document.createElement('button');
+  buy.textContent=signatureUpgrades[key]?'✓ INSTALLED':'BUY $'+item.price;
+  buy.disabled=signatureUpgrades[key]||gameMoney<item.price||(key==='monsterWheels'&&!signatureUpgrades.wheels);
+  buy.addEventListener('click',()=>purchaseGarageUpgrade(key));
+  card.append(title,description,buy);list.append(card);
+ }
+}
+function purchaseGarageUpgrade(key){
+ if(!garageOpened||!Object.hasOwn(GARAGE_UPGRADES,key)||signatureUpgrades[key])return false;
+ if(key==='monsterWheels'&&!signatureUpgrades.wheels)return false;
+ const cost=GARAGE_UPGRADES[key].price;
+ if(gameMoney<cost)return false;
+ gameMoney-=cost;signatureUpgrades[key]=true;saveSignatureUpgrades();saveProgress();
+ ensureSignatureFx();applySignatureCosmetics();renderGarageItems();
+ $('garageNote').textContent=GARAGE_UPGRADES[key].name+' INSTALLED · SAVED';return true;
+}
+function openGarage(){
+ if(garageOpened)return true;
+ if(!garageAvailable())return toast('Park in the service bay and stop'),false;
+ if(!isSignatureCar(pv))return toast('Mac’s signature car only'),false;
+ garageWasPaused=gamePaused;garageOpened=true;gamePaused=true;
+ $('garageOverlay').hidden=false;$('pauseOverlay').hidden=true;
+ $('garageNote').textContent='Choose your modifications. Invincibility starts OFF.';
+ renderGarageItems();return true;
+}
+function closeGarage(){
+ if(!garageOpened)return;
+ garageOpened=false;$('garageOverlay').hidden=true;gamePaused=garageWasPaused;
+ $('pauseOverlay').hidden=!gamePaused;syncProtectionUi();
+}
+$('garageClose').addEventListener('click',closeGarage);
+$('garageOpenBtn').addEventListener('click',openGarage);
+for(const [id,fn] of [
+ ['touchGarage',openGarage],['touchInvincible',toggleInvincible],['touchShield',toggleShield],
+ ['touchOrb',callOrb],['touchLaser',fireCarLaser]
+])$(id).addEventListener('click',fn);
+
 /* v30 car accessories. One headlight spotlight per currently driven vehicle; other lights are emissive meshes. */
 const hornSources={key:false,pad:false,touch:false};let hornGain=null,hornOscA=null,hornOscB=null;
 function activeCarExtras(){
@@ -1608,7 +1811,7 @@ function refreshVehicleExtrasUI(){const e=activeCarExtras();if(!e)return;
  $('touchHeadlights').textContent=e.headlights?'💡 HEADLIGHTS ON':'💡 HEADLIGHTS OFF';
  for(const [id,val] of [['touchHeadlights',e.headlights],['touchLeftTurn',e.signal==='left'],['touchRightTurn',e.signal==='right'],['touchHazards',e.signal==='hazard']])$(id).setAttribute('aria-pressed',String(val));
 }
-function updateVehicleExtras(){if(mode!=='car'||!pv?.extras)return;
+function updateVehicleExtras(){syncProtectionUi();if(mode!=='car'||!pv?.extras)return;
  const e=pv.extras,pulse=Math.floor(performance.now()/295)%2===0;
  for(const lamp of e.lamps)lamp.material.opacity=e.headlights?1:.15;
  e.beam.intensity=e.headlights?3.5:0;
@@ -1977,6 +2180,7 @@ const DEBRIS_PARTS=[[.4,.2,.25,0,.5,2.3],[.18,.12,.1,-1.04,1.14,.85],[.1,.5,.9,1
 function spawnDebris(v,[w,h,d,lx,ly,lz]){const m=new THREE.Mesh(new RoundedBoxGeometry(w,h,d,2,Math.min(w,h,d)*.3),v.paint);m.castShadow=true;m.position.copy(v.root.localToWorld(new THREE.Vector3(lx,ly,lz)));m.rotation.y=v.h;scene.add(m);const a=Math.random()*6.28,sp=(v.speed||0)*.6;fxDebris.push({m,vx:Math.sin(v.h)*sp+Math.cos(a)*3+Math.sign(lx||1)*2,vy:3+Math.random()*3,vz:Math.cos(v.h)*sp+Math.sin(a)*3,rx:(Math.random()-.5)*9,rz:(Math.random()-.5)*9,life:40})}
 function disableVehicle(v){
  if(v.disabled)return false;
+ if(isSignatureCar(v)&&signatureModes.invincible){v.health=100;return false}
  v.health=0;v.disabled=true;v.speed=0;v.steer=0;v.mode='wreck';
  v.hover=false;v.hoverLanding=false;v.hoverHeight=0;v.hoverVy=0;
  v.engineOn=false;v.root.userData.wrecked=true;
@@ -2003,6 +2207,16 @@ function updateWreckFlashes(dt){for(let i=wreckFlashes.length-1;i>=0;i--){const 
 }}
 function hurtVehicle(v,amt,crash){
  if(v.disabled||v.health<=0)return false;
+ if(isSignatureCar(v)){
+  if(signatureModes.invincible){v.health=100;return false}
+  amt=Math.max(0,amt)*.22;
+  if(signatureUpgrades.shield&&signatureModes.shieldOn&&shieldCharge>0){
+   const absorbed=Math.min(amt,shieldCharge);shieldCharge-=absorbed;shieldFlash=.45;amt-=absorbed;
+   if(amt<=0)return false;
+  }
+  if(signatureUpgrades.sensor)amt*=.1;
+ }
+
  const prior=v.health;
  v.health=Math.max(0,v.health-Math.max(0,amt));const f=1-v.health/100;
  if(v.paint&&v.paint.color){v.base=v.base||v.paint.color.clone();v.paint.color.copy(v.base).lerp(new THREE.Color(0x1d1a18),Math.min(.8,f*.9));v.paint.roughness=Math.min(.9,.2+f*.7);v.paint.clearcoat=Math.max(0,1-f*1.4);v.paint.needsUpdate=true;v.paint.emissive.setHex(v.health<=25?0x68251a:0x180000);v.paint.emissiveIntensity=v.health<40?.46:0}
@@ -2314,14 +2528,18 @@ function createNeighborhoodInteractions(){
 }
 function installGarageAndLanding(){
  const gx=-390,gz=-81,garage=new THREE.Group();garage.position.set(gx,.12,gz);scene.add(garage);
- const shopMat=new THREE.MeshStandardMaterial({color:0x475a51,roughness:.85}),doorMat=new THREE.MeshStandardMaterial({color:0xb3ad98,metalness:.35,roughness:.55});
- const gb=(w,h,d,mat,x,y,z)=>{const mesh=new THREE.Mesh(new RoundedBoxGeometry(w,h,d,3,.18),mat);mesh.position.set(x,y,z);garage.add(mesh)};
- gb(16,7.2,14,shopMat,0,3.6,0);gb(10,5.2,.3,doorMat,0,2.7,7.1);gb(11,.7,.45,new THREE.MeshStandardMaterial({color:0xd7b45b}),0,6.6,7.15);
- interactSign('SHANX AUTO GARAGE',garage,0,7.7,7.35,12);
- worldActions.push({x:gx,z:gz+9,range:13,label:'GARAGE: SERVICE CAR $160',kind:'garage'});
+ const wall=new THREE.MeshStandardMaterial({color:0x3a5058,roughness:.76}),gold=new THREE.MeshStandardMaterial({color:0xe5bd62,metalness:.55,roughness:.3});
+ const floor=new THREE.MeshStandardMaterial({color:0x176f60,emissive:0x0a4f41,emissiveIntensity:.38});
+ const box=(w,h,d,mat,x,y,z)=>{const mesh=new THREE.Mesh(new RoundedBoxGeometry(w,h,d,3,.12),mat);mesh.position.set(x,y,z);garage.add(mesh)};
+ // Open-ended service bay, side walls and lift lane: cars can drive through the entrance.
+ box(16,.65,15,wall,0,7,0);box(.7,6.7,15,wall,-7.6,3.35,0);box(.7,6.7,15,wall,7.6,3.35,0);
+ box(16,6.8,.7,wall,0,3.4,-7.1);box(14,.17,14,wall,0,.12,0);
+ box(7,.09,10,floor,0,.26,4.8);box(16,.8,.48,gold,0,6.55,7.28);
+ for(const side of [-1,1])box(.2,6.3,.25,gold,side*6.9,3.3,7.2);
+ interactSign('SHANX AUTO CUSTOMS',garage,0,6.6,7.65,13);
+ worldActions.push({x:gx,z:-76,range:16,label:'CUSTOMIZE CAR',kind:'garage'});
  worldActions.push({x:-1600,z:520,range:16,label:'EXPLORE RIVER LANDING',kind:'landing'});
 }
-
 function nearestAction(){if(mode!=='foot'||P.fly||P.alt>1.2)return null;
  if(insideBuilding){const b=insideBuilding,counterZ=b.minZ+2.7;const d=Math.hypot(P.x-b.x,P.z-counterZ);return d<4.2?{label:'GET A DRINK $5',kind:'indoorDrink',d:0}:{label:'EXIT SHOP',kind:'exitShop',d:0}}
  let best=null,dist=Infinity;
@@ -2331,12 +2549,15 @@ function nearestAction(){if(mode!=='foot'||P.fly||P.alt>1.2)return null;
  return best;
 }
 let latestAction=null,actionCool=0;
-function performAction(){if(!hasStarted||gamePaused)return false;const a=nearestAction();if(!a){toast('No interaction nearby · explore for shops and carts');return false}
+function performAction(){if(!hasStarted||gamePaused)return false;
+ if(mode==='car'&&garageDistance(pv)<GARAGE_BAY.r)return openGarage();
+ const a=nearestAction();if(!a){toast('No interaction nearby · explore for shops and carts');return false}
  if(a.kind==='door'||a.kind==='exitShop'){buildingInteract();return true}
  if(a.kind==='cash'){gameMoney+=a.t.amount;a.t.time=0;saveProgress();toast('PICKED UP $'+a.t.amount);return true}
  if(a.kind==='bench'){P.hp=Math.min(100,P.hp+16);toast('Rested · health restored');return true}
  if(a.kind==='landing'){toast('Three Rivers Landing · riverboats and bridges to explore');return true}
  if(a.kind==='garage'){
+   if(garageDistance(signatureDriveCar())<GARAGE_BAY.r){toast('Enter Mac\'s signature car to customize it');return true}
    const nearby=vehicles.filter(v=>v.type==='car'&&Math.hypot(v.x-P.x,v.z-P.z)<20).sort((a,b)=>Math.hypot(a.x-P.x,a.z-P.z)-Math.hypot(b.x-P.x,b.z-P.z))[0];
    if(!nearby){toast('Bring an undamaged or repairable car closer to the garage');return false}
    if(nearby.disabled||nearby.health<=0){toast('This vehicle is a wreck · salvage feature coming later');return false}
@@ -2347,6 +2568,9 @@ function performAction(){if(!hasStarted||gamePaused)return false;const a=nearest
  gameMoney-=cost;P.hp=Math.min(100,P.hp+(a.kind==='hotdog'?12:5));saveProgress();toast(a.kind==='hotdog'?'Hot dog purchased · +12 health':'Juice purchased · +5 health');return true;
 }
 function updateWorldAction(){const a=nearestAction(),label=$('actionPrompt');latestAction=a;
+ const nearBay=mode==='car'&&garageAvailable();
+ $('garageOpenBtn').hidden=!nearBay;
+ if(nearBay){label.hidden=false;label.textContent='G / LT · SHANX AUTO CUSTOMS';$('bAction').textContent='GARAGE';return}
  if(mode==='foot'&&P.fly){label.hidden=false;label.textContent='HOLD ACTION / G / LT · SUPER SPEED';$('bAction').textContent='BOOST';$('bAction').classList.add('ready');return}
  $('bAction').textContent='ACT';
  if(!a){label.hidden=true;$('bAction').classList.remove('ready')}else{label.hidden=false;label.textContent=(inputPreference==='keyboard'?'G':'ACTION')+' · '+a.label;$('bAction').classList.add('ready')}
@@ -2396,7 +2620,7 @@ for(let n=0;n<3;n++){
  const bike=makeBicycle();bike.x=C[n+3]+4.3;bike.z=C[4]+17+n*14;bike.h=(n%2)*Math.PI;placeVehicle(bike);
 }
 // player car
-pv=makeCar(0x086340);dressSignatureCar(pv);pv.mode='player';pv.x=C[2]+4;pv.z=C[2]+30;pv.h=0;placeVehicle(pv);
+pv=makeCar(0x086340);dressSignatureCar(pv);const signatureCar=pv;ensureSignatureFx();pv.mode='player';pv.x=C[2]+4;pv.z=C[2]+30;pv.h=0;placeVehicle(pv);
 camHead=pv.h;
 
 // traffic
@@ -2773,6 +2997,7 @@ function frame(){
   input.y=clamp((inputPreference==='gamepad'?gamepadAxisY:stick.y+keys.y),-1,1);
   if(gamePaused||!hasStarted||!$('frontMenu').hidden||!$('helpPanel').hidden){updateGameAudio(0);composer.render();return}
   advanceWorldTime(dt);
+  updateSignatureAccessories(dt);
 
   for(const v of vehicles){
     v._dt=dt;
@@ -2875,6 +3100,11 @@ setTimeout(()=>$('title').style.opacity=0,7000);
 window.__X13_FUSION_BUILD='single-stick-v11.1';window.__X13_FUSION_DIAGNOSTICS=()=>({vehicles:vehicles.length,people:npcList.length,avatar:'Claude v17 human + animated pistol',combat:'hit damage and v17 vehicle destruction',doors:enterableBuildings.length,mission:missionIndex,wanted,fly:P.fly,paused:gamePaused,landedHits,activeNPCs:npcList.filter(p=>p.hp>0).length});
 window.__X13_TABLET_BUILD='v19-claude-polish-flight';window.__X13_COMPARISON_SOURCE='Claude v17 polish plus X13 v15';window.__X13_COMBAT_BUILD='v13.2-homewood';window.__X13_V18_DIAGNOSTICS=()=>({wanted,maxWanted:5,officers:footOfficers.filter(o=>o.active).length,officerShots:copPulseEffects.length,fly:P.fly,hasFlyButton:!!$('bQuickFly'),nightAmbient:nightAmbient.intensity,playerHp:P.hp});window.__X13_HOMEWOOD_DIAGNOSTICS=()=>({blocks:(N-1)*(N-1),houses:buildingObjects.filter(b=>b.kind==='residence').length,shops:buildingObjects.filter(b=>b.kind==='storefront').length,parks:parkPlaces.length,treeTrunks:treeSpots.length,vehicles:vehicles.length,bicycles:vehicles.filter(v=>v.type==='bike').length,missions:MS.length,cashDrops:moneyTokens.length,npcs:npcList.length});
 window.__X13_V30_HEAT={get points(){return heatPoints},get stars(){return wanted},thresholds:heatThresholds,add:(kind,n=1)=>addWanted(n,kind),reset:resetWantedHeat,get tanks(){return armoredUnits.length},get jets(){return jetUnits.length}};
+window.__X13_V34_GARAGE=()=>({
+ build:'v34-garage-orb',available:garageAvailable(),bay:{...GARAGE_BAY},carHealth:signatureDriveCar()?.health,
+ signatureOnly:isSignatureCar(signatureDriveCar()),shopOpen:garageOpened,
+ upgrades:{...signatureUpgrades},modes:{...signatureModes},charge:shieldCharge,
+ orbActive:orbWanted,laserCooldown:laserPulseCooldown});
 window.__X13_V33_DIAGNOSTICS=()=>({build:'v33-preview',streetProps:streetProps.map(p=>({kind:p.kind,active:p.active})),downedPolice:footOfficers.filter(o=>o.down>0).length});
 window.__X13_V32_DIAGNOSTICS=()=>({build:'v32-car-impact',activeKnockbacks:npcList.filter(p=>!!p.vehicleKnockback).length,physics:'speed-scaled-swept'});
 window.__X13_V31_DIAGNOSTICS=()=>({build:'v31-pedestrians',citizens:npcList.length,visible:npcList.filter(p=>p.rig.root.visible).length,downed:npcList.filter(p=>p.hp<=0).length});
