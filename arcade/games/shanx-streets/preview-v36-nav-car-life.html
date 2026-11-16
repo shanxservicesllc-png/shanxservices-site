@@ -384,7 +384,7 @@ body[data-ui="car"] #tabletMorePanel{max-height:66dvh;overflow-y:auto}
 <div id="zoneR" class="zone"></div>
 <div id="stickBase"><div id="stickKnob"></div></div>
 <div id="tabletTopControls"><button id="bMore" type="button" aria-label="More on-foot actions" aria-expanded="false" title="Extra actions">⋯</button><button id="bPause" type="button" aria-label="Pause game" title="Pause">Ⅱ</button></div>
-<div id="tabletMorePanel" hidden><button id="bMenuFly" type="button">FLY</button><button id="bMenuSprint" type="button" aria-pressed="false">SPRINT: OFF</button><button id="bMenuCrouch" type="button" aria-pressed="false">CROUCH: OFF</button><button class="vehicleExtra" id="touchHeadlights" type="button">💡 HEADLIGHTS</button><button class="vehicleExtra" id="touchLeftTurn" type="button">◀ LEFT SIGNAL</button><button class="vehicleExtra" id="touchRightTurn" type="button">RIGHT SIGNAL ▶</button><button class="vehicleExtra" id="touchHazards" type="button">⚠ HAZARDS</button><button class="vehicleExtra" id="touchHorn" type="button">🔊 HOLD HORN</button><button class="vehicleExtra" id="touchMusic" type="button">♫ MUSIC NEXT</button>
+<div id="tabletMorePanel" hidden><button id="bMenuFly" type="button">FLY</button><button id="bMenuSprint" type="button" aria-pressed="false">SPRINT: OFF</button><button id="bMenuCrouch" type="button" aria-pressed="false">CROUCH: OFF</button><button id="touchRecallCar" type="button">🚘 CALL MY CAR</button><button class="vehicleExtra" id="touchHeadlights" type="button">💡 HEADLIGHTS</button><button class="vehicleExtra" id="touchLeftTurn" type="button">◀ LEFT SIGNAL</button><button class="vehicleExtra" id="touchRightTurn" type="button">RIGHT SIGNAL ▶</button><button class="vehicleExtra" id="touchHazards" type="button">⚠ HAZARDS</button><button class="vehicleExtra" id="touchHorn" type="button">🔊 HOLD HORN</button><button class="vehicleExtra" id="touchMusic" type="button">♫ MUSIC NEXT</button>
 <button class="vehicleExtra signatureExtra" id="touchInvincible" type="button">◈ INVINCIBLE OFF</button>
 <button class="vehicleExtra signatureExtra" id="touchShield" type="button">⛨ SHIELD OFF</button>
 <button class="vehicleExtra signatureExtra" id="touchOrb" type="button">◉ CALL ORB</button>
@@ -1482,6 +1482,7 @@ function pollGamepad(dt){
  }
  if(!$('realMapOverlay').hidden){if(pressed('map')||pressed('pause'))closeRealMap();gamepadHeld=nextHeld;return}
  if(garageOpened){if(pressed('pause')||pressed('interact'))closeGarage();gamepadHeld=nextHeld;return}
+ if(!$('navOverlay').hidden){if(pressed('pause')||pressed('interact'))closeNavPanel();gamepadHeld=nextHeld;return}
  if(!$('frontMenu').hidden){if(pressed('shootFace')||pressed('pause'))$('startGame').click();gamepadHeld=nextHeld;return}
  if(!$('helpPanel').hidden){if(pressed('jumpBoost')||pressed('pause'))closeHelp();gamepadHeld=nextHeld;return}
  if(pressed('pause'))togglePause();
@@ -1502,7 +1503,9 @@ function pollGamepad(dt){
  if(pressed('crouchHandbrake')&&mode==='foot'&&!P.fly)uiCrouchToggle=!uiCrouchToggle;
  if(pressed('interact')&&!(mode==='foot'&&P.fly)&&!(mode==='car'&&on('shootTrigger')))performAction();
  flightBoostHeld=mode==='foot'&&P.fly&&on('interact');
- if(pressed('cameraView'))nextCameraView();if(pressed('cameraReset'))resetCamera();
+ if(pressed('cameraView')&&mode==='foot'&&on('interact'))callSignatureVehicle();
+ else if(pressed('cameraView'))nextCameraView();
+ if(pressed('cameraReset'))resetCamera();
  if(pressed('map'))openRealMap();
  if(mode==='car'){
   if(pressed('hazards'))toggleVehicleSignal('hazard');
@@ -1541,6 +1544,7 @@ addEventListener('keydown',e=>{
   if(e.code==='KeyJ'&&mode==='car')setVehicleHornInput('key',true);
   if(e.code==='KeyT')openControllerSettings();
   if(e.code==='KeyU'&&mode==='car')openGarage();
+  if(e.code==='KeyU'&&mode==='foot')callSignatureVehicle();
   if(e.code==='KeyN'&&mode==='car')toggleInvincible();
   if(e.code==='KeyY'&&mode==='car')toggleShield();
   if(e.code==='KeyO')callOrb();
@@ -2857,6 +2861,68 @@ pv.root.add(spot);spot.position.set(0,1,2);pv.root.add(spot.target);spot.target.
 
 /* ---------- updates ---------- */
 
+
+/* v36: call the original signature car. It follows road intersections to Mac.
+   No car is spawned/teleported when summoned. */
+let recallState={active:false,route:[],next:0,target:null,status:'IDLE',rerouteClock:0};
+function callSignatureVehicle(){
+ const car=signatureDriveCar();
+ if(mode!=='foot'||P.fly||insideBuilding){toast('Get out on foot to summon the car');return false}
+ if(!car||car.disabled||car.health<=0){toast('SIGNATURE CAR UNAVAILABLE');return false}
+ if(recallState.active){toast('YOUR SIGNATURE CAR IS ALREADY COMING');return true}
+ if(Math.hypot(car.x-P.x,car.z-P.z)<9){toast('SIGNATURE CAR IS ALREADY HERE');return true}
+ const route=planRoadRoute(car,P);
+ if(route.length<2){toast('NO SAFE ROAD TO YOUR LOCATION');return false}
+ car.mode='summon';car.hover=false;car.hoverLanding=false;car.hoverHeight=0;car.speed=0;
+ recallState={active:true,route,next:1,target:{x:P.x,z:P.z},status:'DRIVING',rerouteClock:0};
+ toast('🚘 AUTOPILOT · SIGNATURE CAR ON ITS WAY');return true;
+}
+function updateSummonedCar(car,dt){
+ if(!recallState.active||car!==signatureDriveCar())return;
+ if(mode!=='foot'){recallState.active=false;recallState.status='CANCELLED';car.mode='parked';car.speed=0;return}
+ if(Math.hypot(car.x-P.x,car.z-P.z)<9){
+  recallState.active=false;recallState.status='ARRIVED';car.mode='parked';car.speed=0;
+  car.h=Math.atan2(P.x-car.x,P.z-car.z);toast('🚘 YOUR CAR HAS ARRIVED');return;
+ }
+ recallState.rerouteClock+=dt;
+ if(recallState.rerouteClock>2.5&&Math.hypot(P.x-recallState.target.x,P.z-recallState.target.z)>32){
+  const next=planRoadRoute(car,P);
+  if(next.length>1){recallState.route=next;recallState.next=1;recallState.target={x:P.x,z:P.z}}
+  recallState.rerouteClock=0;
+ }
+ let to=recallState.route[recallState.next];
+ if(!to){
+  const reroute=planRoadRoute(car,P);
+  if(reroute.length<2){recallState.status='ROAD BLOCKED';recallState.active=false;car.mode='parked';car.speed=0;return}
+  recallState.route=reroute;recallState.next=1;to=reroute[1];
+ }
+ let dx=to.x-car.x,dz=to.z-car.z,dist=Math.hypot(dx,dz);
+ if(dist<4.5&&recallState.next<recallState.route.length-1){
+  recallState.next++;to=recallState.route[recallState.next];
+  dx=to.x-car.x;dz=to.z-car.z;dist=Math.hypot(dx,dz);
+ }
+ if(dist<.01)return;
+ const desired=Math.atan2(dx,dz);
+ car.h=angLerp(car.h,desired,Math.min(1,dt*6));
+ const fx=Math.sin(car.h),fz=Math.cos(car.h);
+ let targetSpeed=Math.min(dist*1.7,Math.hypot(car.x-P.x,car.z-P.z)>350?47:Math.hypot(car.x-P.x,car.z-P.z)>85?25:9);
+ if(Math.abs(angleDelta(desired,car.h))>.6)targetSpeed=Math.min(7,targetSpeed);
+ for(const ped of npcList){
+  if(ped.hp<=0||!ped.rig.root.visible)continue;
+  const x=ped.x-car.x,z=ped.z-car.z,along=x*fx+z*fz,lateral=Math.abs(-x*fz+z*fx);
+  if(along>0&&along<5&&lateral<2.1){targetSpeed=0;break}
+ }
+ car.speed+=(targetSpeed-car.speed)*Math.min(1,dt*5);
+ const trial={x:car.x+fx*car.speed*dt,z:car.z+fz*car.speed*dt};
+ if(riverObstacle(trial.x,trial.z)||pushFromBuildings(trial,1.2)){
+  car.speed=0;const route=planRoadRoute(car,P);
+  if(route.length>1){recallState.route=route;recallState.next=1}
+  else{recallState.active=false;recallState.status='ROAD BLOCKED';car.mode='parked';toast('CAR COULD NOT REACH YOU')}
+  return;
+ }
+ car.x=trial.x;car.z=trial.z;
+}
+
 /* v32: swept car-to-citizen contact, non-graphic speed-based knockback arc. */
 function advanceCitizenKnockback(p,dt){
  const k=p.vehicleKnockback;if(!k)return;
@@ -3226,6 +3292,7 @@ function closeNavPanel(){
  $('navOverlay').hidden=true;gamePaused=gamePausedBeforeNav;$('pauseOverlay').hidden=!gamePaused;
 }
 $('navOpen').addEventListener('click',openNavPanel);
+$('touchRecallCar').addEventListener('click',callSignatureVehicle);
 $('navClose').addEventListener('click',closeNavPanel);
 $('navClear').addEventListener('click',clearNavWaypoint);
 $('navRecall').addEventListener('click',()=>{closeNavPanel();callSignatureVehicle()});
@@ -3327,6 +3394,7 @@ function frame(){
     const previousX=v.x,previousZ=v.z;
     if(v.mode==='ai')updateAI(v,dt);
     else if(v.mode==='player')updatePlayerCar(v,dt);
+    else if(v.mode==='summon')updateSummonedCar(v,dt);
     else if(v.mode==='police'){/* updatePolice() handles response movement */}
     else if(v.mode==='wreck'){v.speed=0;v.steer=0;}
     else{v.speed*=Math.pow(0.1,dt);v.steer*=0.9}
@@ -3408,6 +3476,7 @@ function frame(){
   if(toastT>0){toastT-=dt;if(toastT<=0)$('toast').style.opacity=0}
   const hs=$('hoverStatus');if(hs){hs.style.display=(mode==='car'&&(pv.hover||pv.hoverLanding))?'block':'none';if(mode==='car')hs.textContent='HOVER '+Math.round((pv.hoverHeight||0)*3.28084)+' FT · '+Math.round(Math.abs(pv.speed)*2.23694)+' MPH';}
   drawMap(fx,fz,mode==='car'?pv.h:footYaw);updateNavGuide(dt);
+  $('navRecall').textContent=recallState.active?'🚘 CAR APPROACHING':'🚘 CALL MY SIGNATURE CAR';
 
   composer.render();
 }
@@ -3423,6 +3492,11 @@ setTimeout(()=>$('title').style.opacity=0,7000);
 window.__X13_FUSION_BUILD='single-stick-v11.1';window.__X13_FUSION_DIAGNOSTICS=()=>({vehicles:vehicles.length,people:npcList.length,avatar:'Claude v17 human + animated pistol',combat:'hit damage and v17 vehicle destruction',doors:enterableBuildings.length,mission:missionIndex,wanted,fly:P.fly,paused:gamePaused,landedHits,activeNPCs:npcList.filter(p=>p.hp>0).length});
 window.__X13_TABLET_BUILD='v19-claude-polish-flight';window.__X13_COMPARISON_SOURCE='Claude v17 polish plus X13 v15';window.__X13_COMBAT_BUILD='v13.2-homewood';window.__X13_V18_DIAGNOSTICS=()=>({wanted,maxWanted:5,officers:footOfficers.filter(o=>o.active).length,officerShots:copPulseEffects.length,fly:P.fly,hasFlyButton:!!$('bQuickFly'),nightAmbient:nightAmbient.intensity,playerHp:P.hp});window.__X13_HOMEWOOD_DIAGNOSTICS=()=>({blocks:(N-1)*(N-1),houses:buildingObjects.filter(b=>b.kind==='residence').length,shops:buildingObjects.filter(b=>b.kind==='storefront').length,parks:parkPlaces.length,treeTrunks:treeSpots.length,vehicles:vehicles.length,bicycles:vehicles.filter(v=>v.type==='bike').length,missions:MS.length,cashDrops:moneyTokens.length,npcs:npcList.length});
 window.__X13_V30_HEAT={get points(){return heatPoints},get stars(){return wanted},thresholds:heatThresholds,add:(kind,n=1)=>addWanted(n,kind),reset:resetWantedHeat,get tanks(){return armoredUnits.length},get jets(){return jetUnits.length}};
+window.__X13_V36_NAV=()=>({
+ version:'v36',waypoint:navWaypoint&&{...navWaypoint},routeNodes:navRoute.length,
+ recalling:recallState.active,recallStatus:recallState.status,recallRouteNodes:recallState.route.length,
+ carPosition:signatureDriveCar()&&{x:signatureDriveCar().x,z:signatureDriveCar().z}
+});
 window.__X13_V35_DISTRICTS=()=>({
  build:'v35-district-expansion',facades:outerSites.length,collisionBuildings:outerColliderList.length,
  courts:projectCenters.length,roofs:outerRoofs.count,roads:broadRoads.length,
