@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<title>ShanX Streets: Pittsburgh Districts v35</title>
+<title>ShanX Streets: GPS, Car Recall &amp; Living City v36</title>
 <style>
 html,body{margin:0;height:100%;overflow:hidden;background:#000;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:#fff}
 canvas#c{position:fixed;inset:0;width:100%;height:100%;display:block}
@@ -319,6 +319,45 @@ body[data-ui="car"] #tabletMorePanel{max-height:66dvh;overflow-y:auto}
 #signatureProtectionHud{display:none;position:fixed;top:278px;left:12px;z-index:16;background:#082d34d9;border:1px solid #55b3b6;color:#b7fff7;border-radius:8px;padding:6px 8px;font:800 10px system-ui}
 #tabletMorePanel .signatureExtra{display:none}body[data-ui="car"] #tabletMorePanel .signatureExtra{display:block}
 @media(max-width:620px){#garageItems{grid-template-columns:1fr}#garageModal{padding:10px}#signatureProtectionHud{top:216px;left:8px}}
+
+/* v36: clean mobile navigation cockpit, screen-safe map, compact HUD. */
+#navOpen{position:fixed;top:177px;left:12px;z-index:20;border:1px solid #e3c67d;border-radius:10px;padding:7px 11px;background:#10463fee;color:#f6edce;font:800 11px system-ui;min-height:34px;cursor:pointer}
+#routeBanner[hidden],#navOverlay[hidden]{display:none!important}
+#routeBanner{position:fixed;top:219px;left:12px;z-index:10;width:170px;max-width:41vw;border:1px solid #7fcab5;border-radius:9px;background:#061d26e5;color:#dcfff8;padding:7px 9px;font:800 11px/1.4 system-ui;pointer-events:none;box-sizing:border-box}
+#routeArrow{font-size:20px;color:#ffe29b;margin-right:3px}
+#navOverlay{position:fixed;inset:0;z-index:102;background:#07141ef2;display:flex;align-items:center;justify-content:center;padding:14px;box-sizing:border-box}
+#navCard{width:min(600px,100%);max-height:88dvh;overflow:auto;background:#112d39;border:1px solid #e0b764;border-radius:16px;padding:15px;box-shadow:0 16px 45px #000c}
+#navCard h2{font:900 22px system-ui;color:#f0d184;margin:0 0 9px}
+#navCard p{color:#bdd9d9;font:12px/1.5 system-ui;margin:0 0 12px}
+#navChoices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+#navChoices button,#navClose,#navClear,#navRecall{background:#28596a;color:white;border:1px solid #83bba7;border-radius:10px;min-height:42px;padding:8px;font:800 12px system-ui;cursor:pointer}
+#navChoices button[aria-pressed="true"]{background:#1e745a;color:#fff0a3}
+#navActions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+#navStatus{color:#dff1e7;font:12px/1.45 system-ui;display:block;margin-top:8px}
+#map{pointer-events:auto;cursor:crosshair}
+#navCompass{position:fixed;top:14px;left:14px;z-index:10;pointer-events:none;font:900 10px system-ui;color:#ffe5a1;text-shadow:0 0 5px #000;display:none}
+@media(max-width:620px){
+ #map{width:108px;height:108px;top:calc(env(safe-area-inset-top,0px) + 9px);left:8px}
+ #navOpen{top:calc(env(safe-area-inset-top,0px) + 128px);left:8px;min-height:34px}
+ #routeBanner{top:calc(env(safe-area-inset-top,0px) + 170px);left:8px;width:132px;max-width:38vw;padding:5px 6px;font-size:10px}
+ #hud{top:calc(env(safe-area-inset-top,0px) + 56px);right:9px}
+ #hud #spd{font-size:24px}#hud #clk{font-size:11px}
+ #gameStats{top:calc(env(safe-area-inset-top,0px) + 115px);right:9px;min-width:0;max-width:43vw;padding:5px 6px;font-size:10px}
+ #gameStats .mission{max-width:130px;font-size:9px}
+ #gameStats #carCondition{font-size:9px!important}
+ #hoodName{top:auto;bottom:calc(env(safe-area-inset-bottom,0px) + 176px);left:8px;transform:none;max-width:42vw;white-space:normal;font-size:9px;padding:3px 5px;letter-spacing:0}
+ #streetTag,#gpsStreet,#mapLegend,#combatStats{display:none!important}
+ #signatureProtectionHud{top:auto;bottom:calc(env(safe-area-inset-bottom,0px) + 224px);left:8px;max-width:38vw}
+ #sxs-game-feedback-email{top:auto!important;right:auto!important;left:8px!important;bottom:calc(env(safe-area-inset-bottom,0px) + 75px)!important;font-size:9px!important;max-width:34vw!important;padding:4px 6px!important}
+ #navChoices{grid-template-columns:1fr 1fr}
+}
+@media(max-height:510px) and (orientation:landscape){
+ #navOpen{top:105px;left:7px}
+ #routeBanner{top:144px;left:7px;width:138px;font-size:10px}
+ #hoodName{bottom:9px;left:24%;top:auto;transform:none}
+ #gameStats{top:97px}
+}
+
 </style>
 <script type="importmap">
 {"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}
@@ -327,7 +366,17 @@ body[data-ui="car"] #tabletMorePanel{max-height:66dvh;overflow-y:auto}
 <body data-ui="car">
 <a id="sxs-game-feedback-email" href="mailto:shanx@shanxservices.com?subject=ShanX%20Streets%20Game%20Feedback&amp;body=Game%3A%20ShanX%20Streets%0A%0AWhat%20was%20fun%3A%0A%0AWhat%20should%20improve%3A%0A%0ADevice%20(optional)%3A%0A" title="Open an email draft with your game feedback" aria-label="Email feedback about ShanX Streets" style="position:fixed;z-index:2147483647;top:calc(env(safe-area-inset-top,0px) + 64px);right:10px;max-width:calc(100vw - 20px);font:700 12px/1.25 system-ui,sans-serif;letter-spacing:.01em;text-decoration:none;color:#fff;background:rgba(16,28,39,.94);border:1px solid #81e9d2;border-radius:999px;padding:9px 12px;box-shadow:0 3px 12px #0009;touch-action:manipulation;pointer-events:auto">💌 SEND FEEDBACK</a>
 <canvas id="c"></canvas>
-<canvas id="map" width="150" height="150"></canvas><div id="gpsStreet">CURRENT ROAD</div><div id="mapLegend">🟡 GOAL · 🔴🔵 POLICE · ◇ TARGET</div><div id="flightSpeed">FLIGHT BOOST READY</div>
+<canvas id="map" width="150" height="150"></canvas>
+<button id="navOpen" type="button" aria-label="Set GPS waypoint and call vehicle">⌖ GPS / WAYPOINT</button>
+<div id="routeBanner" hidden aria-live="polite"><span id="routeArrow">↑</span> <span id="routeInstruction">CHOOSE DESTINATION</span></div>
+<div id="navOverlay" hidden role="dialog" aria-modal="true" aria-label="Set game GPS waypoint">
+<div id="navCard"><h2>⌖ SHANX NAVIGATION</h2>
+<p>Choose a destination or tap the mini-map to drop a pin. The map rotates with your car or walking direction; the compass shows true in-game north.</p>
+<div id="navChoices"></div><div id="navActions">
+<button id="navRecall" type="button">🚘 CALL MY SIGNATURE CAR</button>
+<button id="navClear" type="button">✕ CLEAR PIN</button>
+<button id="navClose" type="button">✔ DRIVE / WALK</button></div>
+<small id="navStatus" role="status">Choose your destination.</small></div></div><div id="gpsStreet">CURRENT ROAD</div><div id="mapLegend">🟡 GOAL · 🔴🔵 POLICE · ◇ TARGET</div><div id="flightSpeed">FLIGHT BOOST READY</div>
 <div id="hoodName">HOMEWOOD · PITTSBURGH 15208</div><div id="streetTag">HOMEWOOD AVE / FRANKSTOWN RD</div><div id="hud"><div id="spd">0<small>MPH</small></div><div id="clk">--:--</div><div id="timeStatus">TIME: NORMAL</div></div>
 <div id="toast"></div>
 <div id="title">LEFT THUMB MOVE · RIGHT SIDE LOOK · ROUND BUTTONS ACT<br><span style="opacity:.72">Extra actions: tap ⋯ at the top. Pause: tap Ⅱ.</span></div>
@@ -335,7 +384,7 @@ body[data-ui="car"] #tabletMorePanel{max-height:66dvh;overflow-y:auto}
 <div id="zoneR" class="zone"></div>
 <div id="stickBase"><div id="stickKnob"></div></div>
 <div id="tabletTopControls"><button id="bMore" type="button" aria-label="More on-foot actions" aria-expanded="false" title="Extra actions">⋯</button><button id="bPause" type="button" aria-label="Pause game" title="Pause">Ⅱ</button></div>
-<div id="tabletMorePanel" hidden><button id="bMenuFly" type="button">FLY</button><button id="bMenuSprint" type="button" aria-pressed="false">SPRINT: OFF</button><button id="bMenuCrouch" type="button" aria-pressed="false">CROUCH: OFF</button><button class="vehicleExtra" id="touchHeadlights" type="button">💡 HEADLIGHTS</button><button class="vehicleExtra" id="touchLeftTurn" type="button">◀ LEFT SIGNAL</button><button class="vehicleExtra" id="touchRightTurn" type="button">RIGHT SIGNAL ▶</button><button class="vehicleExtra" id="touchHazards" type="button">⚠ HAZARDS</button><button class="vehicleExtra" id="touchHorn" type="button">🔊 HOLD HORN</button><button class="vehicleExtra" id="touchMusic" type="button">♫ MUSIC NEXT</button>
+<div id="tabletMorePanel" hidden><button id="bMenuFly" type="button">FLY</button><button id="bMenuSprint" type="button" aria-pressed="false">SPRINT: OFF</button><button id="bMenuCrouch" type="button" aria-pressed="false">CROUCH: OFF</button><button id="touchRecallCar" type="button">🚘 CALL MY CAR</button><button class="vehicleExtra" id="touchHeadlights" type="button">💡 HEADLIGHTS</button><button class="vehicleExtra" id="touchLeftTurn" type="button">◀ LEFT SIGNAL</button><button class="vehicleExtra" id="touchRightTurn" type="button">RIGHT SIGNAL ▶</button><button class="vehicleExtra" id="touchHazards" type="button">⚠ HAZARDS</button><button class="vehicleExtra" id="touchHorn" type="button">🔊 HOLD HORN</button><button class="vehicleExtra" id="touchMusic" type="button">♫ MUSIC NEXT</button>
 <button class="vehicleExtra signatureExtra" id="touchInvincible" type="button">◈ INVINCIBLE OFF</button>
 <button class="vehicleExtra signatureExtra" id="touchShield" type="button">⛨ SHIELD OFF</button>
 <button class="vehicleExtra signatureExtra" id="touchOrb" type="button">◉ CALL ORB</button>
@@ -949,6 +998,34 @@ for(const p of projectCenters){
   new THREE.MeshBasicMaterial({map:signTexture(p.label),side:THREE.DoubleSide}));
  name.position.set(p.x,4,p.z+31);scene.add(name);
 }
+
+/* v36: efficient citywide details. Shared geometry, two instanced draw groups.
+   Shop fronts, rooftop equipment, street lamps and parking-lot signage. */
+const districtAccents=[],lampPositions=[];
+for(let i=0;i<outerSites.length;i+=13){
+ const [x,z,w,h,d,area]=outerSites[i];
+ const accentX=x-w/2-1.9,accentZ=z+d/2+1.2;
+ if(riverObstacle(accentX,accentZ))continue;
+ districtAccents.push({x:accentX,y:area==='downtown'?4.4:2.5,z:accentZ,width:Math.min(5,w*.55),area});
+ if(i%2===0)lampPositions.push({x:x+w/2+3,z:z+d/2+4});
+}
+const accentGeo=new THREE.BoxGeometry(1,.18,1),accentMesh=new THREE.InstancedMesh(accentGeo,
+ new THREE.MeshStandardMaterial({color:0x53a49d,metalness:.35,roughness:.45}),districtAccents.length);
+districtAccents.forEach((a,i)=>{
+ dummy.position.set(a.x,a.y,a.z);dummy.rotation.set(0,0,0);dummy.scale.set(a.width,1,2.3);dummy.updateMatrix();
+ accentMesh.setMatrixAt(i,dummy.matrix);accentMesh.setColorAt(i,new THREE.Color([0x24836b,0xbd7539,0x286ba1,0xd1b24c][i%4]));
+});
+accentMesh.instanceMatrix.needsUpdate=true;scene.add(accentMesh);
+const lampPosts=new THREE.InstancedMesh(new THREE.CylinderGeometry(.085,.13,7.5,6),
+ new THREE.MeshStandardMaterial({color:0x3a4d58,roughness:.8,metalness:.35}),lampPositions.length);
+const lampBulbs=new THREE.InstancedMesh(new THREE.SphereGeometry(.42,6,4),
+ new THREE.MeshBasicMaterial({color:0xf3e3b1}),lampPositions.length);
+lampPositions.forEach((p,i)=>{
+ dummy.rotation.set(0,0,0);dummy.scale.set(1,1,1);dummy.position.set(p.x,3.8,p.z);dummy.updateMatrix();lampPosts.setMatrixAt(i,dummy.matrix);
+ dummy.position.set(p.x,7.4,p.z);dummy.updateMatrix();lampBulbs.setMatrixAt(i,dummy.matrix);
+});
+lampPosts.instanceMatrix.needsUpdate=lampBulbs.instanceMatrix.needsUpdate=true;
+scene.add(lampPosts,lampBulbs);
 const bridgeMat=new THREE.MeshStandardMaterial({color:0xadb6bd,roughness:.84}),bridgeRailMat=new THREE.MeshStandardMaterial({color:0xe1b85e,metalness:.45,roughness:.46});
 for(const b of riverBridges){
  const group=new THREE.Group();group.position.set(b.x,0,b.z);scene.add(group);
@@ -1433,6 +1510,7 @@ function pollGamepad(dt){
  }
  if(!$('realMapOverlay').hidden){if(pressed('map')||pressed('pause'))closeRealMap();gamepadHeld=nextHeld;return}
  if(garageOpened){if(pressed('pause')||pressed('interact'))closeGarage();gamepadHeld=nextHeld;return}
+ if(!$('navOverlay').hidden){if(pressed('pause')||pressed('interact'))closeNavPanel();gamepadHeld=nextHeld;return}
  if(!$('frontMenu').hidden){if(pressed('shootFace')||pressed('pause'))$('startGame').click();gamepadHeld=nextHeld;return}
  if(!$('helpPanel').hidden){if(pressed('jumpBoost')||pressed('pause'))closeHelp();gamepadHeld=nextHeld;return}
  if(pressed('pause'))togglePause();
@@ -1453,7 +1531,9 @@ function pollGamepad(dt){
  if(pressed('crouchHandbrake')&&mode==='foot'&&!P.fly)uiCrouchToggle=!uiCrouchToggle;
  if(pressed('interact')&&!(mode==='foot'&&P.fly)&&!(mode==='car'&&on('shootTrigger')))performAction();
  flightBoostHeld=mode==='foot'&&P.fly&&on('interact');
- if(pressed('cameraView'))nextCameraView();if(pressed('cameraReset'))resetCamera();
+ if(pressed('cameraView')&&mode==='foot'&&on('interact'))callSignatureVehicle();
+ else if(pressed('cameraView'))nextCameraView();
+ if(pressed('cameraReset'))resetCamera();
  if(pressed('map'))openRealMap();
  if(mode==='car'){
   if(pressed('hazards'))toggleVehicleSignal('hazard');
@@ -1471,7 +1551,7 @@ function pollGamepad(dt){
 
 const down=new Set();
 addEventListener('keydown',e=>{
-  if(e.code==='Escape'){e.preventDefault();if(garageOpened){closeGarage();return}if(!$('controlSettings').hidden){closeControllerSettings();return}if(!$('realMapOverlay').hidden){closeRealMap();return}if(!$('helpPanel').hidden){closeHelp();return}if(!$('frontMenu').hidden&&hasStarted){$('frontMenu').hidden=true;gamePaused=false;return}if(hasStarted)togglePause();return}
+  if(e.code==='Escape'){e.preventDefault();if(!$('navOverlay').hidden){closeNavPanel();return}if(garageOpened){closeGarage();return}if(!$('controlSettings').hidden){closeControllerSettings();return}if(!$('realMapOverlay').hidden){closeRealMap();return}if(!$('helpPanel').hidden){closeHelp();return}if(!$('frontMenu').hidden&&hasStarted){$('frontMenu').hidden=true;gamePaused=false;return}if(hasStarted)togglePause();return}
   if(e.code==='KeyH'){e.preventDefault();if($('helpPanel').hidden)showHelp();else closeHelp();return}
   if(!hasStarted||gamePaused||!$('frontMenu').hidden||!$('helpPanel').hidden)return;
   initAudio();
@@ -1483,6 +1563,7 @@ addEventListener('keydown',e=>{
   if(e.code==='KeyP')togglePause();
   if(e.code==='KeyG'){if(mode==='foot'&&P.fly)flightBoostHeld=true;else performAction()}
   if(e.code==='KeyM')openRealMap();
+  if(e.code==='Tab'){e.preventDefault();openNavPanel()}
   if(e.code==='KeyL'&&mode==='car')toggleVehicleHeadlights();
   if(e.code==='KeyK'&&mode==='car')toggleVehicleSignal('hazard');
   if(e.code==='KeyZ'&&mode==='car')toggleVehicleSignal('left');
@@ -1491,6 +1572,7 @@ addEventListener('keydown',e=>{
   if(e.code==='KeyJ'&&mode==='car')setVehicleHornInput('key',true);
   if(e.code==='KeyT')openControllerSettings();
   if(e.code==='KeyU'&&mode==='car')openGarage();
+  if(e.code==='KeyU'&&mode==='foot')callSignatureVehicle();
   if(e.code==='KeyN'&&mode==='car')toggleInvincible();
   if(e.code==='KeyY'&&mode==='car')toggleShield();
   if(e.code==='KeyO')callOrb();
@@ -2063,6 +2145,80 @@ function crowdSidewalk(cx,cz,minRadius=18,maxRadius=135){
  }
  return null;
 }
+
+/* v36: small reusable ambient scene system. All incidents are non-graphic.
+   Incidents are independent of the mission ledger and police wanted system. */
+const INCIDENT_TYPES=[
+ {id:'dispute',name:'STREET DISPUTE',label:'CALM THE SITUATION',color:0xe5a75c},
+ {id:'traffic',name:'TRAFFIC INCIDENT',label:'ASSIST TRAFFIC',color:0xf1cc69},
+ {id:'police',name:'POLICE STOP',label:'HELP THE BYSTANDER',color:0x5b9fe4},
+ {id:'alarm',name:'STORE ALARM',label:'CHECK THE STORE',color:0xff9b61},
+ {id:'rivals',name:'RIVAL CREW STANDOFF',label:'HELP CLEAR THE STREET',color:0xc77fd8},
+ {id:'help',name:'NEIGHBORHOOD EMERGENCY',label:'OFFER ASSISTANCE',color:0x6ed4a4}
+];
+const streetIncidents=[];let incidentClock=0,incidentNextId=1,incidentResolved=0;
+function spawnStreetIncident(forceKind=null,override=null){
+ if(streetIncidents.length>=2)return null;
+ const def=INCIDENT_TYPES.find(v=>v.id===forceKind)||pick(INCIDENT_TYPES),origin=you();
+ const spot=override||crowdSidewalk(origin.x,origin.z,65,140);
+ if(!spot||riverObstacle(spot.x,spot.z))return null;
+ const trial={x:spot.x,z:spot.z};if(pushFromBuildings(trial,2.6))return null;
+ const marker=new THREE.Mesh(new THREE.RingGeometry(2.5,2.8,22),
+  new THREE.MeshBasicMaterial({color:def.color,transparent:true,opacity:.66,side:THREE.DoubleSide,depthWrite:false}));
+ marker.rotation.x=-Math.PI/2;marker.position.set(spot.x,.14,spot.z);scene.add(marker);
+ const actors=[];
+ for(let i=0;i<3;i++){
+  const shirt=def.id==='police'&&i===0?0x224c75:pick(jacketColors);
+  const rig=sculptPerson(shirt,pick(skinShades));scene.add(rig.root);
+  const a={rig,phase:i*2.1,x:spot.x+(i-1)*3,z:spot.z+(i%2)*3};
+  rig.root.position.set(a.x,groundY(a.x,a.z),a.z);
+  actors.push(a);
+ }
+ const id=incidentNextId++,action={x:spot.x,z:spot.z,range:7,label:def.label,kind:'streetIncident',eventId:id};
+ const event={id,kind:def.id,name:def.name,x:spot.x,z:spot.z,time:0,remaining:38,actors,marker,action,resolved:false};
+ worldActions.push(action);streetIncidents.push(event);
+ return event;
+}
+function removeStreetIncident(event){
+ const idx=streetIncidents.indexOf(event);if(idx>=0)streetIncidents.splice(idx,1);
+ const ai=worldActions.indexOf(event.action);if(ai>=0)worldActions.splice(ai,1);
+ event.marker.parent?.remove(event.marker);event.marker.geometry.dispose();event.marker.material.dispose();
+ for(const a of event.actors){a.rig.root.parent?.remove(a.rig.root)}
+}
+function resolveStreetIncident(id){
+ const event=streetIncidents.find(e=>e.id===id);if(!event)return false;
+ gameMoney+=80;saveProgress();incidentResolved++;toast('COMMUNITY ASSISTED · +$80');
+ removeStreetIncident(event);return true;
+}
+function updateStreetIncidents(dt){
+ incidentClock+=dt;
+ if(incidentClock>34&&streetIncidents.length<2){
+  incidentClock=0;spawnStreetIncident();
+ }
+ const focus=you();
+ for(const e of [...streetIncidents]){
+  e.remaining-=dt;e.time+=dt;
+  if(e.remaining<=0||Math.hypot(e.x-focus.x,e.z-focus.z)>400){removeStreetIncident(e);continue}
+  e.marker.material.opacity=.30+.28*(1+Math.sin(e.time*3))/2;
+  const vis=Math.hypot(e.x-focus.x,e.z-focus.z)<210;e.marker.visible=vis;
+  for(let i=0;i<e.actors.length;i++){
+   const a=e.actors[i],t=e.time;
+   const radius=e.kind==='traffic'?2.2:e.kind==='rivals'?3.8:2.6;
+   const xx=e.x+(i-1)*2+Math.sin(t*.55+a.phase)*radius;
+   const zz=e.z+(i%2)*2+Math.cos(t*.5+a.phase)*radius;
+   const probe={x:xx,z:zz};
+   if(!riverObstacle(xx,zz)&&!pushFromBuildings(probe,.4)){a.x=xx;a.z=zz}
+   a.rig.root.visible=vis;
+   if(vis){
+    const moved=Math.hypot(a.rig.root.position.x-a.x,a.rig.root.position.z-a.z);
+    a.rig.root.position.set(a.x,groundY(a.x,a.z),a.z);
+    a.rig.root.rotation.y=Math.atan2(e.x-a.x,e.z-a.z);
+    animatePerson(a.rig,moved>.02?3.2:1.25,dt);
+   }
+  }
+ }
+}
+
 function spawnPedestrians(){
  // Raise Homewood street population from the earlier 44 pedestrians to 106.
  for(let i=0;i<165;i++){
@@ -2658,6 +2814,7 @@ function performAction(){if(!hasStarted||gamePaused)return false;
  const a=nearestAction();if(!a){toast('No interaction nearby · explore for shops and carts');return false}
  if(a.kind==='door'||a.kind==='exitShop'){buildingInteract();return true}
  if(a.kind==='cash'){gameMoney+=a.t.amount;a.t.time=0;saveProgress();toast('PICKED UP $'+a.t.amount);return true}
+ if(a.kind==='streetIncident')return resolveStreetIncident(a.eventId);
  if(a.kind==='projectMission'){
    const i=MS.findIndex(m=>m.region===a.region);
    if(i<0)return false;
@@ -2746,6 +2903,47 @@ for(let i=0;i<18;i++){
   v.along=rnd(C0+10,CN-10);v.lat=laneTarget(v);v.cruise=rnd(8,14);v.speed=v.cruise;
   v.nextK=nextIndex(v.along,v.dir);v.h=headingFor(v);aiPos(v);placeVehicle(v);
 }
+
+/* v36: district traffic follows actual road graph, outside Homewood too. */
+const districtVehicles=[];
+for(const [x,z] of [[-720,0],[-960,240],[-1200,-240],[-1440,80],[-1760,160],[-2000,-80],
+ [-2240,-240],[-2560,160],[-2800,-80],[-1600,720],[-1760,-720],[-2000,800],
+ [-960,-320],[-800,480],[-2640,400],[-2320,-480],[-1520,0],[-2800,320]]){
+ const start={x,z};if(riverObstacle(x,z)||pushFromBuildings(start,2))continue;
+ const car=makeCar(pick(carColors));car.x=start.x;car.z=start.z;car.mode='districtAI';
+ car.speed=0;car.cruise=rnd(8,17);car.route=[];car.routeAt=0;
+ car.h=Math.random()<.5?0:Math.PI/2;placeVehicle(car);districtVehicles.push(car);
+}
+function updateDistrictTraffic(v,dt){
+ const focus=you();
+ v.root.visible=Math.hypot(v.x-focus.x,v.z-focus.z)<760;
+ if(!v.route.length||v.routeAt>=v.route.length){
+  for(let attempt=0;attempt<10;attempt++){
+   const x=Math.round((v.x+rnd(-500,500))/80)*80,z=Math.round((v.z+rnd(-430,430))/80)*80;
+   const route=planRoadRoute(v,{x,z});
+   if(route.length>3){v.route=route;v.routeAt=1;break}
+  }
+  if(!v.route.length){v.speed=0;return}
+ }
+ let waypoint=v.route[v.routeAt];
+ let dx=waypoint.x-v.x,dz=waypoint.z-v.z,dist=Math.hypot(dx,dz);
+ if(dist<4.5){v.routeAt++;waypoint=v.route[v.routeAt];
+  if(!waypoint){v.route=[];v.speed=0;return}
+  dx=waypoint.x-v.x;dz=waypoint.z-v.z;dist=Math.hypot(dx,dz);
+ }
+ if(dist<.01)return;
+ const target=Math.atan2(dx,dz);v.h=angLerp(v.h,target,Math.min(1,dt*4));
+ let desired=Math.min(v.cruise,dist*1.3);
+ if(Math.abs(angleDelta(target,v.h))>.4)desired=Math.min(desired,7);
+ for(const other of vehicles)if(other!==v&&Math.hypot(v.x-other.x,v.z-other.z)<6){desired=0;break}
+ v.speed+=(desired-v.speed)*Math.min(1,dt*3);
+ const dest={x:v.x+Math.sin(v.h)*v.speed*dt,z:v.z+Math.cos(v.h)*v.speed*dt};
+ if(riverObstacle(dest.x,dest.z)||pushFromBuildings(dest,1.4)){
+  v.speed=0;v.route=[];v.routeAt=0;return;
+ }
+ v.x=dest.x;v.z=dest.z;
+}
+
 function updateAI(v,dt){
   let target=v.cruise;
   const fx=Math.sin(v.h),fz=Math.cos(v.h);
@@ -2806,6 +3004,68 @@ const spot=new THREE.SpotLight(0xfff1d6,0,95,0.5,0.55,1.2);
 pv.root.add(spot);spot.position.set(0,1,2);pv.root.add(spot.target);spot.target.position.set(0,0,30);
 
 /* ---------- updates ---------- */
+
+
+/* v36: call the original signature car. It follows road intersections to Mac.
+   No car is spawned/teleported when summoned. */
+let recallState={active:false,route:[],next:0,target:null,status:'IDLE',rerouteClock:0};
+function callSignatureVehicle(){
+ const car=signatureDriveCar();
+ if(mode!=='foot'||P.fly||insideBuilding){toast('Get out on foot to summon the car');return false}
+ if(!car||car.disabled||car.health<=0){toast('SIGNATURE CAR UNAVAILABLE');return false}
+ if(recallState.active){toast('YOUR SIGNATURE CAR IS ALREADY COMING');return true}
+ if(Math.hypot(car.x-P.x,car.z-P.z)<9){toast('SIGNATURE CAR IS ALREADY HERE');return true}
+ const route=planRoadRoute(car,P);
+ if(route.length<2){toast('NO SAFE ROAD TO YOUR LOCATION');return false}
+ car.mode='summon';car.hover=false;car.hoverLanding=false;car.hoverHeight=0;car.speed=0;
+ recallState={active:true,route,next:1,target:{x:P.x,z:P.z},status:'DRIVING',rerouteClock:0};
+ toast('🚘 AUTOPILOT · SIGNATURE CAR ON ITS WAY');return true;
+}
+function updateSummonedCar(car,dt){
+ if(!recallState.active||car!==signatureDriveCar())return;
+ if(mode!=='foot'){recallState.active=false;recallState.status='CANCELLED';car.mode='parked';car.speed=0;return}
+ if(Math.hypot(car.x-P.x,car.z-P.z)<9){
+  recallState.active=false;recallState.status='ARRIVED';car.mode='parked';car.speed=0;
+  car.h=Math.atan2(P.x-car.x,P.z-car.z);toast('🚘 YOUR CAR HAS ARRIVED');return;
+ }
+ recallState.rerouteClock+=dt;
+ if(recallState.rerouteClock>2.5&&Math.hypot(P.x-recallState.target.x,P.z-recallState.target.z)>32){
+  const next=planRoadRoute(car,P);
+  if(next.length>1){recallState.route=next;recallState.next=1;recallState.target={x:P.x,z:P.z}}
+  recallState.rerouteClock=0;
+ }
+ let to=recallState.route[recallState.next];
+ if(!to){
+  const reroute=planRoadRoute(car,P);
+  if(reroute.length<2){recallState.status='ROAD BLOCKED';recallState.active=false;car.mode='parked';car.speed=0;return}
+  recallState.route=reroute;recallState.next=1;to=reroute[1];
+ }
+ let dx=to.x-car.x,dz=to.z-car.z,dist=Math.hypot(dx,dz);
+ if(dist<4.5&&recallState.next<recallState.route.length-1){
+  recallState.next++;to=recallState.route[recallState.next];
+  dx=to.x-car.x;dz=to.z-car.z;dist=Math.hypot(dx,dz);
+ }
+ if(dist<.01)return;
+ const desired=Math.atan2(dx,dz);
+ car.h=angLerp(car.h,desired,Math.min(1,dt*6));
+ const fx=Math.sin(car.h),fz=Math.cos(car.h);
+ let targetSpeed=Math.min(dist*1.7,Math.hypot(car.x-P.x,car.z-P.z)>350?47:Math.hypot(car.x-P.x,car.z-P.z)>85?25:9);
+ if(Math.abs(angleDelta(desired,car.h))>.6)targetSpeed=Math.min(7,targetSpeed);
+ for(const ped of npcList){
+  if(ped.hp<=0||!ped.rig.root.visible)continue;
+  const x=ped.x-car.x,z=ped.z-car.z,along=x*fx+z*fz,lateral=Math.abs(-x*fz+z*fx);
+  if(along>0&&along<5&&lateral<2.1){targetSpeed=0;break}
+ }
+ car.speed+=(targetSpeed-car.speed)*Math.min(1,dt*5);
+ const trial={x:car.x+fx*car.speed*dt,z:car.z+fz*car.speed*dt};
+ if(riverObstacle(trial.x,trial.z)||pushFromBuildings(trial,1.2)){
+  car.speed=0;const route=planRoadRoute(car,P);
+  if(route.length>1){recallState.route=route;recallState.next=1}
+  else{recallState.active=false;recallState.status='ROAD BLOCKED';car.mode='parked';toast('CAR COULD NOT REACH YOU')}
+  return;
+ }
+ car.x=trial.x;car.z=trial.z;
+}
 
 /* v32: swept car-to-citizen contact, non-graphic speed-based knockback arc. */
 function advanceCitizenKnockback(p,dt){
@@ -3042,6 +3302,155 @@ function gpsPoliceMarker(x,z,transform,phase){
  mctx.fillStyle=alt?'#258aff':'#ff373f';mctx.fillRect(p[0],p[1]-4,4,8);
  mctx.strokeStyle='#ffffff';mctx.lineWidth=1;mctx.strokeRect(p[0]-5,p[1]-5,10,10);
 }
+
+/* v36: World-local GPS, road routing and heading-aligned in-game compass.
+   This is fictional map navigation, never real-world GPS/geolocation. */
+const NAV_PLACES={
+ garage:{name:'SHANX AUTO CUSTOMS GARAGE',x:-390,z:-76},
+ home:{name:'HOMEWOOD START',x:C[2]+4,z:C[2]+30},
+ downtown:{name:'DOWNTOWN',x:-1820,z:80},
+ hill:{name:'HILL DISTRICT',x:-1180,z:80},
+ north:{name:'NORTH SHORE',x:-1730,z:640},
+ south:{name:'SOUTH SIDE',x:-1700,z:-640},
+ west:{name:'WEST END',x:-2650,z:-60}
+};
+let navWaypoint=null,navRoute=[],navLastRouteFrom='',navLastRouteTo='',navTimer=0;
+const navGridStep=PITCH;
+function navNode(x,z){
+ return{x:Math.max(-3120,Math.min(560,Math.round(x/navGridStep)*navGridStep)),
+        z:Math.max(-960,Math.min(960,Math.round(z/navGridStep)*navGridStep))};
+}
+function navNodeSafe(n){
+ if(n.x<EXT_WEST+12||n.x>EXT_EAST-12||n.z<EXT_SOUTH+12||n.z>EXT_NORTH-12)return false;
+ if(riverObstacle(n.x,n.z))return false;
+ const b={x:n.x,z:n.z};return !pushFromBuildings(b,2.2);
+}
+function nearestRoadNode(x,z){
+ const node=navNode(x,z);if(navNodeSafe(node))return node;
+ let best=null,dist=Infinity;
+ for(let a=-5;a<=5;a++)for(let b=-5;b<=5;b++){
+  const n={x:node.x+a*navGridStep,z:node.z+b*navGridStep};
+  if(!navNodeSafe(n))continue;
+  const d=(n.x-x)**2+(n.z-z)**2;
+  if(d<dist){best=n;dist=d}
+ }
+ return best;
+}
+function planRoadRoute(from,to){
+ const start=nearestRoadNode(from.x,from.z),goal=nearestRoadNode(to.x,to.z);
+ if(!start||!goal)return [];
+ const key=n=>n.x+','+n.z,goalKey=key(goal);
+ const score=new Map([[key(start),0]]),previous=new Map(),open=[{p:start,cost:0}];
+ const visited=new Set();let finished=false;
+ while(open.length&&visited.size<2400){
+  open.sort((a,b)=>a.cost-b.cost);
+  const current=open.shift().p,k=key(current);
+  if(visited.has(k))continue;visited.add(k);
+  if(k===goalKey){finished=true;break}
+  for(const [dx,dz] of [[80,0],[-80,0],[0,80],[0,-80]]){
+   const n={x:current.x+dx,z:current.z+dz},nk=key(n);
+   if(visited.has(nk)||!navNodeSafe(n)||riverObstacle((n.x+current.x)/2,(n.z+current.z)/2))continue;
+   const tentative=score.get(k)+80;
+   if(tentative>= (score.get(nk)??Infinity))continue;
+   score.set(nk,tentative);previous.set(nk,current);
+   open.push({p:n,cost:tentative+(Math.abs(n.x-goal.x)+Math.abs(n.z-goal.z))});
+  }
+ }
+ if(!finished)return [];
+ const route=[goal];let point=goal,guard=0;
+ while(key(point)!==key(start)&&guard++<2400){
+  point=previous.get(key(point));if(!point)return [];
+  route.push(point);
+ }
+ route.reverse();
+ // Start/end local anchors help with the garage service bay and walking.
+ route.unshift({x:from.x,z:from.z});
+ route.push({x:to.x,z:to.z});
+ return route;
+}
+function setNavWaypoint(name,x,z){
+ if(!Number.isFinite(x)||!Number.isFinite(z))return false;
+ navWaypoint={name,x:Math.max(EXT_WEST+10,Math.min(EXT_EAST-10,x)),
+                    z:Math.max(EXT_SOUTH+10,Math.min(EXT_NORTH-10,z))};
+ navRoute=[];navLastRouteFrom='';navLastRouteTo='';
+ updateNavRoute(true);renderNavChoices();
+ $('routeBanner').hidden=false;$('navStatus').textContent='PIN SET · '+name;
+ toast('GPS WAYPOINT · '+name);return true;
+}
+function setNavPlace(k){
+ if(k==='mission'&&missionGoal)return setNavWaypoint('CURRENT MISSION',missionGoal.x,missionGoal.z);
+ if(k==='car'){
+  const v=signatureDriveCar();return v?setNavWaypoint('MY SIGNATURE CAR',v.x,v.z):false;
+ }
+ const p=NAV_PLACES[k];return p?setNavWaypoint(p.name,p.x,p.z):false;
+}
+function clearNavWaypoint(){navWaypoint=null;navRoute=[];navLastRouteFrom='';navLastRouteTo='';$('routeBanner').hidden=true;renderNavChoices();$('navStatus').textContent='Waypoint cleared.';return true}
+function updateNavRoute(force=false){
+ if(!navWaypoint)return;
+ const pos=you(),from=navNode(pos.x,pos.z),to=navNode(navWaypoint.x,navWaypoint.z);
+ const fk=from.x+','+from.z,tk=to.x+','+to.z;
+ if(force||fk!==navLastRouteFrom||tk!==navLastRouteTo){
+  navRoute=planRoadRoute(pos,navWaypoint);navLastRouteFrom=fk;navLastRouteTo=tk;
+ }
+}
+function angleDelta(a,b){return Math.atan2(Math.sin(a-b),Math.cos(a-b))}
+function headingInstruction(from,heading,target){
+ const bearing=Math.atan2(target.x-from.x,target.z-from.z);
+ const delta=angleDelta(bearing,heading),deg=Math.round(Math.abs(delta)*180/Math.PI);
+ return{degrees:deg,delta,bearing,arrow:Math.abs(delta)<.32?'↑':Math.abs(delta)>2.5?'↶':delta>0?'↗':'↖',
+         text:Math.abs(delta)<.32?'STRAIGHT':Math.abs(delta)>2.5?'TURN AROUND':delta>0?'TURN RIGHT':'TURN LEFT'};
+}
+function updateNavGuide(dt=0){
+ if(!navWaypoint)return;
+ navTimer+=dt;if(navTimer>.9){updateNavRoute();navTimer=0}
+ const p=you(),heading=mode==='car'?pv.h:footYaw;
+ const d=Math.hypot(navWaypoint.x-p.x,navWaypoint.z-p.z);
+ let next=navWaypoint;
+ if(navRoute.length>2){
+  const idx=navRoute.findIndex((q,i)=>i>0&&Math.hypot(q.x-p.x,q.z-p.z)>18);
+  if(idx>=0)next=navRoute[idx];
+ }
+ const turn=headingInstruction(p,heading,next),where=$('routeInstruction');
+ if(d<9){where.textContent='ARRIVED · '+navWaypoint.name+' · '+Math.round(d)+' m';$('routeArrow').textContent='✓'}
+ else{where.textContent=turn.text+' · '+Math.round(d)+'m TO '+navWaypoint.name+(navRoute.length?'':' · DIRECT');$('routeArrow').textContent=turn.arrow}
+}
+function renderNavChoices(){
+ const entries=[['garage','⚙ GARAGE'],['mission','★ CURRENT MISSION'],['car','🚘 MY CAR'],['home','⌂ HOMEWOOD'],
+ ['downtown','▥ DOWNTOWN'],['hill','▤ HILL'],['north','≈ NORTH SHORE'],['south','≈ SOUTH SIDE'],['west','◇ WEST END']];
+ const list=$('navChoices');list.textContent='';
+ for(const [key,label] of entries){
+  const btn=document.createElement('button');btn.type='button';btn.textContent=label;
+  btn.disabled=key==='mission'&&!missionGoal;
+  const target=key==='mission'?missionGoal:key==='car'?signatureDriveCar():NAV_PLACES[key];
+  btn.setAttribute('aria-pressed',String(!!navWaypoint&&!!target&&Math.hypot(navWaypoint.x-target.x,navWaypoint.z-target.z)<4));
+  btn.addEventListener('click',()=>setNavPlace(key));list.append(btn);
+ }
+}
+function openNavPanel(){
+ if(!hasStarted)return;
+ gamePausedBeforeNav=gamePaused;gamePaused=true;$('navOverlay').hidden=false;$('pauseOverlay').hidden=true;renderNavChoices();
+}
+let gamePausedBeforeNav=false;
+function closeNavPanel(){
+ if($('navOverlay').hidden)return;
+ $('navOverlay').hidden=true;gamePaused=gamePausedBeforeNav;$('pauseOverlay').hidden=!gamePaused;
+}
+$('navOpen').addEventListener('click',openNavPanel);
+$('touchRecallCar').addEventListener('click',callSignatureVehicle);
+$('navClose').addEventListener('click',closeNavPanel);
+$('navClear').addEventListener('click',clearNavWaypoint);
+$('navRecall').addEventListener('click',()=>{closeNavPanel();callSignatureVehicle()});
+$('map').addEventListener('pointerup',e=>{
+ if(!hasStarted||gamePaused)return;
+ const rect=$('map').getBoundingClientRect();
+ const u=((e.clientX-rect.left)/rect.width-.5)*150/.42;
+ const v=(.5-(e.clientY-rect.top)/rect.height)*150/.42;
+ const p=you(),h=mode==='car'?pv.h:footYaw,ch=Math.cos(h),sh=Math.sin(h);
+ const x=p.x+u*ch+v*sh,z=p.z+v*ch-u*sh;
+ if(Math.hypot(x-p.x,z-p.z)<4){openNavPanel();return}
+ setNavWaypoint('CUSTOM PIN',x,z);
+});
+
 /* minimap */
 const mctx=$('map').getContext('2d');
 function drawMap(fx,fz,heading){
@@ -3079,6 +3488,22 @@ function drawMap(fx,fz,heading){
     for(const c of policeCars)if(c.root.visible&&c.health>0&&c.mode==='police')gpsPoliceMarker(c.x,c.z,tr,phase);
     if(wanted>=3)for(const c of footOfficers)if(c.active&&c.down<=0&&c.hp>0)gpsPoliceMarker(c.x,c.z,tr,phase)
   }
+
+  // Heading-up compass: rotate world cardinal directions with the moving map.
+  mctx.textAlign='center';mctx.textBaseline='middle';mctx.font='900 11px system-ui';
+  const directions=[['N',0,'#ffdf80'],['E',Math.PI/2,'#f7f7ec'],['S',Math.PI,'#f7f7ec'],['W',-Math.PI/2,'#f7f7ec']];
+  for(const [letter,bearing,color] of directions){
+   const rel=bearing-heading,x=S/2+Math.sin(rel)*64,y=S/2-Math.cos(rel)*64;
+   mctx.fillStyle='#071823';mctx.fillRect(x-8,y-8,16,16);
+   mctx.fillStyle=color;mctx.fillText(letter,x,y+1);
+  }
+  if(navWaypoint){
+   const wp=tr(navWaypoint.x,navWaypoint.z),dx=wp[0]-S/2,dy=wp[1]-S/2;
+   const r=Math.hypot(dx,dy)||1,scale=Math.min(1,58/r),x=S/2+dx*scale,y=S/2+dy*scale;
+   mctx.strokeStyle='#2ff5bf';mctx.lineWidth=2.7;mctx.beginPath();mctx.moveTo(S/2,S/2);
+   mctx.lineTo(x,y);mctx.stroke();
+   mctx.fillStyle='#fff0ac';mctx.beginPath();mctx.arc(x,y,5.3,0,Math.PI*2);mctx.fill();
+  }
   mctx.fillStyle='#38bdf8';mctx.beginPath();mctx.moveTo(S/2,S/2-8);mctx.lineTo(S/2+6,S/2+6);mctx.lineTo(S/2,S/2+3);mctx.lineTo(S/2-6,S/2+6);mctx.closePath();mctx.fill();
 }
 
@@ -3112,11 +3537,13 @@ function frame(){
     v._dt=dt;
     const previousX=v.x,previousZ=v.z;
     if(v.mode==='ai')updateAI(v,dt);
+    else if(v.mode==='districtAI')updateDistrictTraffic(v,dt);
     else if(v.mode==='player')updatePlayerCar(v,dt);
+    else if(v.mode==='summon')updateSummonedCar(v,dt);
     else if(v.mode==='police'){/* updatePolice() handles response movement */}
     else if(v.mode==='wreck'){v.speed=0;v.steer=0;}
     else{v.speed*=Math.pow(0.1,dt);v.steer*=0.9}
-    if(v.mode==='ai'||v.mode==='player')checkCarPedestrianSweep(v,previousX,previousZ);
+    if(v.mode==='ai'||v.mode==='districtAI'||v.mode==='player')checkCarPedestrianSweep(v,previousX,previousZ);
     if(v.mode==='ai'){for(const r of v.rolls)r.rotation.x+=v.speed*dt/0.38;
       v.y+=(groundY(v.x,v.z)-v.y)*0.25;v.root.position.set(v.x,v.y,v.z);v.root.rotation.y=v.h;for(const f of v.fronts)f.rotation.y=-v.steer*0.5}
     else{
@@ -3130,7 +3557,7 @@ function frame(){
   }
   if(pv&&pv.cockpit){const inCabin=mode==='car'&&cameraView===4&&pv.type==='car';pv.cockpit.visible=inCabin;pv.exteriorGlass.visible=!inCabin;pv.exteriorRoof.visible=!inCabin;if(inCabin){pv.wheelRig.rotation.z=-(pv.steer||0)*.67;const sweep=Math.sin(performance.now()/680)*.18;pv.wipers[0].rotation.z=sweep;pv.wipers[1].rotation.z=-sweep;}}
   if(mode==='foot')updateFoot(dt);
-  updatePedestrians(dt);updatePolice(dt);updateFootPolice(dt);updateHeli(dt);updateMission(dt);updateMoneyTokens(dt);updateVehicleExtras();updateGameAudio(dt);
+  updatePedestrians(dt);updateStreetIncidents(dt);updatePolice(dt);updateFootPolice(dt);updateHeli(dt);updateMission(dt);updateMoneyTokens(dt);updateVehicleExtras();updateGameAudio(dt);
 
   /* camera */
   let fx,fz,focusY;
@@ -3193,7 +3620,8 @@ function frame(){
   // Door/vehicle button label is updated in fusion HUD above.
   if(toastT>0){toastT-=dt;if(toastT<=0)$('toast').style.opacity=0}
   const hs=$('hoverStatus');if(hs){hs.style.display=(mode==='car'&&(pv.hover||pv.hoverLanding))?'block':'none';if(mode==='car')hs.textContent='HOVER '+Math.round((pv.hoverHeight||0)*3.28084)+' FT · '+Math.round(Math.abs(pv.speed)*2.23694)+' MPH';}
-  drawMap(fx,fz,mode==='car'?pv.h:footYaw);
+  drawMap(fx,fz,mode==='car'?pv.h:footYaw);updateNavGuide(dt);
+  $('navRecall').textContent=recallState.active?'🚘 CAR APPROACHING':'🚘 CALL MY SIGNATURE CAR';
 
   composer.render();
 }
@@ -3209,6 +3637,15 @@ setTimeout(()=>$('title').style.opacity=0,7000);
 window.__X13_FUSION_BUILD='single-stick-v11.1';window.__X13_FUSION_DIAGNOSTICS=()=>({vehicles:vehicles.length,people:npcList.length,avatar:'Claude v17 human + animated pistol',combat:'hit damage and v17 vehicle destruction',doors:enterableBuildings.length,mission:missionIndex,wanted,fly:P.fly,paused:gamePaused,landedHits,activeNPCs:npcList.filter(p=>p.hp>0).length});
 window.__X13_TABLET_BUILD='v19-claude-polish-flight';window.__X13_COMPARISON_SOURCE='Claude v17 polish plus X13 v15';window.__X13_COMBAT_BUILD='v13.2-homewood';window.__X13_V18_DIAGNOSTICS=()=>({wanted,maxWanted:5,officers:footOfficers.filter(o=>o.active).length,officerShots:copPulseEffects.length,fly:P.fly,hasFlyButton:!!$('bQuickFly'),nightAmbient:nightAmbient.intensity,playerHp:P.hp});window.__X13_HOMEWOOD_DIAGNOSTICS=()=>({blocks:(N-1)*(N-1),houses:buildingObjects.filter(b=>b.kind==='residence').length,shops:buildingObjects.filter(b=>b.kind==='storefront').length,parks:parkPlaces.length,treeTrunks:treeSpots.length,vehicles:vehicles.length,bicycles:vehicles.filter(v=>v.type==='bike').length,missions:MS.length,cashDrops:moneyTokens.length,npcs:npcList.length});
 window.__X13_V30_HEAT={get points(){return heatPoints},get stars(){return wanted},thresholds:heatThresholds,add:(kind,n=1)=>addWanted(n,kind),reset:resetWantedHeat,get tanks(){return armoredUnits.length},get jets(){return jetUnits.length}};
+window.__X13_V36_LIFE=()=>({
+ districtCars:districtVehicles.length,moving:districtVehicles.filter(v=>v.mode==='districtAI'&&v.speed>0).length,
+ streetLamps:lampPositions.length,shopAccents:districtAccents.length,
+ possibleIncidents:INCIDENT_TYPES.map(x=>x.name),activeIncidents:streetIncidents.length,communityAssists:incidentResolved});
+window.__X13_V36_NAV=()=>({
+ version:'v36',waypoint:navWaypoint&&{...navWaypoint},routeNodes:navRoute.length,
+ recalling:recallState.active,recallStatus:recallState.status,recallRouteNodes:recallState.route.length,
+ carPosition:signatureDriveCar()&&{x:signatureDriveCar().x,z:signatureDriveCar().z}
+});
 window.__X13_V35_DISTRICTS=()=>({
  build:'v35-district-expansion',facades:outerSites.length,collisionBuildings:outerColliderList.length,
  courts:projectCenters.length,roofs:outerRoofs.count,roads:broadRoads.length,
