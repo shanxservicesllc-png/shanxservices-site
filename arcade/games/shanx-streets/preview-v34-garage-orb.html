@@ -1377,6 +1377,7 @@ function pollGamepad(dt){
   gamepadHeld=nextHeld;return;
  }
  if(!$('realMapOverlay').hidden){if(pressed('map')||pressed('pause'))closeRealMap();gamepadHeld=nextHeld;return}
+ if(garageOpened){if(pressed('pause')||pressed('interact'))closeGarage();gamepadHeld=nextHeld;return}
  if(!$('frontMenu').hidden){if(pressed('shootFace')||pressed('pause'))$('startGame').click();gamepadHeld=nextHeld;return}
  if(!$('helpPanel').hidden){if(pressed('jumpBoost')||pressed('pause'))closeHelp();gamepadHeld=nextHeld;return}
  if(pressed('pause'))togglePause();
@@ -1385,11 +1386,17 @@ function pollGamepad(dt){
  gamepadAxisX=padAxis(+pad.axes?.[0]||0);gamepadAxisY=-padAxis(+pad.axes?.[1]||0);
  const dx=padAxis(+pad.axes?.[2]||0),dy=padAxis(+pad.axes?.[3]||0);
  if(Math.abs(dx)+Math.abs(dy)>.015)applyLook(dx*365*dt*controllerPrefs.sensitivity,dy*295*dt*controllerPrefs.sensitivity);
- if(pressed('enter')){if(mode==='foot'&&P.fly)toggleFly();else toggleCar()}
+ if(mode==='car'&&on('interact')){
+   if(pressed('enter'))callOrb();
+   if(pressed('shootTrigger'))fireCarLaser();
+   if(pressed('crouchHandbrake'))toggleShield();
+   if(pressed('cameraReset'))toggleInvincible();
+ }
+ if(pressed('enter')&&!(mode==='car'&&on('interact'))){if(mode==='foot'&&P.fly)toggleFly();else toggleCar()}
  if(pressed('punchBrake')&&mode==='foot'&&!P.fly)punch();
  if(pressed('flyHover')){if(mode==='car')toggleCarHover();else if(mode==='foot'&&!insideBuilding){uiCrouchToggle=false;toggleFly()}}
  if(pressed('crouchHandbrake')&&mode==='foot'&&!P.fly)uiCrouchToggle=!uiCrouchToggle;
- if(pressed('interact')&&!(mode==='foot'&&P.fly))performAction();
+ if(pressed('interact')&&!(mode==='foot'&&P.fly)&&!(mode==='car'&&on('shootTrigger')))performAction();
  flightBoostHeld=mode==='foot'&&P.fly&&on('interact');
  if(pressed('cameraView'))nextCameraView();if(pressed('cameraReset'))resetCamera();
  if(pressed('map'))openRealMap();
@@ -1402,14 +1409,14 @@ function pollGamepad(dt){
  btn.jump=mode==='foot'&&on('jumpBoost');
  btn.boost=mode==='car'&&on('jumpBoost');
  btn.brake=(mode==='car'||mode==='foot'&&P.fly)&&on('punchBrake')||(mode==='foot'&&!P.fly&&uiCrouchToggle);
- btn.handbrake=mode==='car'&&on('crouchHandbrake');
+ btn.handbrake=mode==='car'&&on('crouchHandbrake')&&!on('interact');
  btn.fire=on('shootFace')||on('shootTrigger');
  gamepadHeld=nextHeld;
 }
 
 const down=new Set();
 addEventListener('keydown',e=>{
-  if(e.code==='Escape'){e.preventDefault();if(!$('controlSettings').hidden){closeControllerSettings();return}if(!$('realMapOverlay').hidden){closeRealMap();return}if(!$('helpPanel').hidden){closeHelp();return}if(!$('frontMenu').hidden&&hasStarted){$('frontMenu').hidden=true;gamePaused=false;return}if(hasStarted)togglePause();return}
+  if(e.code==='Escape'){e.preventDefault();if(garageOpened){closeGarage();return}if(!$('controlSettings').hidden){closeControllerSettings();return}if(!$('realMapOverlay').hidden){closeRealMap();return}if(!$('helpPanel').hidden){closeHelp();return}if(!$('frontMenu').hidden&&hasStarted){$('frontMenu').hidden=true;gamePaused=false;return}if(hasStarted)togglePause();return}
   if(e.code==='KeyH'){e.preventDefault();if($('helpPanel').hidden)showHelp();else closeHelp();return}
   if(!hasStarted||gamePaused||!$('frontMenu').hidden||!$('helpPanel').hidden)return;
   initAudio();
@@ -1428,6 +1435,11 @@ addEventListener('keydown',e=>{
   if(e.code==='Comma')nextMusicTrack();
   if(e.code==='KeyJ'&&mode==='car')setVehicleHornInput('key',true);
   if(e.code==='KeyT')openControllerSettings();
+  if(e.code==='KeyU'&&mode==='car')openGarage();
+  if(e.code==='KeyN'&&mode==='car')toggleInvincible();
+  if(e.code==='KeyY'&&mode==='car')toggleShield();
+  if(e.code==='KeyO')callOrb();
+  if(e.code==='KeyI'&&mode==='car')fireCarLaser();
   if(e.code==='ControlLeft'||e.code==='ControlRight')btn.handbrake=true;
   if(e.code==='KeyV')nextCameraView();
   if(e.code==='KeyR')resetCamera();
@@ -1799,7 +1811,7 @@ function refreshVehicleExtrasUI(){const e=activeCarExtras();if(!e)return;
  $('touchHeadlights').textContent=e.headlights?'💡 HEADLIGHTS ON':'💡 HEADLIGHTS OFF';
  for(const [id,val] of [['touchHeadlights',e.headlights],['touchLeftTurn',e.signal==='left'],['touchRightTurn',e.signal==='right'],['touchHazards',e.signal==='hazard']])$(id).setAttribute('aria-pressed',String(val));
 }
-function updateVehicleExtras(){if(mode!=='car'||!pv?.extras)return;
+function updateVehicleExtras(){syncProtectionUi();if(mode!=='car'||!pv?.extras)return;
  const e=pv.extras,pulse=Math.floor(performance.now()/295)%2===0;
  for(const lamp of e.lamps)lamp.material.opacity=e.headlights?1:.15;
  e.beam.intensity=e.headlights?3.5:0;
@@ -2168,6 +2180,7 @@ const DEBRIS_PARTS=[[.4,.2,.25,0,.5,2.3],[.18,.12,.1,-1.04,1.14,.85],[.1,.5,.9,1
 function spawnDebris(v,[w,h,d,lx,ly,lz]){const m=new THREE.Mesh(new RoundedBoxGeometry(w,h,d,2,Math.min(w,h,d)*.3),v.paint);m.castShadow=true;m.position.copy(v.root.localToWorld(new THREE.Vector3(lx,ly,lz)));m.rotation.y=v.h;scene.add(m);const a=Math.random()*6.28,sp=(v.speed||0)*.6;fxDebris.push({m,vx:Math.sin(v.h)*sp+Math.cos(a)*3+Math.sign(lx||1)*2,vy:3+Math.random()*3,vz:Math.cos(v.h)*sp+Math.sin(a)*3,rx:(Math.random()-.5)*9,rz:(Math.random()-.5)*9,life:40})}
 function disableVehicle(v){
  if(v.disabled)return false;
+ if(isSignatureCar(v)&&signatureModes.invincible){v.health=100;return false}
  v.health=0;v.disabled=true;v.speed=0;v.steer=0;v.mode='wreck';
  v.hover=false;v.hoverLanding=false;v.hoverHeight=0;v.hoverVy=0;
  v.engineOn=false;v.root.userData.wrecked=true;
@@ -2194,6 +2207,16 @@ function updateWreckFlashes(dt){for(let i=wreckFlashes.length-1;i>=0;i--){const 
 }}
 function hurtVehicle(v,amt,crash){
  if(v.disabled||v.health<=0)return false;
+ if(isSignatureCar(v)){
+  if(signatureModes.invincible){v.health=100;return false}
+  amt=Math.max(0,amt)*.22;
+  if(signatureUpgrades.shield&&signatureModes.shieldOn&&shieldCharge>0){
+   const absorbed=Math.min(amt,shieldCharge);shieldCharge-=absorbed;shieldFlash=.45;amt-=absorbed;
+   if(amt<=0)return false;
+  }
+  if(signatureUpgrades.sensor)amt*=.1;
+ }
+
  const prior=v.health;
  v.health=Math.max(0,v.health-Math.max(0,amt));const f=1-v.health/100;
  if(v.paint&&v.paint.color){v.base=v.base||v.paint.color.clone();v.paint.color.copy(v.base).lerp(new THREE.Color(0x1d1a18),Math.min(.8,f*.9));v.paint.roughness=Math.min(.9,.2+f*.7);v.paint.clearcoat=Math.max(0,1-f*1.4);v.paint.needsUpdate=true;v.paint.emissive.setHex(v.health<=25?0x68251a:0x180000);v.paint.emissiveIntensity=v.health<40?.46:0}
@@ -2597,7 +2620,7 @@ for(let n=0;n<3;n++){
  const bike=makeBicycle();bike.x=C[n+3]+4.3;bike.z=C[4]+17+n*14;bike.h=(n%2)*Math.PI;placeVehicle(bike);
 }
 // player car
-pv=makeCar(0x086340);dressSignatureCar(pv);pv.mode='player';pv.x=C[2]+4;pv.z=C[2]+30;pv.h=0;placeVehicle(pv);
+pv=makeCar(0x086340);dressSignatureCar(pv);const signatureCar=pv;ensureSignatureFx();pv.mode='player';pv.x=C[2]+4;pv.z=C[2]+30;pv.h=0;placeVehicle(pv);
 camHead=pv.h;
 
 // traffic
@@ -2974,6 +2997,7 @@ function frame(){
   input.y=clamp((inputPreference==='gamepad'?gamepadAxisY:stick.y+keys.y),-1,1);
   if(gamePaused||!hasStarted||!$('frontMenu').hidden||!$('helpPanel').hidden){updateGameAudio(0);composer.render();return}
   advanceWorldTime(dt);
+  updateSignatureAccessories(dt);
 
   for(const v of vehicles){
     v._dt=dt;
@@ -3076,6 +3100,11 @@ setTimeout(()=>$('title').style.opacity=0,7000);
 window.__X13_FUSION_BUILD='single-stick-v11.1';window.__X13_FUSION_DIAGNOSTICS=()=>({vehicles:vehicles.length,people:npcList.length,avatar:'Claude v17 human + animated pistol',combat:'hit damage and v17 vehicle destruction',doors:enterableBuildings.length,mission:missionIndex,wanted,fly:P.fly,paused:gamePaused,landedHits,activeNPCs:npcList.filter(p=>p.hp>0).length});
 window.__X13_TABLET_BUILD='v19-claude-polish-flight';window.__X13_COMPARISON_SOURCE='Claude v17 polish plus X13 v15';window.__X13_COMBAT_BUILD='v13.2-homewood';window.__X13_V18_DIAGNOSTICS=()=>({wanted,maxWanted:5,officers:footOfficers.filter(o=>o.active).length,officerShots:copPulseEffects.length,fly:P.fly,hasFlyButton:!!$('bQuickFly'),nightAmbient:nightAmbient.intensity,playerHp:P.hp});window.__X13_HOMEWOOD_DIAGNOSTICS=()=>({blocks:(N-1)*(N-1),houses:buildingObjects.filter(b=>b.kind==='residence').length,shops:buildingObjects.filter(b=>b.kind==='storefront').length,parks:parkPlaces.length,treeTrunks:treeSpots.length,vehicles:vehicles.length,bicycles:vehicles.filter(v=>v.type==='bike').length,missions:MS.length,cashDrops:moneyTokens.length,npcs:npcList.length});
 window.__X13_V30_HEAT={get points(){return heatPoints},get stars(){return wanted},thresholds:heatThresholds,add:(kind,n=1)=>addWanted(n,kind),reset:resetWantedHeat,get tanks(){return armoredUnits.length},get jets(){return jetUnits.length}};
+window.__X13_V34_GARAGE=()=>({
+ build:'v34-garage-orb',available:garageAvailable(),bay:{...GARAGE_BAY},carHealth:signatureDriveCar()?.health,
+ signatureOnly:isSignatureCar(signatureDriveCar()),shopOpen:garageOpened,
+ upgrades:{...signatureUpgrades},modes:{...signatureModes},charge:shieldCharge,
+ orbActive:orbWanted,laserCooldown:laserPulseCooldown});
 window.__X13_V33_DIAGNOSTICS=()=>({build:'v33-preview',streetProps:streetProps.map(p=>({kind:p.kind,active:p.active})),downedPolice:footOfficers.filter(o=>o.down>0).length});
 window.__X13_V32_DIAGNOSTICS=()=>({build:'v32-car-impact',activeKnockbacks:npcList.filter(p=>!!p.vehicleKnockback).length,physics:'speed-scaled-swept'});
 window.__X13_V31_DIAGNOSTICS=()=>({build:'v31-pedestrians',citizens:npcList.length,visible:npcList.filter(p=>p.rig.root.visible).length,downed:npcList.filter(p=>p.hp<=0).length});
