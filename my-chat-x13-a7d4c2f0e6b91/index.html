@@ -35,6 +35,18 @@
 .model-metrics strong{color:#62e68c}
 .model-compare-results{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px}
 .model-compare-result{white-space:pre-wrap;overflow-wrap:anywhere;border:1px solid #38513e;padding:14px;border-radius:12px;background:#0d1a12;min-height:80px}
+
+/* MY CHAT transcript controls: preserve every message and its real timestamp */
+.chat-export-tools{max-width:900px;width:100%;margin:7px auto 0;padding:7px 9px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;border:1px solid #2d5035;background:#0a1a11;border-radius:12px}
+.chat-export-tools .export-label{font-size:11px;color:#93bc9c;flex:1;min-width:70px}
+.chat-export-tools button,.msg-actions button{border:1px solid #426a4d;background:#183323;color:#e2e9da;border-radius:9px;font-size:12px;padding:6px 9px;cursor:pointer}
+.chat-export-tools button:focus-visible,.msg-actions button:focus-visible{outline:2px solid #e4bd63}
+.msg-shell{min-width:0;max-width:min(85%,760px)}
+.msg-shell .message-bubble{max-width:100%}
+.message.user .msg-shell{display:flex;flex-direction:column;align-items:flex-end}
+.msg-actions{display:flex;flex-wrap:wrap;gap:7px;align-items:center;margin-top:7px}
+.msg-time{font-size:11px;color:#9eb5a4}
+@media(max-width:520px){.chat-export-tools{padding:6px;gap:4px}.chat-export-tools .export-label{width:100%;flex:auto}.chat-export-tools button,.msg-actions button{font-size:11px;padding:6px 8px}.msg-shell{max-width:94%}}
 </style></head>
 <body>
 <div class="app" id="app">
@@ -104,7 +116,7 @@ async function api(path,method='GET',data=null){
   const id=data.chat_id, chat=offlineDB.chats.find(c=>c.id===id);
   if(!chat)throw Error('Chat not found');
   const messages=offlineDB.messages[id]||(offlineDB.messages[id]=[]);
-  messages.push({id:offlineId(),role:'user',content:String(data.message||'')});
+  messages.push({id:offlineId(),role:'user',content:String(data.message||''),created_at:new Date().toISOString()});
   if(chat.title==='New conversation')chat.title=String(data.message||'').slice(0,54)||'Conversation';
   saveOffline();
   if(!window.puter?.ai?.chat)return {answered:false,error:'AI SDK is unavailable. Check internet connection and reload.'};
@@ -114,7 +126,7 @@ async function api(path,method='GET',data=null){
    const raw=response?.message?.content??response?.content??'';
    const answer=typeof raw==='string'?raw:Array.isArray(raw)?raw.filter(b=>b?.type==='text').map(b=>b.text).join('\n'):'';
    if(!answer.trim())throw new Error('The AI returned no text response');
-   messages.push({id:offlineId(),role:'assistant',content:answer});
+   messages.push({id:offlineId(),role:'assistant',content:answer,created_at:new Date().toISOString(),model:state.config.chatModel});
    saveOffline();return {answered:true};
   }catch(error){saveOffline();return {answered:false,error:'AI request failed: '+(error?.message||String(error))}}
 
@@ -160,7 +172,65 @@ function navigate(page){if(state.page==='chat'&&page!=='chat'&&chatRecognition){
 function closeMenu(){$('#sidebar').classList.remove('open');$('#sidebarOverlay').classList.remove('open')}
 function render(){updateFrame();const root=$('#view');switch(state.page){case'chat':root.innerHTML=chatView();attachChat();break;case'projects':root.innerHTML=projectsView();attachProjects();break;case'library':root.innerHTML=libraryView();attachLibrary();break;case'images':root.innerHTML=imagesView();attachImages();break;case'voice':root.innerHTML=voiceView();attachVoice();break;case'connections':root.innerHTML=connectionsView();attachConnections();break;case'models':root.innerHTML=modelLabView();attachModelLab();break;}$('#mainScroll').scrollTop=0}
 function hero(){return `<div class="hero"><div class="halo">X13</div><div class="eyebrow">YOUR AI · YOUR TOOLS · YOUR WORLD</div><h1>MY CHAT</h1><div class="subbrand">POWERED BY SHANX13AịGG</div><p class="tagline">I never leave the crib without My Chat.</p><div class="feature-grid"><button class="feature-tile" data-jump="images"><span class="feature-symbol">▧</span><strong>Image Studio</strong><small>Create, edit, download, and organize.</small></button><button class="feature-tile" data-jump="projects"><span class="feature-symbol">▦</span><strong>Projects</strong><small>Keep your work together in one place.</small></button><button class="feature-tile" data-jump="library"><span class="feature-symbol">✦</span><strong>Generator Library</strong><small>Reusable starting points for your ideas.</small></button></div></div>`}
-function msgMarkup(m){return `<div class="message ${m.role==='user'?'user':'assistant'}"><div class="who">${m.role==='user'?'YOU':'X13'}</div><div class="message-bubble">${h(m.content)}</div></div>`}
+function messageTimeText(m){
+ const time=m?.created_at||m?.createdAt||null;
+ if(!time)return 'Time unavailable';
+ const date=new Date(time);
+ if(!Number.isFinite(date.valueOf()))return 'Time unavailable';
+ try{return new Intl.DateTimeFormat(undefined,{year:'numeric',month:'short',day:'numeric',hour:'numeric',minute:'2-digit',timeZoneName:'short'}).format(date)}
+ catch{return date.toLocaleString()}
+}
+function currentChatMessages(){
+ const saved=state.currentChat?offlineDB.messages[state.currentChat]:null;
+ return Array.isArray(saved)&&saved.length?saved:state.messages.filter(m=>!String(m.id||'').startsWith('pending-'));
+}
+function currentChatDetails(){
+ return offlineDB.chats.find(c=>c.id===state.currentChat)||state.chats.find(c=>c.id===state.currentChat)||null;
+}
+function makeChatTranscript(){
+ const chat=currentChatDetails();const messages=currentChatMessages();
+ const head=['MY CHAT | SHANX13AịGG', 'Conversation: '+String(chat?.title||'Untitled conversation'),
+  'Conversation ID: '+String(state.currentChat||'Not saved'), 'Exported: '+new Date().toISOString(),
+  'Messages: '+messages.length, ''];
+ const body=messages.map(m=>'['+messageTimeText(m)+'] '+(m.role==='user'?'YOU':m.role==='assistant'?'MY CHAT':String(m.role||'UNKNOWN').toUpperCase())+
+  (m.model?' ['+m.model+']':'')+'\n'+String(m.content??'')).join('\n\n');
+ return head.join('\n')+'\n'+body;
+}
+async function copyChatText(value){
+ const text=String(value??'');
+ try{
+  if(navigator.clipboard?.writeText)await navigator.clipboard.writeText(text);
+  else{
+   const temp=document.createElement('textarea');temp.value=text;temp.style.position='fixed';temp.style.opacity='0';
+   document.body.appendChild(temp);temp.focus();temp.select();
+   const ok=document.execCommand('copy');temp.remove();if(!ok)throw Error('Clipboard unavailable');
+  }
+  notify('Copied to clipboard');
+ }catch(error){notify('Copy failed: '+(error.message||String(error)))}
+}
+function exportChat(format){
+ const msgs=currentChatMessages();if(!msgs.length){notify('No messages to export yet');return}
+ const chat=currentChatDetails();
+ const safeTitle=String(chat?.title||'conversation').replace(/[^a-z0-9_-]+/gi,'_').slice(0,48)||'conversation';
+ const date=new Date().toISOString().slice(0,10);
+ const filename='MY_CHAT_'+safeTitle+'_'+date+'.'+format;
+ if(format==='txt'){
+  downloadBlob(new Blob([makeChatTranscript()],{type:'text/plain;charset=utf-8'}),filename);
+ }else if(format==='json'){
+  const payload={format:'MY_CHAT_conversation_export_v1',exported_at:new Date().toISOString(),
+   conversation:{id:state.currentChat||null,title:chat?.title||null,project_id:chat?.project_id||null},
+   messages:msgs.map(m=>({id:m.id||null,role:m.role||'unknown',content:String(m.content??''),
+    created_at:m.created_at||m.createdAt||null,...(m.model?{model:m.model}:{})}))};
+  downloadBlob(new Blob([JSON.stringify(payload,null,2)],{type:'application/json;charset=utf-8'}),filename);
+ }
+ notify('Conversation exported as '+format.toUpperCase());
+}
+function msgMarkup(m,index){
+ return '<div class="message '+(m.role==='user'?'user':'assistant')+'"><div class="who">'+(m.role==='user'?'YOU':'X13')+'</div>'+
+  '<div class="msg-shell"><div class="message-bubble">'+h(m.content)+'</div>'+
+  '<div class="msg-actions"><span class="msg-time">'+h(messageTimeText(m))+'</span>'+
+  '<button type="button" data-copy-message="'+index+'" title="Copy this message">⧉ Copy</button></div></div></div>';
+}
 
 let chatRecognition=null;
 function setChatMicActive(active){
@@ -192,16 +262,20 @@ function startChatDictation(input){
  catch(error){chatRecognition=null;state.dictating=false;setChatMicActive(false);notify('Could not start dictation: '+error.message)}
 }
 
-function chatView(){return `<div class="chat-screen"><div class="chat-area" id="chatArea">${state.messages.length?`<div class="conversation">${state.messages.map(msgMarkup).join('')}</div>`:hero()}${state.chatError?`<div class="notice" style="max-width:850px;margin:12px auto">${h(state.chatError)}</div>`:''}</div><div class="chat-footer"><form class="composer" id="chatForm"><button type="button" title="Open image studio" id="imageShortcut">＋</button><button type="button" id="voiceShortcut" class="iris-orb-button" title="Open IRIS voice recorder" aria-label="Open IRIS voice recorder"><span class="iris-orb-core" aria-hidden="true"></span></button><textarea id="chatInput" aria-label="Message MY CHAT" placeholder="Message MY CHAT…" rows="1" required maxlength="30000"></textarea><button type="button" id="dictateShortcut" title="Dictate into chat (not IRIS)" aria-label="Dictate into chat" aria-pressed="false">🎤</button><button type="submit" class="primary" title="Send message" ${state.busy?'disabled':''}>${state.busy?'⋯':'↑'}</button></form><div class="under-composer" id="dictationStatus" role="status" aria-live="polite">${state.status?.provider?.connected?'Connected model: '+h(state.status.provider.model):'No AI provider selected · Connect one in AI Connections to receive real responses'}</div></div></div>`}
+function chatView(){return `<div class="chat-screen">${state.messages.length?`<div class="chat-export-tools" aria-label="Conversation export tools"><span class="export-label">CONVERSATION TOOLS</span><button type="button" id="copyChatAll" title="Copy all messages to clipboard">⧉ Copy Chat</button><button type="button" id="exportChatTxt" title="Download conversation as readable text">⬇ Export TXT</button><button type="button" id="exportChatJson" title="Download detailed conversation for diagnostics">⬇ Export JSON</button></div>`:''}<div class="chat-area" id="chatArea">${state.messages.length?`<div class="conversation">${state.messages.map(msgMarkup).join('')}</div>`:hero()}${state.chatError?`<div class="notice" style="max-width:850px;margin:12px auto">${h(state.chatError)}</div>`:''}</div><div class="chat-footer"><form class="composer" id="chatForm"><button type="button" title="Open image studio" id="imageShortcut">＋</button><button type="button" id="voiceShortcut" class="iris-orb-button" title="Open IRIS voice recorder" aria-label="Open IRIS voice recorder"><span class="iris-orb-core" aria-hidden="true"></span></button><textarea id="chatInput" aria-label="Message MY CHAT" placeholder="Message MY CHAT…" rows="1" required maxlength="30000"></textarea><button type="button" id="dictateShortcut" title="Dictate into chat (not IRIS)" aria-label="Dictate into chat" aria-pressed="false">🎤</button><button type="submit" class="primary" title="Send message" ${state.busy?'disabled':''}>${state.busy?'⋯':'↑'}</button></form><div class="under-composer" id="dictationStatus" role="status" aria-live="polite">${state.status?.provider?.connected?'Connected model: '+h(state.status.provider.model):'No AI provider selected · Connect one in AI Connections to receive real responses'}</div></div></div>`}
 async function newChat(open=true){try{const c=await api('/api/chats','POST',{title:'New conversation',project_id:state.project});await refresh();if(open)await openChat(c.id);return c.id}catch(e){notify(e.message)}}
 async function openChat(id){state.currentChat=id;state.page='chat';try{state.messages=await api(`/api/chats/${encodeURIComponent(id)}/messages`)}catch(e){notify(e.message);state.messages=[]}state.chatError='';render();setTimeout(scrollMessages,20)}
 function scrollMessages(){const el=$('#chatArea');if(el)el.scrollTop=el.scrollHeight}
 function attachChat(){
  $$('[data-jump]').forEach(b=>b.onclick=()=>navigate(b.dataset.jump));
  $('#imageShortcut').onclick=()=>navigate('images');$('#voiceShortcut').onclick=()=>navigate('voice');$('#dictateShortcut').onclick=()=>startChatDictation($('#chatInput'));
+ $('[data-copy-message]').forEach(btn=>btn.onclick=()=>{const message=state.messages[Number(btn.dataset.copyMessage)];if(message)copyChatText(message.content)});
+ const copyAll=$('#copyChatAll');if(copyAll)copyAll.onclick=()=>currentChatMessages().length?copyChatText(makeChatTranscript()):notify('No messages to copy yet');
+ const txt=$('#exportChatTxt');if(txt)txt.onclick=()=>exportChat('txt');
+ const json=$('#exportChatJson');if(json)json.onclick=()=>exportChat('json');
  const inp=$('#chatInput');if(state.draft){inp.value=state.draft;state.draft=''}
  inp.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();$('#chatForm').requestSubmit()}});
- $('#chatForm').onsubmit=async(e)=>{e.preventDefault();if(state.busy)return;if(chatRecognition)stopChatDictation(false);const text=inp.value.trim();if(!text)return;if(window.puter?.auth?.signIn&&!puter.auth.isSignedIn()){try{await puter.auth.signIn();state.status=await api('/api/status')}catch(error){notify('AI sign-in required: '+(error?.message||String(error)));return}}state.busy=true;state.chatError='';let id=state.currentChat;if(!id)id=await newChat(false);if(!id){state.busy=false;return}inp.value='';state.currentChat=id;state.messages.push({id:'pending-'+Date.now(),role:'user',content:text});render();scrollMessages();try{const out=await api('/api/chat/send','POST',{chat_id:id,message:text});state.messages=await api(`/api/chats/${encodeURIComponent(id)}/messages`);if(!out.answered)state.chatError=out.error||'Provider did not answer';else state.chatError='';state.chats=await api('/api/chats')}catch(e){state.chatError=e.message;notify('Message error: '+e.message)}finally{state.busy=false;render();scrollMessages()}};
+ $('#chatForm').onsubmit=async(e)=>{e.preventDefault();if(state.busy)return;if(chatRecognition)stopChatDictation(false);const text=inp.value.trim();if(!text)return;if(window.puter?.auth?.signIn&&!puter.auth.isSignedIn()){try{await puter.auth.signIn();state.status=await api('/api/status')}catch(error){notify('AI sign-in required: '+(error?.message||String(error)));return}}state.busy=true;state.chatError='';let id=state.currentChat;if(!id)id=await newChat(false);if(!id){state.busy=false;return}inp.value='';state.currentChat=id;state.messages.push({id:'pending-'+Date.now(),role:'user',content:text,created_at:new Date().toISOString()});render();scrollMessages();try{const out=await api('/api/chat/send','POST',{chat_id:id,message:text});state.messages=await api(`/api/chats/${encodeURIComponent(id)}/messages`);if(!out.answered)state.chatError=out.error||'Provider did not answer';else state.chatError='';state.chats=await api('/api/chats')}catch(e){state.chatError=e.message;notify('Message error: '+e.message)}finally{state.busy=false;render();scrollMessages()}};
 }
 function pageHeader(eyebrow,title,desc,buttons=''){return `<div class="page-head"><div><div class="eyebrow">${eyebrow}</div><h1>${title}</h1><p class="subtitle">${desc}</p></div><div>${buttons}</div></div>`}
 function projectsView(){return `<div class="page">${pageHeader('ORGANIZE YOUR WORLD','Projects','Separate workspaces for games, films, business, ideas, and everything you build.','<button class="btn primary" id="addProject">＋ New project</button>')}<div class="surface" id="projectForm" style="display:none;margin-bottom:18px"><h3>Create project</h3><form id="createProject"><div class="form-row"><div class="form-field"><label>Name</label><input class="input" id="projectName" maxlength="120" required placeholder="Name this project"></div><div class="form-field"><label>Description</label><input class="input" id="projectDescription" maxlength="5000" placeholder="What are we making?"></div></div><button class="btn primary">Create project</button></form></div><div class="three-cols">${state.projects.length?state.projects.map(p=>`<div class="project-card"><div class="card-top"><span class="card-icon">▦</span><span class="pill">PROJECT</span></div><div class="library-card-title">${h(p.name)}</div><div class="card-sub">${h(p.description||'Your work, ideas and assets in one place.')}</div><div class="card-actions"><button class="btn small" data-project="${h(p.id)}">Open workspace</button><button class="btn small quiet" data-project-images="${h(p.id)}">Images</button><button class="btn small danger" data-archive-project="${h(p.id)}">Archive</button></div></div>`).join(''):'<div class="empty-card">No projects yet. Create your first workspace to start organizing your work.</div>'}</div></div>`}
