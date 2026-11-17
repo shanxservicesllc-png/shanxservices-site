@@ -67,6 +67,15 @@
 .rich-file-block,.rich-code-block{border-radius:11px;margin:.65em 0;overflow:hidden}.rich-file-block{border:1px solid #957943;background:#0e1c15}.rich-code-block{border:1px solid #337494;background:#071823}.rich-file-head,.rich-code-head{display:flex;gap:9px;justify-content:space-between;align-items:center;padding:8px 10px;font-size:11px;font-weight:800}.rich-file-head{background:#1c2d20;color:#f1d397}.rich-code-head{background:#0e3147;color:#89d8ff}.rich-file-name{min-width:0;overflow-wrap:anywhere}.rich-file-body{padding:11px 12px}.rich-file-body>:last-child{margin-bottom:0}.rich-code-block pre{margin:0;padding:11px 12px;white-space:pre;overflow-x:auto;max-height:580px;color:#e0ecf4;font:12px/1.5 Consolas,'Courier New',monospace}.rich-copy-btn{flex:none;border:1px solid #8c7546;background:#263927;color:#f7e0a7;border-radius:8px;padding:5px 9px;font-size:11px}.rich-copy-btn:focus-visible{outline:2px solid #f7ce72}.rich-file-source{display:none}
 .rich-table-wrap{margin:.6em 0;overflow-x:auto;border:1px solid #42614b;border-radius:9px}.rich-table-wrap table{border-collapse:collapse;width:100%;font-size:12px}.rich-table-wrap th,.rich-table-wrap td{padding:8px;border-bottom:1px solid #355543;text-align:left;vertical-align:top}.rich-table-wrap th{background:#172c1d;color:#f0cf85}
 @media(max-width:540px){.identity .product{font-size:17px}.message{margin:10px 0;gap:6px}.message-bubble{padding:10px 12px}.msg-shell{max-width:96%}.who{width:27px;height:27px;font-size:10px}}
+
+/* Instant model selector: actual Puter catalog, no fake provider sign-in */
+.model-quick-bar{max-width:920px;margin:6px auto 1px;padding:8px 11px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:linear-gradient(110deg,#102318,#10242b);border:1px solid #34584d;border-radius:11px}
+.model-quick-bar label{display:flex;align-items:center;gap:5px;color:#bce3c2;font-size:11px;font-weight:750}
+.model-quick-bar select{min-width:0;border:1px solid #52745d;border-radius:8px;background:#132a1d;color:#eff0e8;font-size:12px;padding:8px 9px}
+#quickModelPicker{width:210px;max-width:44vw}#quickThinkingPicker{width:95px}
+.model-quick-bar button{border:1px solid #917744;border-radius:8px;background:#2b3620;color:#efce83;font-size:11px;padding:8px 10px}
+.model-quick-detail{flex-basis:100%;font-size:10px;color:#91c7ab}
+@media(max-width:540px){.model-quick-bar{padding:7px;gap:5px}#quickModelPicker{width:46vw}#quickThinkingPicker{width:87px}.model-quick-bar label{font-size:10px}}
 </style></head>
 <body>
 <div class="app" id="app">
@@ -97,7 +106,7 @@
 const $=(sel,root=document)=>root.querySelector(sel);
 const $$=(sel,root=document)=>[...root.querySelectorAll(sel)];
 const h=(v)=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const state={page:'chat',status:null,chats:[],projects:[],assets:[],presets:[],currentChat:null,messages:[],project:null,busy:false,recording:null,mediaRecorder:null,audioChunks:[],voiceBlob:null,voiceObjectUrl:null,voiceTranscript:'',voiceToken:0,selection:new Set(),editor:{img:null,maskStrokes:[],drawing:false,brightness:100,contrast:100,brush:20,maskMode:false},config:{mode:'auto',chatModel:'gpt-5.4-nano'},modelCatalog:[],modelLoading:false,modelLoaded:false,modelCatalogError:'',modelFilter:'featured',modelQuery:'',compareA:'',compareB:'',comparePrompt:'Explain the pros and cons of using local versus cloud AI for an offline-capable creative application.',compareResults:null,comparing:false};
+const state={page:'chat',status:null,chats:[],projects:[],assets:[],presets:[],currentChat:null,messages:[],project:null,busy:false,recording:null,mediaRecorder:null,audioChunks:[],voiceBlob:null,voiceObjectUrl:null,voiceTranscript:'',voiceToken:0,selection:new Set(),editor:{img:null,maskStrokes:[],drawing:false,brightness:100,contrast:100,brush:20,maskMode:false},config:{mode:'auto',chatModel:'gpt-5.4-nano',chatEffort:'auto'},modelCatalog:[],modelLoading:false,modelLoaded:false,modelCatalogError:'',modelFilter:'featured',modelQuery:'',compareA:'',compareB:'',comparePrompt:'Explain the pros and cons of using local versus cloud AI for an offline-capable creative application.',compareResults:null,comparing:false};
 const builtins=[
  {title:'Character Sheet',icon:'♙',type:'image',prompt:'Create a cohesive multi-view character reference sheet of [character]. Include front, side, and back views, consistent clothing and proportions.'},
  {title:'Logo Maker',icon:'⬡',type:'image',prompt:'Design a distinctive, professional logo for [brand]. Color palette: [colors]. Provide clean composition, high legibility, and minimal clutter.'},
@@ -115,6 +124,7 @@ const localKey='MY_CHAT_TABLET_PREVIEW_V1';
 let offlineDB={chats:[],projects:[],presets:[],messages:{}};
 try{offlineDB={...offlineDB,...JSON.parse(localStorage.getItem(localKey)||'{}')}}catch(e){}
 if(offlineDB.settings?.chatModel)state.config.chatModel=offlineDB.settings.chatModel;
+if(['auto','low','medium','high'].includes(offlineDB.settings?.chatEffort))state.config.chatEffort=offlineDB.settings.chatEffort;
 const offlineAssets=[];
 const imageDBPromise=new Promise(resolve=>{try{if(!('indexedDB' in window)){resolve(null);return}const req=indexedDB.open('MY_CHAT_IMAGES_V1',1);req.onupgradeneeded=()=>{if(!req.result.objectStoreNames.contains('images'))req.result.createObjectStore('images',{keyPath:'id'})};req.onsuccess=()=>resolve(req.result);req.onerror=()=>resolve(null)}catch{resolve(null)}});
 async function saveImageRecord(entry){const db=await imageDBPromise;if(!db)return false;return new Promise(resolve=>{try{const tx=db.transaction('images','readwrite');tx.objectStore('images').put(entry);tx.oncomplete=()=>resolve(true);tx.onerror=()=>resolve(false)}catch{resolve(false)}})}
@@ -144,7 +154,9 @@ async function api(path,method='GET',data=null){
   if(!window.puter?.ai?.chat)return {answered:false,error:'AI SDK is unavailable. Check internet connection and reload.'};
   try{
    const prompt=[{role:'system',content:'You are X13 INFINITY, a helpful AI assistant inside the SHANX13AịGG workspace. Answer accurately and never claim actions were done if they were not.'},...messages.slice(-24).map(m=>({role:m.role,content:m.content}))];
-   const response=await puter.ai.chat(prompt,{model:state.config.chatModel,normalize:true});
+   const options={model:state.config.chatModel,normalize:true};
+   if(state.config.chatEffort!=='auto')options.reasoning_effort=state.config.chatEffort;
+   const response=await puter.ai.chat(prompt,options);
    const raw=response?.message?.content??response?.content??'';
    const answer=typeof raw==='string'?raw:Array.isArray(raw)?raw.filter(b=>b?.type==='text').map(b=>b.text).join('\n'):'';
    if(!answer.trim())throw new Error('The AI returned no text response');
@@ -604,11 +616,67 @@ function startChatDictation(input){
  catch(error){chatRecognition=null;state.dictating=false;setChatMicActive(false);notify('Could not start dictation: '+error.message)}
 }
 
-function chatView(){return `<div class="chat-screen">${state.messages.length?`<div class="chat-export-tools" aria-label="Conversation export tools"><span class="export-label">CONVERSATION TOOLS</span><button type="button" id="copyChatAll" title="Copy all messages to clipboard">⧉ Copy Chat</button><button type="button" id="exportChatTxt" title="Download conversation as readable text">⬇ Export TXT</button><button type="button" id="exportChatJson" title="Download detailed conversation for diagnostics">⬇ Export JSON</button><button type="button" id="exportChatZip" title="Download this chat and its generated file blocks as a real ZIP">⬇ Export ZIP</button></div>`:''}<div class="chat-area" id="chatArea">${state.messages.length?`<div class="conversation">${state.messages.map(msgMarkup).join('')}</div>`:hero()}${state.chatError?`<div class="notice" style="max-width:850px;margin:12px auto">${h(state.chatError)}</div>`:''}</div><div class="chat-footer"><form class="composer" id="chatForm"><button type="button" title="Open image studio" id="imageShortcut">＋</button><button type="button" id="voiceShortcut" class="iris-orb-button" title="Open IRIS voice recorder" aria-label="Open IRIS voice recorder"><span class="iris-orb-core" aria-hidden="true"></span></button><textarea id="chatInput" aria-label="Message X13 INFINITY" placeholder="Message X13 INFINITY…" rows="1" required maxlength="30000"></textarea><button type="button" id="dictateShortcut" title="Dictate into chat (not IRIS)" aria-label="Dictate into chat" aria-pressed="false">🎤</button><button type="submit" class="primary" title="Send message" ${state.busy?'disabled':''}>${state.busy?'⋯':'↑'}</button></form><div class="under-composer" id="dictationStatus" role="status" aria-live="polite">${state.status?.provider?.connected?'Connected model: '+h(state.status.provider.model):'No AI provider selected · Connect one in AI Connections to receive real responses'}</div></div></div>`}
+
+function quickModelOptions(){
+ const selected=String(state.config.chatModel),all=state.modelCatalog||[];
+ const free=all.filter(modelFree).sort((a,b)=>modelContext(b)-modelContext(a)).slice(0,7);
+ const strong=shortlistModels(all).slice(0,20),seen=new Set();
+ let options='<option value="'+h(selected)+'">'+h((all.find(m=>modelKey(m)===selected||m.id===selected)||{}).name||selected)+'</option>';
+ seen.add(selected);
+ for(const m of [...free,...strong]){
+  const key=modelKey(m);if(!key||seen.has(key))continue;seen.add(key);
+  options+='<option value="'+h(key)+'">'+h(modelName(m))+(modelFree(m)?' · free variant':'')+'</option>';
+  if(seen.size>=26)break;
+ }
+ return options+'<option value="__model_lab__">Browse entire catalog…</option>';
+}
+function quickModelInfo(){
+ const m=(state.modelCatalog||[]).find(v=>modelKey(v)===state.config.chatModel||v.id===state.config.chatModel);
+ if(!m)return state.modelCatalogError||'Current model selected; catalog information loading';
+ return 'Context '+formatTokens(modelContext(m))+' · Output '+formatTokens(modelOutput(m))+' · '+modelPrice(m)+(modelFree(m)?' · free variant, quota dependent':'');
+}
+function quickModelBar(){
+ return '<div class="model-quick-bar" aria-label="Select chat model and thinking level">'+
+ '<label for="quickModelPicker">Model <select id="quickModelPicker" aria-label="AI model">'+quickModelOptions()+'</select></label>'+
+ '<label for="quickThinkingPicker">Think <select id="quickThinkingPicker" aria-label="Reasoning effort for compatible models"><option value="auto">Auto</option><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option></select></label>'+
+ '<button type="button" id="quickOpenModelLab">◈ Model Lab</button>'+
+ '<div class="model-quick-detail" id="quickModelDetail">'+h(quickModelInfo())+' · Thinking options only work on compatible models</div></div>';
+}
+function refreshQuickModelBar(){
+ const select=$('#quickModelPicker');if(select)select.innerHTML=quickModelOptions();
+ const effort=$('#quickThinkingPicker');if(effort)effort.value=state.config.chatEffort;
+ const detail=$('#quickModelDetail');if(detail)detail.textContent=quickModelInfo()+' · Thinking options only work on compatible models';
+}
+function attachQuickModelBar(){
+ const select=$('#quickModelPicker');
+ if(select)select.onchange=async e=>{
+  const next=e.target.value;
+  if(next==='__model_lab__'){navigate('models');return}
+  if(state.busy||chatSubmitLock){refreshQuickModelBar();notify('Wait until the reply finishes to switch model');return}
+  state.config.chatModel=next;
+  offlineDB.settings={...(offlineDB.settings||{}),chatModel:next};saveOffline();
+  state.status=await api('/api/status');updateFrame();refreshQuickModelBar();
+  notify('Chat model selected: '+next);
+ };
+ const effort=$('#quickThinkingPicker');
+ if(effort){
+  effort.value=state.config.chatEffort;
+  effort.onchange=e=>{
+   state.config.chatEffort=e.target.value;
+   offlineDB.settings={...(offlineDB.settings||{}),chatEffort:state.config.chatEffort};saveOffline();
+   notify(state.config.chatEffort==='auto'?'Automatic model thinking selected':'Requested '+state.config.chatEffort+' thinking for compatible models');
+  };
+ }
+ const lab=$('#quickOpenModelLab');if(lab)lab.onclick=()=>navigate('models');
+ if(!state.modelLoaded&&!state.modelLoading)loadModelCatalog();
+}
+
+function chatView(){return `<div class="chat-screen">${quickModelBar()}${state.messages.length?`<div class="chat-export-tools" aria-label="Conversation export tools"><span class="export-label">CONVERSATION TOOLS</span><button type="button" id="copyChatAll" title="Copy all messages to clipboard">⧉ Copy Chat</button><button type="button" id="exportChatTxt" title="Download conversation as readable text">⬇ Export TXT</button><button type="button" id="exportChatJson" title="Download detailed conversation for diagnostics">⬇ Export JSON</button><button type="button" id="exportChatZip" title="Download this chat and its generated file blocks as a real ZIP">⬇ Export ZIP</button></div>`:''}<div class="chat-area" id="chatArea">${state.messages.length?`<div class="conversation">${state.messages.map(msgMarkup).join('')}</div>`:hero()}${state.chatError?`<div class="notice" style="max-width:850px;margin:12px auto">${h(state.chatError)}</div>`:''}</div><div class="chat-footer"><form class="composer" id="chatForm"><button type="button" title="Open image studio" id="imageShortcut">＋</button><button type="button" id="voiceShortcut" class="iris-orb-button" title="Open IRIS voice recorder" aria-label="Open IRIS voice recorder"><span class="iris-orb-core" aria-hidden="true"></span></button><textarea id="chatInput" aria-label="Message X13 INFINITY" placeholder="Message X13 INFINITY…" rows="1" required maxlength="30000"></textarea><button type="button" id="dictateShortcut" title="Dictate into chat (not IRIS)" aria-label="Dictate into chat" aria-pressed="false">🎤</button><button type="submit" class="primary" title="Send message" ${state.busy?'disabled':''}>${state.busy?'⋯':'↑'}</button></form><div class="under-composer" id="dictationStatus" role="status" aria-live="polite">${state.status?.provider?.connected?'Connected model: '+h(state.status.provider.model):'No AI provider selected · Connect one in AI Connections to receive real responses'}</div></div></div>`}
 async function newChat(open=true){try{const c=await api('/api/chats','POST',{title:'New conversation',project_id:state.project});await refresh();if(open)await openChat(c.id);return c.id}catch(e){notify(e.message)}}
 async function openChat(id){state.currentChat=id;state.page='chat';try{state.messages=await api(`/api/chats/${encodeURIComponent(id)}/messages`)}catch(e){notify(e.message);state.messages=[]}state.chatError='';render();setTimeout(scrollMessages,20)}
 function scrollMessages(){const el=$('#chatArea');if(el)el.scrollTop=el.scrollHeight}
 function attachChat(){
+ attachQuickModelBar();
  $$('[data-jump]').forEach(b=>b.onclick=()=>navigate(b.dataset.jump));
  $('#imageShortcut').onclick=()=>navigate('images');$('#voiceShortcut').onclick=()=>navigate('voice');$('#dictateShortcut').onclick=()=>startChatDictation($('#chatInput'));
  $$('[data-copy-message]').forEach(btn=>btn.onclick=()=>{const message=state.messages[Number(btn.dataset.copyMessage)];if(message)copyChatText(message.content)});
@@ -848,7 +916,7 @@ async function loadModelCatalog(force=false){
   state.modelCatalog=result.filter(m=>m&&typeof m==='object'&&typeof m.id==='string'&&m.id.trim());
   state.modelLoaded=true;state.modelCatalogError='';
  }catch(error){state.modelCatalogError='Cannot load model catalog: '+(error?.message||String(error));state.modelLoaded=false}
- finally{state.modelLoading=false;if(state.page==='models')render()}
+ finally{state.modelLoading=false;if(state.page==='models')render();else if(state.page==='chat')refreshQuickModelBar()}
 }
 function visibleModels(){
  let all=[...state.modelCatalog],filter=state.modelFilter,query=state.modelQuery.trim().toLowerCase();
@@ -890,13 +958,13 @@ function attachModelLab(){
  if(search)search.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();state.modelQuery=search.value.trim();render()}};
  const find=$('#modelSearchButton');if(find)find.onclick=()=>{state.modelQuery=$('#modelSearch').value.trim();render()};
  const refresh=$('#modelRefresh');if(refresh)refresh.onclick=()=>loadModelCatalog(true);
- $('[data-model-use]').forEach(btn=>btn.onclick=async()=>{
+ $$('[data-model-use]').forEach(btn=>btn.onclick=async()=>{
   const m=state.modelCatalog.find(x=>modelKey(x)===btn.dataset.modelUse);if(!m)return;
   state.config.chatModel=modelKey(m);offlineDB.settings={...(offlineDB.settings||{}),chatModel:state.config.chatModel};saveOffline();
   state.status=await api('/api/status');notify('Chat model selected: '+modelName(m));render();
  });
- $('[data-model-a]').forEach(btn=>btn.onclick=()=>{state.compareA=btn.dataset.modelA;state.compareResults=null;render()});
- $('[data-model-b]').forEach(btn=>btn.onclick=()=>{state.compareB=btn.dataset.modelB;state.compareResults=null;render()});
+ $$('[data-model-a]').forEach(btn=>btn.onclick=()=>{state.compareA=btn.dataset.modelA;state.compareResults=null;render()});
+ $$('[data-model-b]').forEach(btn=>btn.onclick=()=>{state.compareB=btn.dataset.modelB;state.compareResults=null;render()});
  const prompt=$('#comparePrompt');if(prompt)prompt.oninput=e=>state.comparePrompt=e.target.value;
  const run=$('#runModelComparison');
  if(run)run.onclick=async()=>{
