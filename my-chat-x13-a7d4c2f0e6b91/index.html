@@ -21,6 +21,20 @@
 .voice-controls .btn{white-space:normal}
 .composer #chatInput{min-width:0}
 @media(max-width:480px){.composer{gap:5px;padding:7px}.composer button{min-width:37px;height:39px;width:37px}.composer .iris-orb-button{min-width:37px;width:37px}.composer textarea{min-width:0;padding:9px 3px;font-size:13px}.composer .iris-orb-core{width:19px;height:19px}}
+
+/* MY CHAT Model Lab: searchable live model catalog and comparison */
+.model-lab-controls{display:flex;gap:9px;flex-wrap:wrap;align-items:end}
+.model-lab-controls>*{min-width:160px;flex:1}
+.model-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(275px,1fr));gap:12px;margin-top:16px}
+.model-tile{background:#102018;border:1px solid #34513c;border-radius:13px;padding:16px;min-width:0}
+.model-tile.selected{border-color:#d9b85c;box-shadow:inset 3px 0 #d9b85c}
+.model-tile h3{overflow-wrap:anywhere;font-size:14px;margin:3px 0 6px;color:#eedaa0}
+.model-id{overflow-wrap:anywhere;color:#9ab69f;font-size:11px}
+.model-metrics{display:flex;gap:7px;flex-wrap:wrap;margin:11px 0}
+.model-metrics span{border:1px solid #38634a;padding:3px 7px;border-radius:9px;font-size:11px;color:#d8e4d9}
+.model-metrics strong{color:#62e68c}
+.model-compare-results{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px}
+.model-compare-result{white-space:pre-wrap;overflow-wrap:anywhere;border:1px solid #38513e;padding:14px;border-radius:12px;background:#0d1a12;min-height:80px}
 </style></head>
 <body>
 <div class="app" id="app">
@@ -34,7 +48,7 @@
       <button class="nav-item" data-page="library"><span class="nav-icon">✦</span><span>Generator Library</span></button>
       <button class="nav-item" data-page="images"><span class="nav-icon">▧</span><span>Images <small>STUDIO</small></span></button>
       <button class="nav-item" data-page="voice"><span class="nav-icon">◉</span><span>Voice / Iris</span></button>
-      <button class="nav-item" data-page="connections"><span class="nav-icon">⌘</span><span>AI Connections</span></button>
+      <button class="nav-item" data-page="models"><span class="nav-icon">◈</span><span>AI Model Lab</span></button><button class="nav-item" data-page="connections"><span class="nav-icon">⌘</span><span>AI Connections</span></button>
     </nav>
     <div class="history-heading"><span>RECENT CHATS</span><button id="refreshChats" title="Refresh">↻</button></div><div class="recent" id="recentChats"><span class="muted">Loading…</span></div>
     <div class="sidebar-bottom"><div class="active-dot"></div><div><strong>MY CHAT · TABLET</strong><small id="sidebarStatus">Checking connection</small></div><button class="tiny-icon" id="openSettings" title="Connections">⚙</button></div>
@@ -51,7 +65,7 @@
 const $=(sel,root=document)=>root.querySelector(sel);
 const $$=(sel,root=document)=>[...root.querySelectorAll(sel)];
 const h=(v)=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const state={page:'chat',status:null,chats:[],projects:[],assets:[],presets:[],currentChat:null,messages:[],project:null,busy:false,recording:null,mediaRecorder:null,audioChunks:[],voiceBlob:null,voiceObjectUrl:null,voiceTranscript:'',voiceToken:0,selection:new Set(),editor:{img:null,maskStrokes:[],drawing:false,brightness:100,contrast:100,brush:20,maskMode:false},config:{mode:'auto',chatModel:'gpt-5.4-nano'}};
+const state={page:'chat',status:null,chats:[],projects:[],assets:[],presets:[],currentChat:null,messages:[],project:null,busy:false,recording:null,mediaRecorder:null,audioChunks:[],voiceBlob:null,voiceObjectUrl:null,voiceTranscript:'',voiceToken:0,selection:new Set(),editor:{img:null,maskStrokes:[],drawing:false,brightness:100,contrast:100,brush:20,maskMode:false},config:{mode:'auto',chatModel:'gpt-5.4-nano'},modelCatalog:[],modelLoading:false,modelLoaded:false,modelCatalogError:'',modelFilter:'featured',modelQuery:'',compareA:'',compareB:'',comparePrompt:'Explain the pros and cons of using local versus cloud AI for an offline-capable creative application.',compareResults:null,comparing:false};
 const builtins=[
  {title:'Character Sheet',icon:'♙',type:'image',prompt:'Create a cohesive multi-view character reference sheet of [character]. Include front, side, and back views, consistent clothing and proportions.'},
  {title:'Logo Maker',icon:'⬡',type:'image',prompt:'Design a distinctive, professional logo for [brand]. Color palette: [colors]. Provide clean composition, high legibility, and minimal clutter.'},
@@ -137,14 +151,14 @@ function updateFrame(){
  $('#providerPill').innerHTML=`<span class="pulse"></span>${h(info?.kind!=='none'&&info?.kind ? info.kind==='ollama'?'Ollama · '+info.model:info.model:'Local core')}`;
  $('#sidebarStatus').textContent=info?.connected?'AI connected':'Sign in to use AI';
  $$('.nav-item').forEach(btn=>btn.classList.toggle('active',btn.dataset.page===state.page));
- $('#topName').textContent=({chat:'Conversations',projects:'Projects',library:'Generator Library',images:'Image Studio',voice:'Voice / Iris',connections:'AI Connections'})[state.page];
+ $('#topName').textContent=({chat:'Conversations',projects:'Projects',library:'Generator Library',images:'Image Studio',voice:'Voice / Iris',connections:'AI Connections',models:'AI Model Lab'})[state.page];
  $('#topSub').textContent=state.project?state.projects.find(p=>p.id===state.project)?.name||'My workspace':'My workspace';
  const recent=$('#recentChats');recent.innerHTML=state.chats.length?state.chats.map(c=>`<button class="history-item ${c.id===state.currentChat?'selected':''}" data-chat="${h(c.id)}"><span class="history-icon">◩</span><span>${h(c.title)}</span></button>`).join(''):'<div class="muted" style="padding:10px">No conversations yet</div>';
  $$('.history-item').forEach(b=>b.onclick=()=>openChat(b.dataset.chat));
 }
-function navigate(page){if(state.page==='chat'&&page!=='chat'&&chatRecognition){state.draft=$('#chatInput')?.value||'';stopChatDictation(true)}if(!['chat','projects','library','images','voice','connections'].includes(page))return;if(state.page==='voice'&&page!=='voice'&&state.mediaRecorder?.state==='recording'){state.mediaRecorder.stop();notify('Voice recording stopped because you left the Voice page')}state.page=page;closeMenu();render()}
+function navigate(page){if(state.page==='chat'&&page!=='chat'&&chatRecognition){state.draft=$('#chatInput')?.value||'';stopChatDictation(true)}if(!['chat','projects','library','images','voice','connections','models'].includes(page))return;if(state.page==='voice'&&page!=='voice'&&state.mediaRecorder?.state==='recording'){state.mediaRecorder.stop();notify('Voice recording stopped because you left the Voice page')}state.page=page;closeMenu();render();if(page==='models'&&!state.modelLoaded&&!state.modelLoading)loadModelCatalog()}
 function closeMenu(){$('#sidebar').classList.remove('open');$('#sidebarOverlay').classList.remove('open')}
-function render(){updateFrame();const root=$('#view');switch(state.page){case'chat':root.innerHTML=chatView();attachChat();break;case'projects':root.innerHTML=projectsView();attachProjects();break;case'library':root.innerHTML=libraryView();attachLibrary();break;case'images':root.innerHTML=imagesView();attachImages();break;case'voice':root.innerHTML=voiceView();attachVoice();break;case'connections':root.innerHTML=connectionsView();attachConnections();break;}$('#mainScroll').scrollTop=0}
+function render(){updateFrame();const root=$('#view');switch(state.page){case'chat':root.innerHTML=chatView();attachChat();break;case'projects':root.innerHTML=projectsView();attachProjects();break;case'library':root.innerHTML=libraryView();attachLibrary();break;case'images':root.innerHTML=imagesView();attachImages();break;case'voice':root.innerHTML=voiceView();attachVoice();break;case'connections':root.innerHTML=connectionsView();attachConnections();break;case'models':root.innerHTML=modelLabView();attachModelLab();break;}$('#mainScroll').scrollTop=0}
 function hero(){return `<div class="hero"><div class="halo">X13</div><div class="eyebrow">YOUR AI · YOUR TOOLS · YOUR WORLD</div><h1>MY CHAT</h1><div class="subbrand">POWERED BY SHANX13AịGG</div><p class="tagline">I never leave the crib without My Chat.</p><div class="feature-grid"><button class="feature-tile" data-jump="images"><span class="feature-symbol">▧</span><strong>Image Studio</strong><small>Create, edit, download, and organize.</small></button><button class="feature-tile" data-jump="projects"><span class="feature-symbol">▦</span><strong>Projects</strong><small>Keep your work together in one place.</small></button><button class="feature-tile" data-jump="library"><span class="feature-symbol">✦</span><strong>Generator Library</strong><small>Reusable starting points for your ideas.</small></button></div></div>`}
 function msgMarkup(m){return `<div class="message ${m.role==='user'?'user':'assistant'}"><div class="who">${m.role==='user'?'YOU':'X13'}</div><div class="message-bubble">${h(m.content)}</div></div>`}
 
@@ -346,6 +360,200 @@ function attachVoice(){
   recognition.start();notify('Browser speech recognition listening');
  };
 }
+
+/* Model Lab reads only the provider's current catalog, not fabricated model IDs. */
+function modelName(m){return String(m.name||m.id||m.puterId||'Unknown model')}
+function modelKey(m){return String(m.puterId||m.id||'')}
+function modelContext(m){const x=Number(m.context);return Number.isFinite(x)&&x>0?x:0}
+function modelOutput(m){const x=Number(m.max_tokens);return Number.isFinite(x)&&x>0?x:0}
+function formatTokens(n){if(!n)return 'unknown';return n>=1000000?(Number(n/1000000).toFixed(n%1000000?1:0)+'M'):n>=1000?(Number(n/1000).toFixed(n%1000?1:0)+'K'):String(n)}
+function modelFree(m){return /:free(?:$|\b)/i.test(modelKey(m))||/:free(?:$|\b)/i.test(String(m.id||''))}
+function modelPrice(m){
+ const c=m.cost;if(!c||c.currency!=='usd-cents'||!(Number(c.tokens)>0))return 'Price unknown';
+ const t=Number(c.tokens),i=Number(c.input),o=Number(c.output);
+ if(!Number.isFinite(i)||!Number.isFinite(o))return 'Price unknown';
+ const dollars=v=>(v*10000/t).toFixed(v*10000/t<1?3:2);
+ return '
+ const sdk=!!window.puter?.ai;const signed=!!window.puter?.auth?.isSignedIn?.();
+ const label=signed?'Connected to Puter AI':sdk?'Ready for sign-in':'AI script not loaded';
+ const status='<span class="provider-indicator">'+h(label)+'</span>';
+ return '<div class="page">'+pageHeader('BRING YOUR OWN AI','AI Connections','MY CHAT uses a real AI provider without embedding private API keys in a public website.')+
+ '<div class="two-cols"><div class="surface"><div class="section-title">Puter AI Account</div><p class="subtitle">Sign in to your own Puter account. Chat, AI images and voice transcription use that account and its available allowance or credits.</p><p>'+status+'</p>'+
+ '<div class="form-row spaced"><button type="button" class="btn primary" id="puterConnect">✦ Connect Puter AI</button><button type="button" class="btn quiet" id="puterDisconnect">Disconnect Puter</button></div>'+
+ '<div class="subtle-line"></div><div class="form-field"><label>Chat model ID</label><input id="chatModelInput" class="input" type="text" maxlength="100" value="'+h(state.config.chatModel)+'"></div><button id="saveChatModel" class="btn gold">Save model selection</button>'+
+ '<p class="caption spaced">Default: gpt-5.4-nano. If you enter another model ID, it must be supported by your Puter account. The provider may request payment for usage beyond its allowance.</p></div>'+
+ '<div class="grid-gap"><div class="surface"><div class="section-title">Live capabilities</div><div class="mini-stats"><span class="stat"><strong>Chat:</strong> '+(sdk?'Provider API loaded':'Offline')+'</span><span class="stat"><strong>Images:</strong> '+(!!window.puter?.ai?.txt2img?'Cloud models available':'Unavailable')+'</span><span class="stat"><strong>Transcription:</strong> '+(!!window.puter?.ai?.speech2txt?'Provider supported':'Unavailable')+'</span></div>'+
+ '<p class="caption spaced">Automatic sign-in can also occur when you send a message, generate an image or request a transcript.</p></div>'+
+ '<div class="surface"><div class="section-title">Current device</div><div class="mini-stats"><div class="stat">CPU threads: '+h(device.cores||'unknown')+'</div><div class="stat">WebGPU: '+(device.webgpu?'supported':'unavailable')+'</div><div class="stat">Canvas worker: '+(device.offscreen?'supported':'unavailable')+'</div></div>'+
+ '<p class="caption spaced">Edits, local image storage and recording playback run in this browser. Generative models currently run through your connected provider; a separate compatible runtime is required for on-device AI generation.</p></div></div></div></div>';
+}
+function attachConnections(){
+ $('#puterConnect').onclick=async()=>{
+  if(!window.puter?.auth?.signIn){notify('Puter SDK unavailable. Check internet and reload.');return}
+  try{await puter.auth.signIn();state.status=await api('/api/status');notify(state.status?.provider?.connected?'Puter AI connected':'Sign-in did not complete');render()}catch(err){notify('Sign-in failed: '+(err?.message||String(err)))}
+ };
+ $('#puterDisconnect').onclick=async()=>{
+  if(!window.puter?.auth?.signOut)return;
+  try{await puter.auth.signOut();state.status=await api('/api/status');notify('Puter account disconnected');render()}catch(err){notify('Disconnect error: '+(err?.message||String(err)))}
+ };
+ $('#saveChatModel').onclick=async()=>{
+  const model=$('#chatModelInput').value.trim();
+  if(!model||model.length>100){notify('Enter a valid model ID');return}
+  state.config.chatModel=model;offlineDB.settings={...(offlineDB.settings||{}),chatModel:model};saveOffline();
+  state.status=await api('/api/status');notify('Chat model set to '+model);render();
+ };
+}
+
+function init(){
+ $('#nav').addEventListener('click',e=>{const btn=e.target.closest('[data-page]');if(btn)navigate(btn.dataset.page)});
+ $('#newChat').onclick=()=>{state.currentChat=null;state.messages=[];state.chatError='';navigate('chat');$('#chatInput')?.focus()};
+ $('#refreshChats').onclick=async()=>{await refresh();render();notify('Refreshed')};
+ $('#openSettings').onclick=()=>navigate('connections');$('#topConnections').onclick=()=>navigate('connections');
+ $('#mobileMenu').onclick=()=>{$('#sidebar').classList.add('open');$('#sidebarOverlay').classList.add('open')};$('#closeSidebar').onclick=closeMenu;$('#sidebarOverlay').onclick=closeMenu;
+ restoreImageRecords().then(refresh).then(render).catch(e=>{notify(e.message);render()});
+}
+window.addEventListener('DOMContentLoaded',init);
+</script>
+</body></html>
++dollars(i)+' in / 
+ const sdk=!!window.puter?.ai;const signed=!!window.puter?.auth?.isSignedIn?.();
+ const label=signed?'Connected to Puter AI':sdk?'Ready for sign-in':'AI script not loaded';
+ const status='<span class="provider-indicator">'+h(label)+'</span>';
+ return '<div class="page">'+pageHeader('BRING YOUR OWN AI','AI Connections','MY CHAT uses a real AI provider without embedding private API keys in a public website.')+
+ '<div class="two-cols"><div class="surface"><div class="section-title">Puter AI Account</div><p class="subtitle">Sign in to your own Puter account. Chat, AI images and voice transcription use that account and its available allowance or credits.</p><p>'+status+'</p>'+
+ '<div class="form-row spaced"><button type="button" class="btn primary" id="puterConnect">✦ Connect Puter AI</button><button type="button" class="btn quiet" id="puterDisconnect">Disconnect Puter</button></div>'+
+ '<div class="subtle-line"></div><div class="form-field"><label>Chat model ID</label><input id="chatModelInput" class="input" type="text" maxlength="100" value="'+h(state.config.chatModel)+'"></div><button id="saveChatModel" class="btn gold">Save model selection</button>'+
+ '<p class="caption spaced">Default: gpt-5.4-nano. If you enter another model ID, it must be supported by your Puter account. The provider may request payment for usage beyond its allowance.</p></div>'+
+ '<div class="grid-gap"><div class="surface"><div class="section-title">Live capabilities</div><div class="mini-stats"><span class="stat"><strong>Chat:</strong> '+(sdk?'Provider API loaded':'Offline')+'</span><span class="stat"><strong>Images:</strong> '+(!!window.puter?.ai?.txt2img?'Cloud models available':'Unavailable')+'</span><span class="stat"><strong>Transcription:</strong> '+(!!window.puter?.ai?.speech2txt?'Provider supported':'Unavailable')+'</span></div>'+
+ '<p class="caption spaced">Automatic sign-in can also occur when you send a message, generate an image or request a transcript.</p></div>'+
+ '<div class="surface"><div class="section-title">Current device</div><div class="mini-stats"><div class="stat">CPU threads: '+h(device.cores||'unknown')+'</div><div class="stat">WebGPU: '+(device.webgpu?'supported':'unavailable')+'</div><div class="stat">Canvas worker: '+(device.offscreen?'supported':'unavailable')+'</div></div>'+
+ '<p class="caption spaced">Edits, local image storage and recording playback run in this browser. Generative models currently run through your connected provider; a separate compatible runtime is required for on-device AI generation.</p></div></div></div></div>';
+}
+function attachConnections(){
+ $('#puterConnect').onclick=async()=>{
+  if(!window.puter?.auth?.signIn){notify('Puter SDK unavailable. Check internet and reload.');return}
+  try{await puter.auth.signIn();state.status=await api('/api/status');notify(state.status?.provider?.connected?'Puter AI connected':'Sign-in did not complete');render()}catch(err){notify('Sign-in failed: '+(err?.message||String(err)))}
+ };
+ $('#puterDisconnect').onclick=async()=>{
+  if(!window.puter?.auth?.signOut)return;
+  try{await puter.auth.signOut();state.status=await api('/api/status');notify('Puter account disconnected');render()}catch(err){notify('Disconnect error: '+(err?.message||String(err)))}
+ };
+ $('#saveChatModel').onclick=async()=>{
+  const model=$('#chatModelInput').value.trim();
+  if(!model||model.length>100){notify('Enter a valid model ID');return}
+  state.config.chatModel=model;offlineDB.settings={...(offlineDB.settings||{}),chatModel:model};saveOffline();
+  state.status=await api('/api/status');notify('Chat model set to '+model);render();
+ };
+}
+
+function init(){
+ $('#nav').addEventListener('click',e=>{const btn=e.target.closest('[data-page]');if(btn)navigate(btn.dataset.page)});
+ $('#newChat').onclick=()=>{state.currentChat=null;state.messages=[];state.chatError='';navigate('chat');$('#chatInput')?.focus()};
+ $('#refreshChats').onclick=async()=>{await refresh();render();notify('Refreshed')};
+ $('#openSettings').onclick=()=>navigate('connections');$('#topConnections').onclick=()=>navigate('connections');
+ $('#mobileMenu').onclick=()=>{$('#sidebar').classList.add('open');$('#sidebarOverlay').classList.add('open')};$('#closeSidebar').onclick=closeMenu;$('#sidebarOverlay').onclick=closeMenu;
+ restoreImageRecords().then(refresh).then(render).catch(e=>{notify(e.message);render()});
+}
+window.addEventListener('DOMContentLoaded',init);
+</script>
+</body></html>
++dollars(o)+' out per 1M tokens';
+}
+function shortlistModels(models){
+ const eligible=models.filter(m=>modelContext(m)>=128000&&modelOutput(m)>=8000);
+ const sorted=[...eligible].sort((a,b)=>modelContext(b)-modelContext(a)||modelOutput(b)-modelOutput(a));
+ const picks=[],counts=new Map();
+ for(const model of sorted){
+  const provider=String(model.provider||'unknown');
+  if((counts.get(provider)||0)>=2)continue;
+  picks.push(model);counts.set(provider,(counts.get(provider)||0)+1);
+  if(picks.length>=20)break;
+ }
+ for(const model of sorted){if(picks.length>=20)break;if(!picks.includes(model))picks.push(model)}
+ return picks;
+}
+async function loadModelCatalog(force=false){
+ if(state.modelLoading||state.modelLoaded&&!force)return;
+ if(!window.puter?.ai?.listModels){state.modelCatalogError='Puter model catalog API unavailable in this browser';state.modelLoaded=false;if(state.page==='models')render();return}
+ state.modelLoading=true;state.modelCatalogError='';
+ if(state.page==='models')render();
+ try{
+  const result=await puter.ai.listModels();
+  if(!Array.isArray(result))throw Error('Provider returned an invalid model catalog');
+  state.modelCatalog=result.filter(m=>m&&typeof m==='object'&&typeof m.id==='string'&&m.id.trim());
+  state.modelLoaded=true;state.modelCatalogError='';
+ }catch(error){state.modelCatalogError='Cannot load model catalog: '+(error?.message||String(error));state.modelLoaded=false}
+ finally{state.modelLoading=false;if(state.page==='models')render()}
+}
+function visibleModels(){
+ let all=[...state.modelCatalog],filter=state.modelFilter,query=state.modelQuery.trim().toLowerCase();
+ if(filter==='featured')all=shortlistModels(all);
+ else if(filter==='free')all=all.filter(modelFree).sort((a,b)=>modelContext(b)-modelContext(a)||modelOutput(b)-modelOutput(a));
+ else if(filter==='context')all=all.filter(m=>modelContext(m)>=200000).sort((a,b)=>modelContext(b)-modelContext(a)||modelOutput(b)-modelOutput(a));
+ else if(filter==='output')all=all.filter(m=>modelOutput(m)>=16000).sort((a,b)=>modelOutput(b)-modelOutput(a)||modelContext(b)-modelContext(a));
+ else all.sort((a,b)=>modelContext(b)-modelContext(a)||modelOutput(b)-modelOutput(a));
+ if(query)all=all.filter(m=>(modelName(m)+' '+modelKey(m)+' '+String(m.provider||'')).toLowerCase().includes(query));
+ return all.slice(0,60);
+}
+function modelLabView(){
+ const n=state.modelCatalog.length,items=visibleModels(),cur=state.config.chatModel;
+ const menu='<option value="featured">Featured large-window shortlist (up to 20)</option><option value="context">200K+ context</option><option value="output">16K+ max output</option><option value="free">Provider free variants (quotas apply)</option><option value="all">All available models</option>';
+ const cards=items.map(m=>{
+  const id=modelKey(m),name=modelName(m),isSelected=cur===id||cur===m.id,context=formatTokens(modelContext(m)),output=formatTokens(modelOutput(m)),free=modelFree(m);
+  return '<article class="model-tile'+(isSelected?' selected':'')+'"><div class="card-top"><span class="pill">'+h(m.provider||'Provider unknown')+'</span>'+(free?'<span class="pill">FREE VARIANT · LIMITED</span>':'')+'</div>'+
+  '<h3>'+h(name)+'</h3><div class="model-id">'+h(id)+'</div><div class="model-metrics"><span>Context <strong>'+context+'</strong></span><span>Output <strong>'+output+'</strong></span></div>'+
+  '<div class="caption">'+h(modelPrice(m))+'</div><div class="card-actions"><button class="btn small'+(isSelected?' gold':' primary')+'" data-model-use="'+h(id)+'">'+(isSelected?'✓ Selected':'Use in Chat')+'</button><button class="btn small quiet" data-model-a="'+h(id)+'">Compare A</button><button class="btn small quiet" data-model-b="'+h(id)+'">Compare B</button></div></article>';
+ }).join('');
+ const side=(key)=>state.modelCatalog.find(m=>modelKey(m)===key);
+ const a=side(state.compareA),b=side(state.compareB);
+ const result=state.compareResults;
+ const results=result?'<div class="model-compare-results spaced"><div class="model-compare-result"><strong>'+h(a?modelName(a):'Model A')+'</strong><div class="subtle-line"></div>'+h(result.a||'No result')+'</div><div class="model-compare-result"><strong>'+h(b?modelName(b):'Model B')+'</strong><div class="subtle-line"></div>'+h(result.b||'No result')+'</div></div>':'';
+ return '<div class="page">'+pageHeader('LIVE PROVIDER CATALOG','AI Model Lab','Compare real model capabilities, select a model for chats, or run two models against the same prompt. Larger token limits do not guarantee better reasoning.')+
+  '<div class="surface"><div class="card-top"><strong>Available models: '+n+'</strong><button id="modelRefresh" class="btn small quiet"'+(state.modelLoading?' disabled':'')+'>↻ Refresh catalog</button></div>'+
+  '<p class="caption spaced">'+(state.modelLoading?'Loading current provider models…':state.modelCatalogError?h(state.modelCatalogError):'Metadata is supplied by Puter. Context, output and prices may change. Unknown means the provider did not supply a verified value.')+'</p>'+
+  '<div class="model-lab-controls"><div class="form-field"><label>Browse models</label><select id="modelFilter">'+menu+'</select></div><div class="form-field"><label>Search name / ID / provider</label><input class="input" id="modelSearch" placeholder="Search the model catalog..." value="'+h(state.modelQuery)+'"></div><button id="modelSearchButton" class="btn gold">Find</button></div>'+
+  '<p class="caption spaced">'+items.length+' models shown. Featured means large context/output and provider variety, not a claim of intelligence ranking.</p><div class="model-list">'+(cards||'<div class="empty-card">No matching models. Refresh or try another filter.</div>')+'</div></div>'+
+  '<div class="surface spaced"><h3>Two-model comparison</h3><p class="subtitle">Choose Compare A and Compare B on model cards. Each test sends your prompt to both real models and uses your own account allowance or paid credits.</p>'+
+  '<div class="mini-stats"><div class="stat"><strong>A:</strong> '+h(a?modelName(a):'Not selected')+'</div><div class="stat"><strong>B:</strong> '+h(b?modelName(b):'Not selected')+'</div></div>'+
+  '<div class="form-field spaced"><label>Test prompt</label><textarea id="comparePrompt" rows="4" maxlength="8000">'+h(state.comparePrompt)+'</textarea></div>'+
+  '<button id="runModelComparison" class="btn primary"'+(state.comparing||!a||!b?' disabled':'')+'>'+(state.comparing?'Running both models…':'▶ Compare models (uses credits)')+'</button>'+results+
+  '</div></div>';
+}
+function attachModelLab(){
+ const filter=$('#modelFilter');if(filter){filter.value=state.modelFilter;filter.onchange=e=>{state.modelFilter=e.target.value;render()}}
+ const search=$('#modelSearch');
+ if(search)search.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();state.modelQuery=search.value.trim();render()}};
+ const find=$('#modelSearchButton');if(find)find.onclick=()=>{state.modelQuery=$('#modelSearch').value.trim();render()};
+ const refresh=$('#modelRefresh');if(refresh)refresh.onclick=()=>loadModelCatalog(true);
+ $('[data-model-use]').forEach(btn=>btn.onclick=async()=>{
+  const m=state.modelCatalog.find(x=>modelKey(x)===btn.dataset.modelUse);if(!m)return;
+  state.config.chatModel=modelKey(m);offlineDB.settings={...(offlineDB.settings||{}),chatModel:state.config.chatModel};saveOffline();
+  state.status=await api('/api/status');notify('Chat model selected: '+modelName(m));render();
+ });
+ $('[data-model-a]').forEach(btn=>btn.onclick=()=>{state.compareA=btn.dataset.modelA;state.compareResults=null;render()});
+ $('[data-model-b]').forEach(btn=>btn.onclick=()=>{state.compareB=btn.dataset.modelB;state.compareResults=null;render()});
+ const prompt=$('#comparePrompt');if(prompt)prompt.oninput=e=>state.comparePrompt=e.target.value;
+ const run=$('#runModelComparison');
+ if(run)run.onclick=async()=>{
+  if(state.comparing||!state.compareA||!state.compareB)return;
+  const promptText=$('#comparePrompt').value.trim();if(!promptText){notify('Enter a comparison prompt');return}
+  state.comparePrompt=promptText;
+  if(!window.puter?.ai?.chat){notify('Provider chat API unavailable');return}
+  if(window.puter?.auth?.signIn&&!puter.auth.isSignedIn()){try{await puter.auth.signIn()}catch(e){notify('Sign-in canceled: '+(e?.message||String(e)));return}}
+  state.comparing=true;state.compareResults=null;render();
+  const request=async(id)=>{
+   try{
+    const response=await puter.ai.chat(promptText,{model:id,normalize:true});
+    const body=response?.message?.content??response?.content??'';
+    return typeof body==='string'?body:Array.isArray(body)?body.filter(x=>x?.type==='text').map(x=>x.text).join('\n'):'No text returned';
+   }catch(e){return 'Model error: '+(e?.message||String(e))}
+  };
+  const [a,b]=await Promise.all([request(state.compareA),request(state.compareB)]);
+  state.compareResults={a,b};state.comparing=false;
+  if(state.page==='models')render();
+ };
+}
+
 function connectionsView(){
  const sdk=!!window.puter?.ai;const signed=!!window.puter?.auth?.isSignedIn?.();
  const label=signed?'Connected to Puter AI':sdk?'Ready for sign-in':'AI script not loaded';
