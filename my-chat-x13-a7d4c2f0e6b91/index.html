@@ -96,6 +96,7 @@ const builtins=[
  {title:'Thumbnail Creator',icon:'▣',type:'image',prompt:'Design an original attention-grabbing thumbnail for [topic], with clear focal point, crisp composition, and room for a readable headline.'},
  {title:'Project Planner',icon:'▦',type:'chat',prompt:'Help me organize a new project. Ask for the goal, deliverables, constraints, and priority, then propose an actionable plan.'},
  {title:'Script Workshop',icon:'✎',type:'chat',prompt:'Help develop an original script from my concept. Start with logline, character arcs, scenes, and production constraints.'},
+ {title:'Website Builder',icon:'⌘',type:'chat',prompt:'Build a complete responsive website from my details. Make practical assumptions only when specified requirements are missing, explain assumptions briefly, and provide actual functional source files. Format each as FILE START: website/index.html, full file content, FILE END (and similarly for style.css, app.js, other required files). Do not say you created a ZIP unless you have. I can click Export ZIP inside MY CHAT after the files are supplied. Never publish automatically.'},
 ];
 const device={cores:navigator.hardwareConcurrency||null,ram:navigator.deviceMemory||null,webgpu:!!navigator.gpu,offscreen:typeof OffscreenCanvas!=='undefined'&&typeof Worker!=='undefined',wasm:typeof WebAssembly!=='undefined'};
 function deviceLabel(){return `Auto · ${device.cores?device.cores+' logical cores':'CPU detected'} · ${device.offscreen?'Worker canvas':'Standard canvas'}${device.webgpu?' · WebGPU available':''}`;}
@@ -232,6 +233,143 @@ async function copyChatText(value){
   console.warn('MY CHAT copy failed',error||e);return false;
  }finally{field?.remove()}
 }
+
+/* Browser-native ZIP creation: STORE format with CRC32, UTF-8 paths, no server required. */
+function zipSafePath(path){
+ const parts=String(path||'').replace(/\\/g,'/').split('/').map(p=>p.trim()).filter(Boolean);
+ if(!parts.length||parts.some(p=>p==='.'||p==='..'||/[\x00-\x1f:]/.test(p)))return null;
+ const name=parts.join('/');
+ return name.length<=240&&!name.startsWith('/')?name:null;
+}
+function zipUniquePath(path,seen){
+ const safe=zipSafePath(path);if(!safe)return null;
+ if(!seen.has(safe)){seen.add(safe);return safe}
+ const dot=safe.lastIndexOf('.'),slash=safe.lastIndexOf('/');
+ const base=dot>slash?safe.slice(0,dot):safe,ext=dot>slash?safe.slice(dot):'';
+ for(let i=2;i<1000;i++){const proposed=base+'_version_'+i+ext;if(!seen.has(proposed)){seen.add(proposed);return proposed}}
+ return null;
+}
+function zipCrc(bytes){
+ let table=zipCrc.table;
+ if(!table){
+  table=new Uint32Array(256);
+  for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xedb88320^(c>>>1):c>>>1;table[n]=c>>>0}
+  zipCrc.table=table;
+ }
+ let crc=0xffffffff;
+ for(let i=0;i<bytes.length;i++)crc=table[(crc^bytes[i])&255]^(crc>>>8);
+ return (crc^0xffffffff)>>>0;
+}
+async function makeBrowserZip(files){
+ if(files.length>65535)throw Error('Too many files for ZIP format');
+ const encoder=new TextEncoder(),parts=[],directory=[];
+ let offset=0,total=0;
+ const now=new Date(),year=Math.max(1980,now.getFullYear()),date=((year-1980)&127)<<9|((now.getMonth()+1)&15)<<5|(now.getDate()&31);
+ const time=(now.getHours()&31)<<11|(now.getMinutes()&63)<<5|((now.getSeconds()/2|0)&31);
+ for(const file of files){
+  const name=zipSafePath(file.name);if(!name)throw Error('Unsafe archive path');
+  const filename=encoder.encode(name);
+  const bytes=typeof file.data==='string'?encoder.encode(file.data):file.data instanceof Blob?new Uint8Array(await file.data.arrayBuffer()):file.data;
+  if(!(bytes instanceof Uint8Array))throw Error('Invalid ZIP file data');
+  total+=bytes.length;if(total>200*1024*1024)throw Error('Workspace ZIP exceeds 200 MB browser safety limit; export large images individually');
+  const crc=zipCrc(bytes),length=bytes.length;
+  const local=new Uint8Array(30+filename.length),a=new DataView(local.buffer);
+  a.setUint32(0,0x04034b50,true);a.setUint16(4,20,true);a.setUint16(6,0x0800,true);
+  a.setUint16(8,0,true);a.setUint16(10,time,true);a.setUint16(12,date,true);
+  a.setUint32(14,crc,true);a.setUint32(18,length,true);a.setUint32(22,length,true);
+  a.setUint16(26,filename.length,true);a.setUint16(28,0,true);local.set(filename,30);
+  const central=new Uint8Array(46+filename.length),b=new DataView(central.buffer);
+  b.setUint32(0,0x02014b50,true);b.setUint16(4,20,true);b.setUint16(6,20,true);b.setUint16(8,0x0800,true);
+  b.setUint16(10,0,true);b.setUint16(12,time,true);b.setUint16(14,date,true);
+  b.setUint32(16,crc,true);b.setUint32(20,length,true);b.setUint32(24,length,true);
+  b.setUint16(28,filename.length,true);b.setUint16(30,0,true);b.setUint16(32,0,true);
+  b.setUint16(34,0,true);b.setUint16(36,0,true);b.setUint32(38,0,true);b.setUint32(42,offset,true);
+  central.set(filename,46);
+  parts.push(local,bytes);directory.push(central);offset+=local.length+bytes.length;
+ }
+ const centralOffset=offset,centralSize=directory.reduce((n,a)=>n+a.length,0);
+ const end=new Uint8Array(22),e=new DataView(end.buffer);
+ e.setUint32(0,0x06054b50,true);e.setUint16(4,0,true);e.setUint16(6,0,true);
+ e.setUint16(8,directory.length,true);e.setUint16(10,directory.length,true);
+ e.setUint32(12,centralSize,true);e.setUint32(16,centralOffset,true);e.setUint16(20,0,true);
+ return new Blob([...parts,...directory,end],{type:'application/zip'});
+}
+function extractGeneratedFileBlocks(messages){
+ const items=[],seen=new Set();
+ const fenced=/^#{1,5}\s+((?:[0-9]{2}_[a-z0-9_ -]+\/)?[a-z0-9_ ./-]+\.(?:md|txt|json|html|css|js|mjs|py|csv|yaml|yml|xml))\s*\r?\n(?:[ \t]*\r?\n)*\x60{3}[^\r\n]*\r?\n([\s\S]*?)\r?\n\x60{3}/gmi;
+ const marked=/^\s*FILE START:\s*([^\r\n]+)\r?\n([\s\S]*?)^\s*FILE END\s*$/gmi;
+ for(let index=0;index<messages.length;index++){
+  const m=messages[index];if(m.role!=='assistant')continue;
+  const text=String(m.content||'');
+  for(const pattern of [marked,fenced]){
+   pattern.lastIndex=0;
+   let hit;while((hit=pattern.exec(text))){
+    const original=zipSafePath(hit[1]);if(!original||!/\.(?:md|txt|json|html|css|js|mjs|py|csv|yaml|yml|xml)$/i.test(original))continue;
+    const body=hit[2].trim();if(!body)continue;
+    const path=zipUniquePath(original,seen);
+    if(path)items.push({name:path,data:body+'\n',source_message_index:index,original_path:original});
+   }
+  }
+ }
+ return items;
+}
+function conversationExportObject(){
+ const c=currentChatDetails();
+ return {format:'MY_CHAT_conversation_export_v1',exported_at:new Date().toISOString(),conversation:{id:state.currentChat||null,title:c?.title||null,project_id:c?.project_id||null},
+ messages:currentChatMessages().map(m=>({id:m.id||null,role:m.role||'unknown',content:String(m.content??''),created_at:m.created_at||m.createdAt||null,...(m.model?{model:m.model}:{}),...(m.client_request_id?{client_request_id:m.client_request_id}:{})}))};
+}
+async function getSavedImageBlobs(){
+ const db=await imageDBPromise;if(!db)return [];
+ return await new Promise(resolve=>{
+  try{const req=db.transaction('images','readonly').objectStore('images').getAll();req.onsuccess=()=>resolve((req.result||[]).filter(x=>x.blob instanceof Blob));req.onerror=()=>resolve([])}
+  catch{resolve([])}
+ });
+}
+let zipExportActive=false;
+async function exportMyChatZip(mode='chat'){
+ if(zipExportActive){notify('ZIP export already in progress');return}
+ const msgs=currentChatMessages();
+ if(mode==='chat'&&!msgs.length){notify('No chat messages to export yet');return}
+ zipExportActive=true;
+ const button=$('#exportChatZip')||$('#exportWorkspaceZip');if(button)button.disabled=true;
+ try{
+  const seen=new Set(),files=[];
+  function add(name,data){const safe=zipUniquePath(name,seen);if(!safe)throw Error('Archive name invalid');files.push({name:safe,data})}
+  const info=conversationExportObject();
+  add('Chat/conversation.json',JSON.stringify(info,null,2));
+  add('Chat/transcript.txt',makeChatTranscript());
+  const extracted=extractGeneratedFileBlocks(msgs);
+  const records=[];
+  for(const file of extracted){add(file.name,file.data);records.push({path:files[files.length-1].name,source_message_index:file.source_message_index,original_path:file.original_path})}
+  if(mode==='workspace'){
+   add('Generator_Library/custom_generators.json',JSON.stringify(state.presets||[],null,2));
+   add('Workspace/projects.json',JSON.stringify(state.projects||[],null,2));
+   const images=await getSavedImageBlobs();
+   for(const img of images){
+    const type=img.blob.type||'';
+    const ext=type.includes('jpeg')?'.jpg':type.includes('webp')?'.webp':'.png';
+    const name=String(img.name||'image').replace(/[^a-z0-9_.-]+/gi,'_').slice(0,70);
+    add('Assets/Images/'+String(img.id||'unknown').replace(/[^a-z0-9_-]+/gi,'_')+'_'+name+(name.match(/\.(png|jpg|jpeg|webp)$/i)?'':ext),img.blob);
+   }
+   if(state.voiceBlob instanceof Blob){
+    add('Assets/Voice/IRIS_current_recording.'+(state.voiceBlob.type.includes('mp4')?'mp4':'webm'),state.voiceBlob);
+    if(state.voiceTranscript)add('Assets/Voice/IRIS_transcript.txt',state.voiceTranscript);
+   }
+  }
+  const manifest={format:'MY_CHAT_ZIP_V1',exported_at:new Date().toISOString(),mode,message_count:msgs.length,
+   extracted_file_count:extracted.length,extracted_files:records,
+   note:'Contains actual saved messages and only files explicitly present in marked or fenced reply blocks. It does not invent unfinished scripts, generated websites, or missing images.',
+   files:files.map(x=>x.name)};
+  add('MANIFEST.json',JSON.stringify(manifest,null,2));
+  add('README.txt','MY CHAT / SHANX13AịGG\n\nThis ZIP was generated on your device. It contains the actual conversation and any correctly marked source files found in the selected chat.\nIt does not assume that unfinished files exist. If you want complete screenplay or website files, ask MY CHAT to produce FILE START / FILE END blocks or heading plus fenced code for each file.\n');
+  const archive=await makeBrowserZip(files);
+  const title=String(currentChatDetails()?.title||'workspace').replace(/[^a-z0-9_-]+/gi,'_').slice(0,45);
+  downloadBlob(archive,'MY_CHAT_'+title+'_'+new Date().toISOString().slice(0,10)+(mode==='workspace'?'_Workspace':'')+'.zip');
+  notify('ZIP prepared: '+files.length+' files, '+extracted.length+' extracted generator files');
+ }catch(error){notify('ZIP export failed: '+(error?.message||String(error)))}
+ finally{zipExportActive=false;if(button)button.disabled=false}
+}
+
 function exportChat(format){
  const msgs=currentChatMessages();if(!msgs.length){notify('No messages to export yet');return}
  const chat=currentChatDetails();
@@ -251,12 +389,11 @@ function exportChat(format){
 }
 function msgMarkup(m,index){
  const assistant=m.role==='assistant',stamp=h(messageTimeText(m));
- const actions=assistant?'<button type="button" data-read-message="'+index+'" aria-pressed="false" title="Read aloud using a voice you select">🔊 Listen</button>'+
+ const actions=assistant?'<button type="button" data-read-message="'+index+'" aria-pressed="false" title="Read aloud using your browser voice, with no AI credits">🔊 Listen</button>'+
  '<button type="button" data-continue-message="'+index+'" title="Continue developing this answer">↳ Continue</button>'+
  '<button type="button" data-expand-message="'+index+'" title="Expand on this answer">⤢ Expand</button>'+
  '<button type="button" data-branch-message="'+index+'" title="Create a separate conversation from this message">⑂ Branch</button>':'';
- const voice=assistant?'<div class="msg-voice-panel" data-voice-panel="'+index+'" hidden><p>Choose a reading voice (not the canonical X13 voice). Uses your Puter allowance.</p>'+
- '<select data-voice-option="'+index+'" aria-label="Reading voice"><option value="">Select voice…</option><option value="onyx">Onyx</option><option value="nova">Nova</option><option value="shimmer">Shimmer</option><option value="echo">Echo</option></select> <button type="button" data-voice-play="'+index+'">▶ Play</button></div>':'';
+ const voice='';
  return '<div class="message '+(m.role==='user'?'user':'assistant')+'"><div class="who">'+(m.role==='user'?'YOU':'X13')+'</div>'+
   '<div class="msg-shell"><div class="message-bubble">'+h(m.content)+'</div>'+
   '<div class="msg-actions"><span class="msg-time">'+stamp+'</span>'+
@@ -265,54 +402,73 @@ function msgMarkup(m,index){
 
 let chatSubmitLock=false;
 let spokenAudio=null,spokenIndex=-1,spokenSequence=0;
+function browserSpeechReady(){
+ return typeof window.speechSynthesis!=='undefined'&&typeof window.SpeechSynthesisUtterance!=='undefined';
+}
+function availableBrowserVoices(){
+ if(!browserSpeechReady())return [];
+ try{return window.speechSynthesis.getVoices()||[]}catch(error){return []}
+}
+function browserVoiceOptions(){
+ const voices=availableBrowserVoices(),chosen=String(offlineDB.settings?.browserVoiceURI||'');
+ const main='<option value="">Device default voice</option>';
+ const items=voices.map(v=>'<option value="'+h(v.voiceURI)+'"'+(v.voiceURI===chosen?' selected':'')+'>'+h(v.name)+' ('+h(v.lang)+(v.localService?', on-device':'')+')</option>');
+ if(chosen&&!voices.some(v=>v.voiceURI===chosen))items.unshift('<option value="'+h(chosen)+'" selected>Previously selected voice (currently unavailable)</option>');
+ return main+items.join('');
+}
 function stopSpokenReply(){
  spokenSequence++;
+ if(browserSpeechReady())try{window.speechSynthesis.cancel()}catch(error){}
  if(spokenAudio){try{spokenAudio.pause();spokenAudio.currentTime=0}catch(error){}}
  spokenAudio=null;spokenIndex=-1;
  $$('[data-read-message]').forEach(b=>{b.textContent='🔊 Listen';b.setAttribute('aria-pressed','false')});
 }
 function speechChunks(value){
- let rest=String(value||'').trim(),pieces=[];
- while(rest.length>2700){
-  let cut=rest.lastIndexOf(' ',2600);if(cut<1200)cut=2600;
-  pieces.push(rest.slice(0,cut));rest=rest.slice(cut).trimStart();
+ const text=String(value||'').trim(),chunks=[];let rest=text;
+ while(rest.length>780){
+  let cut=Math.max(rest.lastIndexOf('. ',730),rest.lastIndexOf('! ',730),rest.lastIndexOf('? ',730));
+  if(cut<250)cut=rest.lastIndexOf(' ',740);
+  if(cut<250)cut=740;
+  else cut+=1;
+  chunks.push(rest.slice(0,cut).trim());rest=rest.slice(cut).trimStart();
  }
- if(rest)pieces.push(rest);
- return pieces;
+ if(rest)chunks.push(rest);
+ return chunks;
 }
-async function playReplyAloud(index){
+function playReplyAloud(index){
  const msg=state.messages[index];
  if(!msg?.content||msg.role!=='assistant')return;
  if(spokenIndex===index){stopSpokenReply();return}
- const voice=offlineDB.settings?.readingVoice;
- if(!voice){
-  const box=document.querySelector('[data-voice-panel="'+index+'"]');
-  if(box){box.hidden=!box.hidden;box.querySelector('select')?.focus()}
-  return;
- }
- if(!window.puter?.ai?.txt2speech){notify('Speech provider unavailable. Try again when connected.');return}
+ if(!browserSpeechReady()){notify('Browser speech unavailable. Check device text-to-speech settings or use a compatible browser.');return}
  stopSpokenReply();
  const token=++spokenSequence;
  spokenIndex=index;
  const button=document.querySelector('[data-read-message="'+index+'"]');
  if(button){button.textContent='■ Stop';button.setAttribute('aria-pressed','true')}
- try{
-  if(window.puter?.auth?.signIn&&!puter.auth.isSignedIn())await puter.auth.signIn();
-  for(const section of speechChunks(msg.content)){
-   if(token!==spokenSequence)break;
-   const audio=await puter.ai.txt2speech(section,{provider:'openai',model:'tts-1-hd',voice});
-   if(token!==spokenSequence){try{audio.pause()}catch(e){}break}
-   if(!audio||typeof audio.play!=='function')throw Error('No playable voice returned');
-   spokenAudio=audio;
-   await new Promise((resolve,reject)=>{
-    audio.onended=resolve;
-    audio.onerror=()=>reject(Error('Audio playback failed'));
-    Promise.resolve(audio.play()).catch(reject);
-   });
-  }
- }catch(error){if(token===spokenSequence)notify('Read aloud: '+(error?.message||String(error)))}
- finally{if(token===spokenSequence)stopSpokenReply()}
+ const speech=window.speechSynthesis,selected=String(offlineDB.settings?.browserVoiceURI||'');
+ const voice=availableBrowserVoices().find(v=>v.voiceURI===selected);
+ const chunks=speechChunks(msg.content);
+ let part=0;
+ const run=()=>{
+  if(token!==spokenSequence)return;
+  if(part>=chunks.length){stopSpokenReply();return}
+  const utterance=new SpeechSynthesisUtterance(chunks[part++]);
+  utterance.lang=voice?.lang||navigator.language||'en-US';
+  if(voice)utterance.voice=voice;
+  utterance.rate=Number(offlineDB.settings?.speechRate||1);
+  utterance.onend=()=>{if(token===spokenSequence)run()};
+  utterance.onerror=e=>{
+   if(token===spokenSequence){
+    const problem=String(e.error||'speech engine error');
+    stopSpokenReply();notify('Device speech error: '+problem);
+   }
+  };
+  try{speech.speak(utterance)}
+  catch(error){stopSpokenReply();notify('Browser speech failed: '+(error.message||String(error)))}
+ };
+ run();
 }
+
 function focusComposerWith(text){
  const inp=$('#chatInput');
  if(!inp){notify('Open a conversation first');return}
@@ -346,15 +502,6 @@ async function branchFromReply(index){
 }
 function attachReplyActions(){
  $$('[data-read-message]').forEach(b=>b.onclick=()=>playReplyAloud(Number(b.dataset.readMessage)));
- $$('[data-voice-play]').forEach(b=>b.onclick=()=>{
-  const index=Number(b.dataset.voicePlay);
-  const select=document.querySelector('[data-voice-option="'+index+'"]');
-  const voice=select?.value;
-  if(!['onyx','nova','shimmer','echo'].includes(voice)){notify('Choose a voice first');return}
-  offlineDB.settings={...(offlineDB.settings||{}),readingVoice:voice};saveOffline();
-  const box=document.querySelector('[data-voice-panel="'+index+'"]');if(box)box.hidden=true;
-  playReplyAloud(index);
- });
  $$('[data-continue-message]').forEach(b=>b.onclick=()=>continueFromReply(Number(b.dataset.continueMessage)));
  $$('[data-expand-message]').forEach(b=>b.onclick=()=>continueFromReply(Number(b.dataset.expandMessage),true));
  $$('[data-branch-message]').forEach(b=>b.onclick=()=>branchFromReply(Number(b.dataset.branchMessage)));
@@ -390,7 +537,7 @@ function startChatDictation(input){
  catch(error){chatRecognition=null;state.dictating=false;setChatMicActive(false);notify('Could not start dictation: '+error.message)}
 }
 
-function chatView(){return `<div class="chat-screen">${state.messages.length?`<div class="chat-export-tools" aria-label="Conversation export tools"><span class="export-label">CONVERSATION TOOLS</span><button type="button" id="copyChatAll" title="Copy all messages to clipboard">⧉ Copy Chat</button><button type="button" id="exportChatTxt" title="Download conversation as readable text">⬇ Export TXT</button><button type="button" id="exportChatJson" title="Download detailed conversation for diagnostics">⬇ Export JSON</button></div>`:''}<div class="chat-area" id="chatArea">${state.messages.length?`<div class="conversation">${state.messages.map(msgMarkup).join('')}</div>`:hero()}${state.chatError?`<div class="notice" style="max-width:850px;margin:12px auto">${h(state.chatError)}</div>`:''}</div><div class="chat-footer"><form class="composer" id="chatForm"><button type="button" title="Open image studio" id="imageShortcut">＋</button><button type="button" id="voiceShortcut" class="iris-orb-button" title="Open IRIS voice recorder" aria-label="Open IRIS voice recorder"><span class="iris-orb-core" aria-hidden="true"></span></button><textarea id="chatInput" aria-label="Message MY CHAT" placeholder="Message MY CHAT…" rows="1" required maxlength="30000"></textarea><button type="button" id="dictateShortcut" title="Dictate into chat (not IRIS)" aria-label="Dictate into chat" aria-pressed="false">🎤</button><button type="submit" class="primary" title="Send message" ${state.busy?'disabled':''}>${state.busy?'⋯':'↑'}</button></form><div class="under-composer" id="dictationStatus" role="status" aria-live="polite">${state.status?.provider?.connected?'Connected model: '+h(state.status.provider.model):'No AI provider selected · Connect one in AI Connections to receive real responses'}</div></div></div>`}
+function chatView(){return `<div class="chat-screen">${state.messages.length?`<div class="chat-export-tools" aria-label="Conversation export tools"><span class="export-label">CONVERSATION TOOLS</span><button type="button" id="copyChatAll" title="Copy all messages to clipboard">⧉ Copy Chat</button><button type="button" id="exportChatTxt" title="Download conversation as readable text">⬇ Export TXT</button><button type="button" id="exportChatJson" title="Download detailed conversation for diagnostics">⬇ Export JSON</button><button type="button" id="exportChatZip" title="Download this chat and its generated file blocks as a real ZIP">⬇ Export ZIP</button></div>`:''}<div class="chat-area" id="chatArea">${state.messages.length?`<div class="conversation">${state.messages.map(msgMarkup).join('')}</div>`:hero()}${state.chatError?`<div class="notice" style="max-width:850px;margin:12px auto">${h(state.chatError)}</div>`:''}</div><div class="chat-footer"><form class="composer" id="chatForm"><button type="button" title="Open image studio" id="imageShortcut">＋</button><button type="button" id="voiceShortcut" class="iris-orb-button" title="Open IRIS voice recorder" aria-label="Open IRIS voice recorder"><span class="iris-orb-core" aria-hidden="true"></span></button><textarea id="chatInput" aria-label="Message MY CHAT" placeholder="Message MY CHAT…" rows="1" required maxlength="30000"></textarea><button type="button" id="dictateShortcut" title="Dictate into chat (not IRIS)" aria-label="Dictate into chat" aria-pressed="false">🎤</button><button type="submit" class="primary" title="Send message" ${state.busy?'disabled':''}>${state.busy?'⋯':'↑'}</button></form><div class="under-composer" id="dictationStatus" role="status" aria-live="polite">${state.status?.provider?.connected?'Connected model: '+h(state.status.provider.model):'No AI provider selected · Connect one in AI Connections to receive real responses'}</div></div></div>`}
 async function newChat(open=true){try{const c=await api('/api/chats','POST',{title:'New conversation',project_id:state.project});await refresh();if(open)await openChat(c.id);return c.id}catch(e){notify(e.message)}}
 async function openChat(id){state.currentChat=id;state.page='chat';try{state.messages=await api(`/api/chats/${encodeURIComponent(id)}/messages`)}catch(e){notify(e.message);state.messages=[]}state.chatError='';render();setTimeout(scrollMessages,20)}
 function scrollMessages(){const el=$('#chatArea');if(el)el.scrollTop=el.scrollHeight}
@@ -402,6 +549,7 @@ function attachChat(){
  const copyAll=$('#copyChatAll');if(copyAll)copyAll.onclick=()=>currentChatMessages().length?copyChatText(makeChatTranscript()):notify('No messages to copy yet');
  const txt=$('#exportChatTxt');if(txt)txt.onclick=()=>exportChat('txt');
  const json=$('#exportChatJson');if(json)json.onclick=()=>exportChat('json');
+ const zip=$('#exportChatZip');if(zip)zip.onclick=()=>exportMyChatZip('chat');
  const inp=$('#chatInput');if(state.draft){inp.value=state.draft;state.draft=''}
  inp.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();$('#chatForm').requestSubmit()}});
  $('#chatForm').onsubmit=async(e)=>{
@@ -443,9 +591,10 @@ function attachProjects(){
  $$('[data-project-images]').forEach(el=>el.onclick=()=>{state.project=el.dataset.project;navigate('images')});
  $$('[data-archive-project]').forEach(el=>el.onclick=async()=>{if(!confirm('Archive this MY CHAT project? Existing assets remain preserved.'))return;await api('/api/archive/projects','POST',{id:el.dataset.archiveProject});state.projects=await api('/api/projects');if(state.project===el.dataset.archiveProject)state.project=null;notify('Project archived, not deleted');render()});
 }
-function libraryView(){let cards=[...builtins,...state.presets.map(p=>({...p,icon:'✧',custom:true}))];return `<div class="page">${pageHeader('TOOLS FOR EVERY IDEA','Generator Library','Choose an existing generator template, customize it, or create a reusable one of your own.','<button class="btn primary" id="newPreset">＋ Custom generator</button>')}<div class="surface" id="presetForm" style="display:none;margin-bottom:20px"><h3>Create your generator</h3><form id="makePreset"><div class="form-row"><div class="form-field"><label>Title</label><input class="input" id="presetTitle" maxlength="120" required></div><div class="form-field"><label>Destination</label><select id="presetType"><option value="image">Image Studio</option><option value="chat">Chat</option></select></div></div><div class="form-field"><label>Reusable prompt</label><textarea id="presetPrompt" rows="3" maxlength="5000" required></textarea></div><button class="btn primary">Save generator</button></form></div><div class="three-cols">${cards.map((p,i)=>`<div class="preset-card"><div class="card-top"><span class="card-icon">${p.icon}</span><span class="pill">${p.type==='image'?'IMAGE':'CHAT'}</span></div><div class="library-card-title">${h(p.title)}</div><div class="card-sub">${h(p.prompt).slice(0,165)}${p.prompt.length>165?'…':''}</div><div class="card-actions"><button class="btn small gold" data-use-preset="${i}">Use generator ↗</button></div></div>`).join('')}</div></div>`}
+function libraryView(){let cards=[...builtins,...state.presets.map(p=>({...p,icon:'✧',custom:true}))];return `<div class="page">${pageHeader('TOOLS FOR EVERY IDEA','Generator Library','Choose an existing generator template, customize it, or create a reusable one of your own.','<div class="form-row"><button class="btn primary" id="newPreset">＋ Custom generator</button><button class="btn gold" id="exportWorkspaceZip" type="button" title="Download chat, generated files, saved images, custom generator templates and current IRIS recording when present">⬇ Workspace ZIP</button></div>')}<div class="surface" id="presetForm" style="display:none;margin-bottom:20px"><h3>Create your generator</h3><form id="makePreset"><div class="form-row"><div class="form-field"><label>Title</label><input class="input" id="presetTitle" maxlength="120" required></div><div class="form-field"><label>Destination</label><select id="presetType"><option value="image">Image Studio</option><option value="chat">Chat</option></select></div></div><div class="form-field"><label>Reusable prompt</label><textarea id="presetPrompt" rows="3" maxlength="5000" required></textarea></div><button class="btn primary">Save generator</button></form></div><div class="three-cols">${cards.map((p,i)=>`<div class="preset-card"><div class="card-top"><span class="card-icon">${p.icon}</span><span class="pill">${p.type==='image'?'IMAGE':'CHAT'}</span></div><div class="library-card-title">${h(p.title)}</div><div class="card-sub">${h(p.prompt).slice(0,165)}${p.prompt.length>165?'…':''}</div><div class="card-actions"><button class="btn small gold" data-use-preset="${i}">Use generator ↗</button></div></div>`).join('')}</div></div>`}
 function attachLibrary(){
  $('#newPreset').onclick=()=>{$('#presetForm').style.display='block';$('#presetTitle').focus()};
+ const workspaceZip=$('#exportWorkspaceZip');if(workspaceZip)workspaceZip.onclick=()=>exportMyChatZip('workspace');
  $('#makePreset').onsubmit=async e=>{e.preventDefault();try{await api('/api/presets','POST',{title:$('#presetTitle').value,type:$('#presetType').value,prompt:$('#presetPrompt').value});state.presets=await api('/api/presets');notify('Custom generator added');render()}catch(e){notify(e.message)}};
  const cards=[...builtins,...state.presets.map(p=>({...p,custom:true}))];
  $$('[data-use-preset]').forEach(b=>b.onclick=()=>{let p=cards[Number(b.dataset.usePreset)];if(p.type==='image'){state.imageDraft=p.prompt;navigate('images')}else{state.draft=p.prompt;state.currentChat=null;state.messages=[];navigate('chat')}});
@@ -709,13 +858,23 @@ function connectionsView(){
  '<div class="two-cols"><div class="surface"><div class="section-title">Puter AI Account</div><p class="subtitle">Sign in to your own Puter account. Chat, AI images and voice transcription use that account and its available allowance or credits.</p><p>'+status+'</p>'+
  '<div class="form-row spaced"><button type="button" class="btn primary" id="puterConnect">✦ Connect Puter AI</button><button type="button" class="btn quiet" id="puterDisconnect">Disconnect Puter</button></div>'+
  '<div class="subtle-line"></div><div class="form-field"><label>Chat model ID</label><input id="chatModelInput" class="input" type="text" maxlength="100" value="'+h(state.config.chatModel)+'"></div><button id="saveChatModel" class="btn gold">Save model selection</button>'+
- '<p class="caption spaced">Default: gpt-5.4-nano. If you enter another model ID, it must be supported by your Puter account. The provider may request payment for usage beyond its allowance.</p></div>'+
+ '<div class="subtle-line"></div><div class="form-field"><label>Read Aloud voice (browser, no Puter credits)</label><select class="input" id="readingVoiceSetting" aria-label="Browser reading voice">'+browserVoiceOptions()+'</select></div><div class="form-field"><label>Reading speed</label><select class="input" id="speechRateSetting"><option value="0.85">Relaxed · 0.85×</option><option value="1">Normal · 1×</option><option value="1.15">Fast · 1.15×</option></select></div><p class="caption">Voice and speed are remembered in this browser. Available voices depend on your device. No separate Puter speech request is made.</p>'+'<p class="caption spaced">Default: gpt-5.4-nano. If you enter another model ID, it must be supported by your Puter account. The provider may request payment for usage beyond its allowance.</p></div>'+
  '<div class="grid-gap"><div class="surface"><div class="section-title">Live capabilities</div><div class="mini-stats"><span class="stat"><strong>Chat:</strong> '+(sdk?'Provider API loaded':'Offline')+'</span><span class="stat"><strong>Images:</strong> '+(!!window.puter?.ai?.txt2img?'Cloud models available':'Unavailable')+'</span><span class="stat"><strong>Transcription:</strong> '+(!!window.puter?.ai?.speech2txt?'Provider supported':'Unavailable')+'</span></div>'+
  '<p class="caption spaced">Automatic sign-in can also occur when you send a message, generate an image or request a transcript.</p></div>'+
  '<div class="surface"><div class="section-title">Current device</div><div class="mini-stats"><div class="stat">CPU threads: '+h(device.cores||'unknown')+'</div><div class="stat">WebGPU: '+(device.webgpu?'supported':'unavailable')+'</div><div class="stat">Canvas worker: '+(device.offscreen?'supported':'unavailable')+'</div></div>'+
  '<p class="caption spaced">Edits, local image storage and recording playback run in this browser. Generative models currently run through your connected provider; a separate compatible runtime is required for on-device AI generation.</p></div></div></div></div>';
 }
 function attachConnections(){
+ const voice=$('#readingVoiceSetting'),speed=$('#speechRateSetting');
+ if(voice){
+  voice.onchange=e=>{offlineDB.settings={...(offlineDB.settings||{}),browserVoiceURI:e.target.value};saveOffline();notify('Browser reading voice saved')};
+  const updateVoices=()=>{if(state.page==='connections'&&$('#readingVoiceSetting'))$('#readingVoiceSetting').innerHTML=browserVoiceOptions()};
+  if(browserSpeechReady())window.speechSynthesis.onvoiceschanged=updateVoices;
+ }
+ if(speed){
+  speed.value=String(offlineDB.settings?.speechRate||1);
+  speed.onchange=e=>{offlineDB.settings={...(offlineDB.settings||{}),speechRate:Number(e.target.value)||1};saveOffline();notify('Reading speed saved')};
+ }
  $('#puterConnect').onclick=async()=>{
   if(!window.puter?.auth?.signIn){notify('Puter SDK unavailable. Check internet and reload.');return}
   try{await puter.auth.signIn();state.status=await api('/api/status');notify(state.status?.provider?.connected?'Puter AI connected':'Sign-in did not complete');render()}catch(err){notify('Sign-in failed: '+(err?.message||String(err)))}
