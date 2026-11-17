@@ -198,15 +198,27 @@ function makeChatTranscript(){
 }
 async function copyChatText(value){
  const text=String(value??'');
+ if(!text){notify('No text to copy');return false}
+ let error=null;
+ if(navigator.clipboard?.writeText){
+  try{await navigator.clipboard.writeText(text);notify('Copied to clipboard');return true}
+  catch(e){error=e}
+ }
+ let field=null;
  try{
-  if(navigator.clipboard?.writeText)await navigator.clipboard.writeText(text);
-  else{
-   const temp=document.createElement('textarea');temp.value=text;temp.style.position='fixed';temp.style.opacity='0';
-   document.body.appendChild(temp);temp.focus();temp.select();
-   const ok=document.execCommand('copy');temp.remove();if(!ok)throw Error('Clipboard unavailable');
-  }
-  notify('Copied to clipboard');
- }catch(error){notify('Copy failed: '+(error.message||String(error)))}
+  field=document.createElement('textarea');
+  field.value=text;
+  field.setAttribute('readonly','');
+  field.style.cssText='position:fixed;top:0;left:0;width:1px;height:1px;opacity:0;z-index:-1';
+  document.body.appendChild(field);
+  field.focus();field.select();field.setSelectionRange(0,text.length);
+  const ok=document.execCommand('copy');
+  if(!ok)throw Error('Browser blocked clipboard');
+  notify('Copied to clipboard');return true;
+ }catch(e){
+  notify('Clipboard unavailable; select the text and use your browser Copy option.');
+  console.warn('MY CHAT copy failed',error||e);return false;
+ }finally{field?.remove()}
 }
 function exportChat(format){
  const msgs=currentChatMessages();if(!msgs.length){notify('No messages to export yet');return}
@@ -269,7 +281,7 @@ function scrollMessages(){const el=$('#chatArea');if(el)el.scrollTop=el.scrollHe
 function attachChat(){
  $$('[data-jump]').forEach(b=>b.onclick=()=>navigate(b.dataset.jump));
  $('#imageShortcut').onclick=()=>navigate('images');$('#voiceShortcut').onclick=()=>navigate('voice');$('#dictateShortcut').onclick=()=>startChatDictation($('#chatInput'));
- $('[data-copy-message]').forEach(btn=>btn.onclick=()=>{const message=state.messages[Number(btn.dataset.copyMessage)];if(message)copyChatText(message.content)});
+ $$('[data-copy-message]').forEach(btn=>btn.onclick=()=>{const message=state.messages[Number(btn.dataset.copyMessage)];if(message)copyChatText(message.content)});
  const copyAll=$('#copyChatAll');if(copyAll)copyAll.onclick=()=>currentChatMessages().length?copyChatText(makeChatTranscript()):notify('No messages to copy yet');
  const txt=$('#exportChatTxt');if(txt)txt.onclick=()=>exportChat('txt');
  const json=$('#exportChatJson');if(json)json.onclick=()=>exportChat('json');
