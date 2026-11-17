@@ -6,7 +6,7 @@ import { createDeviceControls } from './device_controls.js';
 import { createGhostAudio } from './ghost_audio.js';
 import { LEVELS, missionQuestion } from './campaign_levels.js';
 const $=id=>document.getElementById(id),clamp=(x,a,b)=>Math.max(a,Math.min(b,x)),dist=(a,b)=>Math.hypot(a.x-b.x,a.z-b.z);
-const qa=window.__FIND_THE_AI__={version:'ghost-protocol-rc10-level-gate-progress-20261117',ready:false,playing:false,sector:0,fragments:0,health:100,score:0,errors:[],frames:0,complete:false};
+const qa=window.__FIND_THE_AI__={version:'ghost-protocol-rc11-mission-menu-20261117',ready:false,playing:false,sector:0,fragments:0,health:100,score:0,errors:[],frames:0,complete:false};
 let app;try{app=new pc.Application($('game'),{graphicsDeviceOptions:{alpha:false,antialias:true,preserveDrawingBuffer:true}});app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);app.setCanvasResolution(pc.RESOLUTION_AUTO);app.graphicsDevice.maxPixelRatio=Math.min(devicePixelRatio||1,1.45);app.scene.ambientLight=new pc.Color(.26,.39,.54);app.scene.toneMapping=pc.TONEMAP_ACES;app.scene.gammaCorrection=pc.GAMMA_SRGB;app.scene.exposure=1.28;app.start()}catch(e){qa.errors.push(String(e));$('load').textContent='3D LOAD FAILED: '+e;throw e}
 function syncTabletViewport(){if(app)app.resizeCanvas()}
 window.addEventListener('resize',syncTabletViewport,{passive:true});
@@ -238,8 +238,13 @@ let unlockedLevel=Math.max(0,Math.min(9,Math.floor(Number(storedProgress.unlocke
 let levelSelectorUnlocked=false;
 const LEVEL_GATE_CODE='SHANX13AịGG';  // U+1ECB: lowercase i WITH DOT BELOW. Exact-match game code.
 function savedContinueLevel(){return Math.max(0,Math.min(LEVELS.length-1,unlockedLevel))}
+function selectedStartLevel(){
+ const select=$('levelSelect');
+ const requested=select?Number(select.value):0;
+ return levelSelectorUnlocked&&Number.isInteger(requested)?Math.max(0,Math.min(LEVELS.length-1,requested)):savedContinueLevel();
+}
 function refreshStartButton(){
- $('start').textContent=unlockedLevel>0?'CONTINUE LEVEL '+String(savedContinueLevel()+1).padStart(2,'0')+' ▶':'START LEVEL 01 ▶';
+ $('start').textContent='START LEVEL '+String(selectedStartLevel()+1).padStart(2,'0')+' ▶';
 }
 const shiftRank=()=>shiftChips>=15?3:shiftChips>=8?2:shiftChips>=3?1:0;
 const shiftLabels=['CORE BEAM','FOCUS BEAM','PIERCE CHARGE','NOVA CORE'];
@@ -267,7 +272,7 @@ function refreshCampaignMenu(){
   const opt=document.createElement('option');
   opt.value=String(i);
   opt.disabled=!levelSelectorUnlocked&&i>unlockedLevel;
-  opt.textContent=String(i+1).padStart(2,'0')+' · '+l.name+(i>unlockedLevel?' 🔒':'');
+  opt.textContent=String(i+1).padStart(2,'0')+' · '+l.name+(!levelSelectorUnlocked&&i>unlockedLevel?' 🔒':'');
   select.appendChild(opt);
  });
  select.value=String(levelSelectorUnlocked?old:Math.min(old,unlockedLevel));
@@ -901,7 +906,10 @@ function winSector(){
  if(droneKills<req){toast('MISSION LOCKED • DISABLE '+(req-droneKills)+' MORE ENEMIES',3);return}
  if(LEVELS[missionLevel].boss&&bossHealth>0){toast('CLOSAI CORE STILL ACTIVE • AIM YOUR EYE LASER AT THE GHOST',4);return}
  score+=1500;finished=true;const final=missionLevel===LEVELS.length-1;
- unlockedLevel=Math.max(unlockedLevel,Math.min(LEVELS.length-1,missionLevel+1));saveOrbProgress();refreshCampaignMenu();
+ unlockedLevel=Math.max(unlockedLevel,Math.min(LEVELS.length-1,missionLevel+1));
+ saveOrbProgress();
+ if(levelSelectorUnlocked&&!final)$('levelSelect').value=String(missionLevel+1);
+ refreshCampaignMenu();
  if(final){qa.complete=true;results('CAMPAIGN COMPLETE • LEVEL 10','CLOSAI DEFEATED',
  'You cleared all TEN missions and recovered the X13 master code. LEVEL SELECT UNLOCK PASSWORD: '+LEVEL_GATE_CODE+
  ' • Enter it exactly, including the special dotted ị. Total score: '+score+'.',
@@ -961,9 +969,10 @@ function attemptLevelUnlock(){
  return true;
 }
 $('gateSubmit').onclick=attemptLevelUnlock;
+$('levelSelect').addEventListener('change',refreshStartButton);
 $('levelGateInput').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();attemptLevelUnlock()}});
 $('start').onclick=()=>{
- const chosen=levelSelectorUnlocked?Math.max(0,Math.min(9,Number($('levelSelect').value)||0)):savedContinueLevel();
+ const chosen=selectedStartLevel();
  $('menu').classList.add('hidden');restart(chosen);
  if(controls.mode==='controller')showControllerGuide();sound(620,.2);
 };
