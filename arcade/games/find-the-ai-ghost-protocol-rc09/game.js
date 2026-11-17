@@ -6,7 +6,7 @@ import { createDeviceControls } from './device_controls.js';
 import { createGhostAudio } from './ghost_audio.js';
 import { LEVELS, missionQuestion } from './campaign_levels.js';
 const $=id=>document.getElementById(id),clamp=(x,a,b)=>Math.max(a,Math.min(b,x)),dist=(a,b)=>Math.hypot(a.x-b.x,a.z-b.z);
-const qa=window.__FIND_THE_AI__={version:'ghost-protocol-rc09-ten-level-campaign-20261116',ready:false,playing:false,sector:0,fragments:0,health:100,score:0,errors:[],frames:0,complete:false};
+const qa=window.__FIND_THE_AI__={version:'ghost-protocol-rc10-level-gate-progress-20261117',ready:false,playing:false,sector:0,fragments:0,health:100,score:0,errors:[],frames:0,complete:false};
 let app;try{app=new pc.Application($('game'),{graphicsDeviceOptions:{alpha:false,antialias:true,preserveDrawingBuffer:true}});app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);app.setCanvasResolution(pc.RESOLUTION_AUTO);app.graphicsDevice.maxPixelRatio=Math.min(devicePixelRatio||1,1.45);app.scene.ambientLight=new pc.Color(.26,.39,.54);app.scene.toneMapping=pc.TONEMAP_ACES;app.scene.gammaCorrection=pc.GAMMA_SRGB;app.scene.exposure=1.28;app.start()}catch(e){qa.errors.push(String(e));$('load').textContent='3D LOAD FAILED: '+e;throw e}
 function syncTabletViewport(){if(app)app.resizeCanvas()}
 window.addEventListener('resize',syncTabletViewport,{passive:true});
@@ -235,6 +235,12 @@ let weaponTier=Math.max(0,Math.min(3,Number(storedProgress.weaponTier)||0));
 const weaponNames=['BASIC OPTICS','ARC CAPACITOR','PRISM ARRAY','NOVA AMPLIFIER'];
 let shiftChips=Math.max(0,Math.min(9999,Math.floor(Number(storedProgress.shiftChips)||0)));
 let unlockedLevel=Math.max(0,Math.min(9,Math.floor(Number(storedProgress.unlockedLevel)||0)));
+let levelSelectorUnlocked=false;
+const LEVEL_GATE_CODE='SHANX13AịGG';  // U+1ECB: lowercase i WITH DOT BELOW. Exact-match game code.
+function savedContinueLevel(){return Math.max(0,Math.min(LEVELS.length-1,unlockedLevel))}
+function refreshStartButton(){
+ $('start').textContent=unlockedLevel>0?'CONTINUE LEVEL '+String(savedContinueLevel()+1).padStart(2,'0')+' ▶':'START LEVEL 01 ▶';
+}
 const shiftRank=()=>shiftChips>=15?3:shiftChips>=8?2:shiftChips>=3?1:0;
 const shiftLabels=['CORE BEAM','FOCUS BEAM','PIERCE CHARGE','NOVA CORE'];
 function gainShiftChips(amount){
@@ -260,12 +266,13 @@ function refreshCampaignMenu(){
  LEVELS.forEach((l,i)=>{
   const opt=document.createElement('option');
   opt.value=String(i);
-  opt.disabled=i>unlockedLevel;
+  opt.disabled=!levelSelectorUnlocked&&i>unlockedLevel;
   opt.textContent=String(i+1).padStart(2,'0')+' · '+l.name+(i>unlockedLevel?' 🔒':'');
   select.appendChild(opt);
  });
- select.value=String(Math.min(old,unlockedLevel));
- $('campaignProgress').textContent=(unlockedLevel+1)+' / '+LEVELS.length+' MISSIONS UNLOCKED';
+ select.value=String(levelSelectorUnlocked?old:Math.min(old,unlockedLevel));
+ $('campaignProgress').textContent='SAVE FOUND • LEVEL '+String(savedContinueLevel()+1).padStart(2,'0')+' OF '+LEVELS.length+' UNLOCKED';
+ refreshStartButton();
 }
 
 function saveOrbProgress(){try{localStorage.setItem('ghost-protocol-rc03-progress-v1',JSON.stringify({credits,orbPower,weaponTier,shiftChips,unlockedLevel}))}catch(_){}}
@@ -895,7 +902,10 @@ function winSector(){
  if(LEVELS[missionLevel].boss&&bossHealth>0){toast('CLOSAI CORE STILL ACTIVE • AIM YOUR EYE LASER AT THE GHOST',4);return}
  score+=1500;finished=true;const final=missionLevel===LEVELS.length-1;
  unlockedLevel=Math.max(unlockedLevel,Math.min(LEVELS.length-1,missionLevel+1));saveOrbProgress();refreshCampaignMenu();
- if(final){qa.complete=true;results('CAMPAIGN COMPLETE • LEVEL 10','CLOSAI DEFEATED','All ten levels cleared! The Ghost has lost its fortress. Your SHIFT upgrades and proof of completion are preserved. Total score: '+score+'.','restart','REPLAY CAMPAIGN ▶')}
+ if(final){qa.complete=true;results('CAMPAIGN COMPLETE • LEVEL 10','CLOSAI DEFEATED',
+ 'You cleared all TEN missions and recovered the X13 master code. LEVEL SELECT UNLOCK PASSWORD: '+LEVEL_GATE_CODE+
+ ' • Enter it exactly, including the special dotted ị. Total score: '+score+'.',
+ 'restart','REPLAY CAMPAIGN ▶')}
  else results('MISSION '+(missionLevel+1)+' CLEARED',LEVELS[missionLevel].name+' COMPLETE','Mission complete. Your next assignment: '+LEVELS[missionLevel+1].name+'. '+LEVELS[missionLevel+1].brief+' Score '+score+'.','advance','NEXT LEVEL '+String(missionLevel+2).padStart(2,'0')+' ▶');
 
  sound(1100,.3);
@@ -929,17 +939,36 @@ function followCamera(factor=.14){
  }
  playerLight.setPosition(p.x,p.y+2.6,p.z);
 }
-$('start').onclick=()=>{
- const code=$('sectorCode').value.trim().toUpperCase();
- const aliases={SIGNAL:0,MEMORY:1,CITY:1,GHOST:2,CORE:2,STREETS:2,DISTRICT:2,
- BLACKOUT:3,FOUNDRY:4,VAULT:5,SKY:6,FIREWALL:7,MIRROR:8,CLOSAI:9};
- LEVELS.forEach((m,i)=>{aliases['L'+(i+1)]=i;aliases['LEVEL'+(i+1)]=i});
- if(code&&!Object.prototype.hasOwnProperty.call(aliases,code)){
-  $('codeStatus').textContent='CODE UNKNOWN • USE LEVEL1 THROUGH LEVEL10 OR AN UNLOCKED MISSION';
-  return;
+$('openLevelGate').onclick=()=>{
+ const panel=$('levelGateForm');
+ panel.classList.toggle('closed');
+ if(!panel.classList.contains('closed'))$('levelGateInput').focus();
+};
+function attemptLevelUnlock(){
+ // Strict Unicode equality. Ordinary i, number 1, uppercase I, or U+0131 are NOT the special ị.
+ const entered=$('levelGateInput').value;
+ if(entered!==LEVEL_GATE_CODE){
+  $('gateStatus').textContent='CODE NOT RECOGNIZED';
+  return false;
  }
- const chosen=code?aliases[code]:Math.min(unlockedLevel,Math.max(0,Number($('levelSelect').value)||0));
+ levelSelectorUnlocked=true;
+ $('missionSetup').classList.remove('locked');
+ $('levelGateForm').classList.add('closed');
+ $('openLevelGate').textContent='LEVEL SELECT UNLOCKED';
+ $('gateStatus').textContent='LEVEL SELECTOR UNLOCKED';
+ $('levelSelect').value=String(savedContinueLevel());
+ refreshCampaignMenu();
+ return true;
+}
+$('gateSubmit').onclick=attemptLevelUnlock;
+$('levelGateInput').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();attemptLevelUnlock()}});
+$('start').onclick=()=>{
+ const chosen=levelSelectorUnlocked?Math.max(0,Math.min(9,Number($('levelSelect').value)||0)):savedContinueLevel();
  $('menu').classList.add('hidden');restart(chosen);
+ if(controls.mode==='controller')showControllerGuide();sound(620,.2);
+};
+$('startOver').onclick=()=>{
+ $('menu').classList.add('hidden');restart(0);
  if(controls.mode==='controller')showControllerGuide();sound(620,.2);
 };
 $('next').onclick=()=>{$('results').classList.add('hidden');if(nextMode==='advance')build(missionLevel+1);else if(nextMode==='restart')restart();else if(nextMode==='retry')restart(missionLevel);else if(nextMode==='resume'){paused=false;active=true;updateUI()}};
@@ -1200,7 +1229,7 @@ function step(dt){
 refreshCampaignMenu();
 let frames=0;app.on('update',dt=>{qa.frames++;step(Math.min(dt,.05))});
 camera.setPosition(0,28,22);camera.lookAt(0,0,0);
-$('load').style.display='none';qa.ready=true;qa.usingEngine='local PlayCanvas ESM';qa.start=restart;qa.campaign=LEVELS.map((x,i)=>({number:i+1,name:x.name,world:x.world,goal:x.goal,boss:!!x.boss}));qa.scan=scanNow;qa.pulse=pulseNow;qa.bolt=boltNow;qa.phase=phaseNow;qa.act=actionNow;qa.state=()=>({ready:qa.ready,worldType:qa.worldType,cameraMode:cameraView,cameraYaw:fpsYaw,cameraDistance,sector:missionLevel+1,worldSector:sector+1,missionName:LEVELS[missionLevel].name,levelCount:LEVELS.length,unlockedLevel,droneGoal:LEVELS[missionLevel].goal,fragments:fragmentCount,bossHealth,pulses,pulseCd,scanCd,health,score,drones:drones.length,droneKills,phaseFloor,phaseCd,boltCd,active,paused,puzzleOpen,complete:qa.complete,credits,orbPower,weaponTier,weaponName:weaponNames[weaponTier],laserDamage:laserDamage(),laserTickDamage:laserTickDamage(),laserTicks,laserHeld:firingLaser(),laserHoldTime,shiftChips,shiftRank:shiftRank(),mapExpanded,repairingDrones:drones.filter(d=>d.repairing).length,dronesRepaired:qa.dronesRepaired||0,repairReturns:qa.repairReturns||0,answerMisses:puzzleTarget?.misses||0,robotFacingYaw:robotFacingYaw(),shiftPierces:qa.shiftPierces||0,shiftNovas:qa.shiftNovas||0,opticEmitters:player?.eyeEmitters?.length||0,audioState:sfx.state,deviceMode:controls.mode,gamepadProfile:controls.profile,gamepadSprinting:controls.sprinting,aiming:controls.aiming,guideOpen:controllerGuideOpen,orbFlying,orbLanding,orbAltitude,lastMoveSpeed,hyperActive:hyperActive(),sideMissions:districtContracts.length,sideMissionsDone:districtContracts.filter(c=>c.done).length,streetProps:districtInfo?.streetProps||0,districtBuildings:districtInfo?.buildingCount||0,districtModels:districtInfo?.modelStatus||null,districtSize:districtInfo?.bounds||null,districtShops:districtShops.map(x=>({x:x.x,z:x.z})),districtContracts:districtContracts.map(c=>({x:c.x,z:c.z,done:c.done,reward:c.reward})),electricArcCount:player?.electricArcs?.length||0,enemyTypes:drones.map(x=>x.kind),enemyHP:drones.map(x=>x.hp)});
+$('load').style.display='none';qa.ready=true;qa.usingEngine='local PlayCanvas ESM';qa.start=restart;qa.campaign=LEVELS.map((x,i)=>({number:i+1,name:x.name,world:x.world,goal:x.goal,boss:!!x.boss}));qa.scan=scanNow;qa.pulse=pulseNow;qa.bolt=boltNow;qa.phase=phaseNow;qa.act=actionNow;qa.state=()=>({selectorUnlocked:levelSelectorUnlocked,savedContinueLevel:savedContinueLevel(),ready:qa.ready,worldType:qa.worldType,cameraMode:cameraView,cameraYaw:fpsYaw,cameraDistance,sector:missionLevel+1,worldSector:sector+1,missionName:LEVELS[missionLevel].name,levelCount:LEVELS.length,unlockedLevel,droneGoal:LEVELS[missionLevel].goal,fragments:fragmentCount,bossHealth,pulses,pulseCd,scanCd,health,score,drones:drones.length,droneKills,phaseFloor,phaseCd,boltCd,active,paused,puzzleOpen,complete:qa.complete,credits,orbPower,weaponTier,weaponName:weaponNames[weaponTier],laserDamage:laserDamage(),laserTickDamage:laserTickDamage(),laserTicks,laserHeld:firingLaser(),laserHoldTime,shiftChips,shiftRank:shiftRank(),mapExpanded,repairingDrones:drones.filter(d=>d.repairing).length,dronesRepaired:qa.dronesRepaired||0,repairReturns:qa.repairReturns||0,answerMisses:puzzleTarget?.misses||0,robotFacingYaw:robotFacingYaw(),shiftPierces:qa.shiftPierces||0,shiftNovas:qa.shiftNovas||0,opticEmitters:player?.eyeEmitters?.length||0,audioState:sfx.state,deviceMode:controls.mode,gamepadProfile:controls.profile,gamepadSprinting:controls.sprinting,aiming:controls.aiming,guideOpen:controllerGuideOpen,orbFlying,orbLanding,orbAltitude,lastMoveSpeed,hyperActive:hyperActive(),sideMissions:districtContracts.length,sideMissionsDone:districtContracts.filter(c=>c.done).length,streetProps:districtInfo?.streetProps||0,districtBuildings:districtInfo?.buildingCount||0,districtModels:districtInfo?.modelStatus||null,districtSize:districtInfo?.bounds||null,districtShops:districtShops.map(x=>({x:x.x,z:x.z})),districtContracts:districtContracts.map(c=>({x:c.x,z:c.z,done:c.done,reward:c.reward})),electricArcCount:player?.electricArcs?.length||0,enemyTypes:drones.map(x=>x.kind),enemyHP:drones.map(x=>x.hp)});
 const preview=new URLSearchParams(location.search);if(preview.has('preview')&&['192.168.1.211','192.168.1.208','127.0.0.1','localhost'].includes(location.hostname)){$('menu').classList.add('hidden');restart(Math.max(0,Math.min(LEVELS.length-1,Number(preview.get('preview'))||0)))}
 if(new URLSearchParams(location.search).has('qa')&&['100.122.234.50','192.168.1.211','192.168.1.208','127.0.0.1','localhost'].includes(location.hostname)){qa.test={position:()=>{const p=player.getPosition();return{x:p.x,z:p.z}},toTrace:i=>{const p=terminals[i];if(!p||p.done)throw Error('trace not available');player.setPosition(p.x,p.y||0,p.z);phaseFloor=Math.round((p.y||0)/4);followCamera(1)},toGhost:()=>{const p=ghost.entity.getPosition();player.setPosition(p.x+1.4,0,p.z);phaseFloor=0;followCamera(1)},relocate:()=>{putGhost((ghost.index+1)%hideouts.length);return ghost.index},invincible:()=>{immune=1000},aimAtDrone:i=>{const d=drones[i];if(!d)throw Error('drone absent');const p=player.getPosition();fpsYaw=aimAngleTo(d,p);player.setEulerAngles(0,fpsYaw*180/Math.PI,0);followCamera(1);return {yaw:fpsYaw,droneHp:d.hp}},toDrone:i=>{const d=drones[i];if(!d)throw Error('drone absent');phaseFloor=Math.round((d.alt||0)/4);player.setPosition(d.x,(d.alt||0),d.z+6);fpsYaw=0;followCamera(1);return{hp:d.hp,x:d.x,z:d.z}},phaseAtGate:i=>{const g=phaseGates[i];if(!g)throw Error('phase gate missing');phaseFloor=g.floor;phaseCd=0;player.setPosition(g.x,g.floor*4,g.z);phaseNow();return{floor:phaseFloor,playerY:player.getPosition().y}},advance:seconds=>{const count=Math.ceil(seconds/.05);for(let i=0;i<count;i++)step(.05)},damage:d=>{immune=0;hit(d)},toLoot:i=>{const c=caches[i]&&!caches[i].taken?caches[i]:caches.find(x=>!x.taken);if(!c)throw Error('all loot collected');player.setPosition(c.x,0,c.z);followCamera(1)},toShop:()=>{const s=districtShops[0];if(!s)throw Error('shop unavailable');player.setPosition(s.x,0,s.z);followCamera(1)},toContract:i=>{const c=districtContracts[i];if(!c)throw Error('mission unavailable');player.setPosition(c.x,0,c.z);orbAltitude=0;followCamera(1)},toggleFlight,setPosition:(x,z)=>{player.setPosition(x,0,z);followCamera(1)},canMove:(x,z)=>free(x,z),cameraPosition:()=>{const p=camera.getPosition();return{x:p.x,y:p.y,z:p.z}},
  robotRig:()=>({rigged:!!player.robotRigged,visualPitch:player.robotVisual.getLocalEulerAngles().x,blend:player.robotFlightBlend||0,armLeft:player.lArm.getLocalEulerAngles().x,armRight:player.rArm.getLocalEulerAngles().x,legLeft:player.lLeg.getLocalEulerAngles().x,legRight:player.rLeg.getLocalEulerAngles().x}),
