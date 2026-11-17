@@ -76,6 +76,15 @@
 .model-quick-bar button{border:1px solid #917744;border-radius:8px;background:#2b3620;color:#efce83;font-size:11px;padding:8px 10px}
 .model-quick-detail{flex-basis:100%;font-size:10px;color:#91c7ab}
 @media(max-width:540px){.model-quick-bar{padding:7px;gap:5px}#quickModelPicker{width:46vw}#quickThinkingPicker{width:87px}.model-quick-bar label{font-size:10px}}
+
+.stream-toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:0 auto 8px;max-width:920px;padding:10px;border:1px solid #347fa9;border-radius:11px;background:#122e3a}
+.stream-toolbar .stream-status{flex:1;font-size:12px;color:#8cdeff;font-weight:800}
+.stream-toolbar small{flex-basis:100%;color:#b7c9cf;font-size:10px}
+.stream-toolbar button,.steer-panel button{background:#184768;color:#e9f7ff;border:1px solid #529fcf;border-radius:8px;padding:7px 12px;font-size:12px}
+.steer-panel{max-width:920px;margin:0 auto 8px;background:#122833;border:1px solid #367a9d;border-radius:10px;padding:10px}
+.steer-panel label{font-size:12px;color:#88d9ff;font-weight:800}
+.steer-panel textarea{width:100%;display:block;min-height:74px;margin:7px 0;background:#071a26;border:1px solid #3b7f9f;border-radius:8px;padding:9px;color:#e8f5ff;resize:vertical}
+.steer-panel small{font-size:10px;color:#b7cbd4}
 </style></head>
 <body>
 <div class="app" id="app">
@@ -144,27 +153,49 @@ async function api(path,method='GET',data=null){
  const m=path.match(/^\/api\/chats\/([^/]+)\/messages$/);
  if(m)return offlineDB.messages[decodeURIComponent(m[1])]||[];
  if(path==='/api/chat/send'&&method==='POST'){
-  const id=data.chat_id, chat=offlineDB.chats.find(c=>c.id===id);
+  const chat=offlineDB.chats.find(c=>c.id===data.chat_id);
   if(!chat)throw Error('Chat not found');
-  const messages=offlineDB.messages[id]||(offlineDB.messages[id]=[]);
-  if(data.client_request_id&&messages.some(m=>m.client_request_id===data.client_request_id))return {answered:false,duplicate:true,error:'Duplicate request ignored'};
+  const messages=offlineDB.messages[chat.id]||(offlineDB.messages[chat.id]=[]);
+  if(data.client_request_id&&messages.some(m=>m.client_request_id===data.client_request_id))
+    return {duplicate:true,answered:false,error:'Duplicate request ignored'};
   messages.push({id:offlineId(),role:'user',content:String(data.message||''),created_at:new Date().toISOString(),client_request_id:data.client_request_id||null});
   if(chat.title==='New conversation')chat.title=String(data.message||'').slice(0,54)||'Conversation';
   saveOffline();
-  if(!window.puter?.ai?.chat)return {answered:false,error:'AI SDK is unavailable. Check internet connection and reload.'};
+  if(!window.puter?.ai?.chat)return {answered:false,error:'Puter AI unavailable'};
+  let answer='',saved=false;
+  const preserve=interrupted=>{
+   if(saved||!answer.trim())return;
+   messages.push({id:offlineId(),role:'assistant',content:answer,created_at:new Date().toISOString(),model:state.config.chatModel,interrupted:!!interrupted});
+   saved=true;saveOffline();
+  };
   try{
-   const prompt=[{role:'system',content:'You are X13 INFINITY, a helpful AI assistant inside the SHANX13AịGG workspace. Answer accurately and never claim actions were done if they were not.'},...messages.slice(-24).map(m=>({role:m.role,content:m.content}))];
-   const options={model:state.config.chatModel,normalize:true};
-   if(state.config.chatEffort!=='auto')options.reasoning_effort=state.config.chatEffort;
-   const response=await puter.ai.chat(prompt,options);
-   const raw=response?.message?.content??response?.content??'';
-   const answer=typeof raw==='string'?raw:Array.isArray(raw)?raw.filter(b=>b?.type==='text').map(b=>b.text).join('\n'):'';
-   if(!answer.trim())throw new Error('The AI returned no text response');
-   messages.push({id:offlineId(),role:'assistant',content:answer,created_at:new Date().toISOString(),model:state.config.chatModel});
-   saveOffline();return {answered:true};
-  }catch(error){saveOffline();return {answered:false,error:'AI request failed: '+(error?.message||String(error))}}
-
+   const prompt=[{role:'system',content:'You are X13 INFINITY, a helpful AI assistant inside SHANX13AịGG. Be accurate and never claim actions were done if they were not.'},...messages.slice(-24).map(m=>({role:m.role,content:m.content}))];
+   const opts={model:state.config.chatModel,normalize:true,stream:true,signal:data.signal};
+   if(state.config.chatEffort!=='auto')opts.reasoning_effort=state.config.chatEffort;
+   const reply=await puter.ai.chat(prompt,opts);
+   if(reply&&typeof reply[Symbol.asyncIterator]==='function'){
+    for await(const item of reply){
+     if(data.signal?.aborted)break;
+     if(item?.type==='error')throw Error(item.message||'AI stream failed');
+     if(item?.type==='text'&&typeof item.text==='string'){
+      answer+=item.text;
+      try{data.onChunk?.(answer)}catch(e){console.warn('Streaming display error',e)}
+     }
+    }
+   }else{
+    const value=reply?.message?.content??reply?.content??'';
+    answer=typeof value==='string'?value:Array.isArray(value)?value.filter(v=>v?.type==='text').map(v=>v.text).join('\n'):'';
+    if(answer)data.onChunk?.(answer);
+   }
+   const stopped=!!data.signal?.aborted;preserve(stopped);
+   return {answered:!!answer.trim()&&!stopped,stopped,error:answer.trim()?null:'No AI text received'};
+  }catch(error){
+   const stopped=!!data.signal?.aborted||error?.name==='AbortError';preserve(stopped);
+   return {answered:false,stopped,error:stopped?null:'AI request failed: '+(error?.message||String(error))};
+  }
  }
+
+
  if(path==='/api/projects'){
   if(method==='GET')return [...offlineDB.projects];
   if(method==='POST'){const o={id:offlineId(),name:String(data.name||''),description:String(data.description||'')};offlineDB.projects.push(o);saveOffline();return o}
@@ -671,12 +702,24 @@ function attachQuickModelBar(){
  if(!state.modelLoaded&&!state.modelLoading)loadModelCatalog();
 }
 
-function chatView(){return `<div class="chat-screen">${quickModelBar()}${state.messages.length?`<div class="chat-export-tools" aria-label="Conversation export tools"><span class="export-label">CONVERSATION TOOLS</span><button type="button" id="copyChatAll" title="Copy all messages to clipboard">⧉ Copy Chat</button><button type="button" id="exportChatTxt" title="Download conversation as readable text">⬇ Export TXT</button><button type="button" id="exportChatJson" title="Download detailed conversation for diagnostics">⬇ Export JSON</button><button type="button" id="exportChatZip" title="Download this chat and its generated file blocks as a real ZIP">⬇ Export ZIP</button></div>`:''}<div class="chat-area" id="chatArea">${state.messages.length?`<div class="conversation">${state.messages.map(msgMarkup).join('')}</div>`:hero()}${state.chatError?`<div class="notice" style="max-width:850px;margin:12px auto">${h(state.chatError)}</div>`:''}</div><div class="chat-footer"><form class="composer" id="chatForm"><button type="button" title="Open image studio" id="imageShortcut">＋</button><button type="button" id="voiceShortcut" class="iris-orb-button" title="Open IRIS voice recorder" aria-label="Open IRIS voice recorder"><span class="iris-orb-core" aria-hidden="true"></span></button><textarea id="chatInput" aria-label="Message X13 INFINITY" placeholder="Message X13 INFINITY…" rows="1" required maxlength="30000"></textarea><button type="button" id="dictateShortcut" title="Dictate into chat (not IRIS)" aria-label="Dictate into chat" aria-pressed="false">🎤</button><button type="submit" class="primary" title="Send message" ${state.busy?'disabled':''}>${state.busy?'⋯':'↑'}</button></form><div class="under-composer" id="dictationStatus" role="status" aria-live="polite">${state.status?.provider?.connected?'Connected model: '+h(state.status.provider.model):'No AI provider selected · Connect one in AI Connections to receive real responses'}</div></div></div>`}
+function chatView(){return `<div class="chat-screen">${quickModelBar()}${state.messages.length?`<div class="chat-export-tools" aria-label="Conversation export tools"><span class="export-label">CONVERSATION TOOLS</span><button type="button" id="copyChatAll" title="Copy all messages to clipboard">⧉ Copy Chat</button><button type="button" id="exportChatTxt" title="Download conversation as readable text">⬇ Export TXT</button><button type="button" id="exportChatJson" title="Download detailed conversation for diagnostics">⬇ Export JSON</button><button type="button" id="exportChatZip" title="Download this chat and its generated file blocks as a real ZIP">⬇ Export ZIP</button></div>`:''}<div class="chat-area" id="chatArea">${state.messages.length?`<div class="conversation">${state.messages.map(msgMarkup).join('')}</div>`:hero()}${state.chatError?`<div class="notice" style="max-width:850px;margin:12px auto">${h(state.chatError)}</div>`:''}</div><div class="chat-footer">${state.busy?'<div class="stream-toolbar"><span class="stream-status" id="streamStatus">⚡ X13 INFINITY is responding</span><button type="button" id="streamStop">■ Stop</button><button type="button" id="streamSteer">↪ Steer</button><small>Stopping visible output might still be billed by Puter.</small></div><div class="steer-panel" id="steerPanel" hidden><label for="steerInstruction">New direction</label><textarea id="steerInstruction" maxlength="5000" placeholder="Change what X13 is working on…"></textarea><button type="button" id="applySteer">Stop & prepare direction</button><small>Review in composer, then choose Send. No automatic extra request.</small></div>':''}<form class="composer" id="chatForm"><button type="button" title="Open image studio" id="imageShortcut">＋</button><button type="button" id="voiceShortcut" class="iris-orb-button" title="Open IRIS voice recorder" aria-label="Open IRIS voice recorder"><span class="iris-orb-core" aria-hidden="true"></span></button><textarea id="chatInput" aria-label="Message X13 INFINITY" placeholder="Message X13 INFINITY…" rows="1" required maxlength="30000"></textarea><button type="button" id="dictateShortcut" title="Dictate into chat (not IRIS)" aria-label="Dictate into chat" aria-pressed="false">🎤</button><button type="submit" class="primary" title="Send message" ${state.busy?'disabled':''}>${state.busy?'⋯':'↑'}</button></form><div class="under-composer" id="dictationStatus" role="status" aria-live="polite">${state.status?.provider?.connected?'Connected model: '+h(state.status.provider.model):'No AI provider selected · Connect one in AI Connections to receive real responses'}</div></div></div>`}
 async function newChat(open=true){try{const c=await api('/api/chats','POST',{title:'New conversation',project_id:state.project});await refresh();if(open)await openChat(c.id);return c.id}catch(e){notify(e.message)}}
 async function openChat(id){state.currentChat=id;state.page='chat';try{state.messages=await api(`/api/chats/${encodeURIComponent(id)}/messages`)}catch(e){notify(e.message);state.messages=[]}state.chatError='';render();setTimeout(scrollMessages,20)}
 function scrollMessages(){const el=$('#chatArea');if(el)el.scrollTop=el.scrollHeight}
+let liveResponseController=null,steerDraft=null;
+function stopLiveResponse(){
+ if(liveResponseController&&state.busy)liveResponseController.abort();
+ const status=$('#streamStatus');if(status)status.textContent='Stopping visible reply…';
+}
+function bindResponseActions(){
+ const stop=$('#streamStop');if(stop)stop.onclick=()=>{stopLiveResponse();notify('Output stop requested. Puter may still bill for the request.')};
+ const steer=$('#streamSteer');if(steer)steer.onclick=()=>{const panel=$('#steerPanel');if(panel){panel.hidden=!panel.hidden;if(!panel.hidden)$('#steerInstruction')?.focus()}};
+ const apply=$('#applySteer');if(apply)apply.onclick=()=>{const input=$('#steerInstruction')?.value.trim();if(!input){notify('Enter a direction first');return}steerDraft=input;stopLiveResponse()};
+}
+
 function attachChat(){
  attachQuickModelBar();
+ bindResponseActions();
  $$('[data-jump]').forEach(b=>b.onclick=()=>navigate(b.dataset.jump));
  $('#imageShortcut').onclick=()=>navigate('images');$('#voiceShortcut').onclick=()=>navigate('voice');$('#dictateShortcut').onclick=()=>startChatDictation($('#chatInput'));
  $$('[data-copy-message]').forEach(btn=>btn.onclick=()=>{const message=state.messages[Number(btn.dataset.copyMessage)];if(message)copyChatText(message.content)});
@@ -694,9 +737,7 @@ function attachChat(){
   if(chatSubmitLock||state.busy)return;
   const text=inp.value.trim();if(!text)return;
   chatSubmitLock=true;state.busy=true;
-  const sendButton=inp.form.querySelector('[type="submit"]');
-  if(sendButton)sendButton.disabled=true;
-  const requestId=offlineId();
+  const requestId=offlineId();let chatId=null,controller=null;
   try{
    if(chatRecognition)stopChatDictation(false);
    if(window.puter?.auth?.signIn&&!puter.auth.isSignedIn()){
@@ -704,20 +745,37 @@ function attachChat(){
     catch(error){notify('AI sign-in required: '+(error?.message||String(error)));return}
    }
    state.chatError='';
-   let id=state.currentChat;
-   if(!id)id=await newChat(false);
-   if(!id)return;
-   inp.value='';state.currentChat=id;
+   chatId=state.currentChat||await newChat(false);
+   if(!chatId)return;
+   state.currentChat=chatId;inp.value='';
+   controller=new AbortController();liveResponseController=controller;
+   const streamId='stream-'+requestId;
    state.messages.push({id:'pending-'+requestId,role:'user',content:text,created_at:new Date().toISOString()});
+   state.messages.push({id:streamId,role:'assistant',content:'Thinking…',created_at:new Date().toISOString()});
    render();scrollMessages();
-   const out=await api('/api/chat/send','POST',{chat_id:id,message:text,client_request_id:requestId});
-   if(state.currentChat===id)state.messages=await api('/api/chats/'+encodeURIComponent(id)+'/messages');
-   if(!out.answered&&!out.duplicate)state.chatError=out.error||'Provider did not answer';
-   else if(out.answered)state.chatError='';
+   const result=await api('/api/chat/send','POST',{chat_id:chatId,message:text,client_request_id:requestId,signal:controller.signal,onChunk:content=>{
+    const m=state.messages.find(x=>x.id===streamId);if(m)m.content=content;
+    if(state.page==='chat'&&state.currentChat===chatId){
+     const bubbles=$$('.message.assistant .message-bubble'),bubble=bubbles[bubbles.length-1];
+     if(bubble){bubble.innerHTML=richText(content);scrollMessages()}
+    }
+   }});
+   if(state.currentChat===chatId)state.messages=await api('/api/chats/'+encodeURIComponent(chatId)+'/messages');
+   if(!result.answered&&!result.stopped&&!result.duplicate)state.chatError=result.error||'AI did not answer';
+   else if(result.answered||result.stopped)state.chatError='';
    state.chats=await api('/api/chats');
-  }catch(error){state.chatError=error?.message||String(error);notify('Message error: '+state.chatError)}
-  finally{chatSubmitLock=false;state.busy=false;render();scrollMessages()}
+  }catch(error){state.chatError='Message error: '+(error?.message||String(error));notify(state.chatError)}
+  finally{
+   if(liveResponseController===controller)liveResponseController=null;
+   chatSubmitLock=false;state.busy=false;
+   const direction=steerDraft;steerDraft=null;
+   render();scrollMessages();
+   if(direction&&state.page==='chat'&&state.currentChat===chatId){
+    const editor=$('#chatInput');if(editor){editor.value=direction;editor.focus();notify('Direction ready. Review and press Send when ready.')}
+   }
+  }
  };
+
 }
 function pageHeader(eyebrow,title,desc,buttons=''){return `<div class="page-head"><div><div class="eyebrow">${eyebrow}</div><h1>${title}</h1><p class="subtitle">${desc}</p></div><div>${buttons}</div></div>`}
 function projectsView(){return `<div class="page">${pageHeader('ORGANIZE YOUR WORLD','Projects','Separate workspaces for games, films, business, ideas, and everything you build.','<button class="btn primary" id="addProject">＋ New project</button>')}<div class="surface" id="projectForm" style="display:none;margin-bottom:18px"><h3>Create project</h3><form id="createProject"><div class="form-row"><div class="form-field"><label>Name</label><input class="input" id="projectName" maxlength="120" required placeholder="Name this project"></div><div class="form-field"><label>Description</label><input class="input" id="projectDescription" maxlength="5000" placeholder="What are we making?"></div></div><button class="btn primary">Create project</button></form></div><div class="three-cols">${state.projects.length?state.projects.map(p=>`<div class="project-card"><div class="card-top"><span class="card-icon">▦</span><span class="pill">PROJECT</span></div><div class="library-card-title">${h(p.name)}</div><div class="card-sub">${h(p.description||'Your work, ideas and assets in one place.')}</div><div class="card-actions"><button class="btn small" data-project="${h(p.id)}">Open workspace</button><button class="btn small quiet" data-project-images="${h(p.id)}">Images</button><button class="btn small danger" data-archive-project="${h(p.id)}">Archive</button></div></div>`).join(''):'<div class="empty-card">No projects yet. Create your first workspace to start organizing your work.</div>'}</div></div>`}
