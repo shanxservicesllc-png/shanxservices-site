@@ -47,6 +47,17 @@
 .msg-actions{display:flex;flex-wrap:wrap;gap:7px;align-items:center;margin-top:7px}
 .msg-time{font-size:11px;color:#9eb5a4}
 @media(max-width:520px){.chat-export-tools{padding:6px;gap:4px}.chat-export-tools .export-label{width:100%;flex:auto}.chat-export-tools button,.msg-actions button{font-size:11px;padding:6px 8px}.msg-shell{max-width:94%}}
+
+/* Per-response tools: every assistant bubble controls its own actions */
+.msg-actions{gap:5px}
+.msg-actions button{white-space:nowrap}
+.msg-actions button[aria-pressed="true"]{border-color:#2fafff;color:#b3eaff}
+.msg-voice-panel{margin-top:8px;background:#0a1c2e;border:1px solid #3576a6;border-radius:10px;padding:10px;color:#d5e5eb}
+.msg-voice-panel[hidden]{display:none}
+.msg-voice-panel p{font-size:11px;margin:0 0 8px;color:#b6c8d4}
+.msg-voice-panel select{background:#132b38;color:#edf7fa;border:1px solid #3d8bb4;border-radius:7px;padding:7px;max-width:160px}
+.msg-voice-panel button{background:#174b76;border:1px solid #3198dc;border-radius:8px;padding:7px 12px;color:white}
+
 </style></head>
 <body>
 <div class="app" id="app">
@@ -116,7 +127,8 @@ async function api(path,method='GET',data=null){
   const id=data.chat_id, chat=offlineDB.chats.find(c=>c.id===id);
   if(!chat)throw Error('Chat not found');
   const messages=offlineDB.messages[id]||(offlineDB.messages[id]=[]);
-  messages.push({id:offlineId(),role:'user',content:String(data.message||''),created_at:new Date().toISOString()});
+  if(data.client_request_id&&messages.some(m=>m.client_request_id===data.client_request_id))return {answered:false,duplicate:true,error:'Duplicate request ignored'};
+  messages.push({id:offlineId(),role:'user',content:String(data.message||''),created_at:new Date().toISOString(),client_request_id:data.client_request_id||null});
   if(chat.title==='New conversation')chat.title=String(data.message||'').slice(0,54)||'Conversation';
   saveOffline();
   if(!window.puter?.ai?.chat)return {answered:false,error:'AI SDK is unavailable. Check internet connection and reload.'};
@@ -238,10 +250,114 @@ function exportChat(format){
  notify('Conversation exported as '+format.toUpperCase());
 }
 function msgMarkup(m,index){
+ const assistant=m.role==='assistant',stamp=h(messageTimeText(m));
+ const actions=assistant?'<button type="button" data-read-message="'+index+'" aria-pressed="false" title="Read aloud using a voice you select">🔊 Listen</button>'+
+ '<button type="button" data-continue-message="'+index+'" title="Continue developing this answer">↳ Continue</button>'+
+ '<button type="button" data-expand-message="'+index+'" title="Expand on this answer">⤢ Expand</button>'+
+ '<button type="button" data-branch-message="'+index+'" title="Create a separate conversation from this message">⑂ Branch</button>':'';
+ const voice=assistant?'<div class="msg-voice-panel" data-voice-panel="'+index+'" hidden><p>Choose a reading voice (not the canonical X13 voice). Uses your Puter allowance.</p>'+
+ '<select data-voice-option="'+index+'" aria-label="Reading voice"><option value="">Select voice…</option><option value="onyx">Onyx</option><option value="nova">Nova</option><option value="shimmer">Shimmer</option><option value="echo">Echo</option></select> <button type="button" data-voice-play="'+index+'">▶ Play</button></div>':'';
  return '<div class="message '+(m.role==='user'?'user':'assistant')+'"><div class="who">'+(m.role==='user'?'YOU':'X13')+'</div>'+
   '<div class="msg-shell"><div class="message-bubble">'+h(m.content)+'</div>'+
-  '<div class="msg-actions"><span class="msg-time">'+h(messageTimeText(m))+'</span>'+
-  '<button type="button" data-copy-message="'+index+'" title="Copy this message">⧉ Copy</button></div></div></div>';
+  '<div class="msg-actions"><span class="msg-time">'+stamp+'</span>'+
+  '<button type="button" data-copy-message="'+index+'" title="Copy this message">⧉ Copy</button>'+actions+'</div>'+voice+'</div></div>';
+}
+
+let chatSubmitLock=false;
+let spokenAudio=null,spokenIndex=-1,spokenSequence=0;
+function stopSpokenReply(){
+ spokenSequence++;
+ if(spokenAudio){try{spokenAudio.pause();spokenAudio.currentTime=0}catch(error){}}
+ spokenAudio=null;spokenIndex=-1;
+ $$('[data-read-message]').forEach(b=>{b.textContent='🔊 Listen';b.setAttribute('aria-pressed','false')});
+}
+function speechChunks(value){
+ let rest=String(value||'').trim(),pieces=[];
+ while(rest.length>2700){
+  let cut=rest.lastIndexOf(' ',2600);if(cut<1200)cut=2600;
+  pieces.push(rest.slice(0,cut));rest=rest.slice(cut).trimStart();
+ }
+ if(rest)pieces.push(rest);
+ return pieces;
+}
+async function playReplyAloud(index){
+ const msg=state.messages[index];
+ if(!msg?.content||msg.role!=='assistant')return;
+ if(spokenIndex===index){stopSpokenReply();return}
+ const voice=offlineDB.settings?.readingVoice;
+ if(!voice){
+  const box=document.querySelector('[data-voice-panel="'+index+'"]');
+  if(box){box.hidden=!box.hidden;box.querySelector('select')?.focus()}
+  return;
+ }
+ if(!window.puter?.ai?.txt2speech){notify('Speech provider unavailable. Try again when connected.');return}
+ stopSpokenReply();
+ const token=++spokenSequence;
+ spokenIndex=index;
+ const button=document.querySelector('[data-read-message="'+index+'"]');
+ if(button){button.textContent='■ Stop';button.setAttribute('aria-pressed','true')}
+ try{
+  if(window.puter?.auth?.signIn&&!puter.auth.isSignedIn())await puter.auth.signIn();
+  for(const section of speechChunks(msg.content)){
+   if(token!==spokenSequence)break;
+   const audio=await puter.ai.txt2speech(section,{provider:'openai',model:'tts-1-hd',voice});
+   if(token!==spokenSequence){try{audio.pause()}catch(e){}break}
+   if(!audio||typeof audio.play!=='function')throw Error('No playable voice returned');
+   spokenAudio=audio;
+   await new Promise((resolve,reject)=>{
+    audio.onended=resolve;
+    audio.onerror=()=>reject(Error('Audio playback failed'));
+    Promise.resolve(audio.play()).catch(reject);
+   });
+  }
+ }catch(error){if(token===spokenSequence)notify('Read aloud: '+(error?.message||String(error)))}
+ finally{if(token===spokenSequence)stopSpokenReply()}
+}
+function focusComposerWith(text){
+ const inp=$('#chatInput');
+ if(!inp){notify('Open a conversation first');return}
+ inp.value=String(text);inp.focus();inp.setSelectionRange(inp.value.length,inp.value.length);
+ notify('Direction added to composer. Tap Send when ready.');
+}
+function continueFromReply(index,expand=false){
+ const msg=state.messages[index];
+ if(!msg||msg.role!=='assistant')return;
+ const excerpt=String(msg.content||'').slice(0,5000);
+ const instruction=expand?
+  'Expand the following earlier MY CHAT answer into a more detailed, concrete result. Preserve established facts, do not repeat questions already answered, and identify any new assumptions:\n\n'+excerpt:
+  'Continue from this earlier MY CHAT response, adding the next substantive section without repeating what is already written:\n\n'+excerpt;
+ focusComposerWith(instruction);
+}
+async function branchFromReply(index){
+ if(state.busy||chatSubmitLock){notify('Wait until the current response finishes before branching');return}
+ const message=state.messages[index],original=currentChatDetails(),history=currentChatMessages();
+ if(!message||!original){notify('Save this conversation before branching');return}
+ const idx=history.findIndex(m=>m.id===message.id);
+ if(idx<0){notify('This message must be saved before branching');return}
+ const branchId=offlineId();
+ const branch={id:branchId,title:'Branch: '+String(original.title||'Conversation').slice(0,62),
+  project_id:original.project_id||null,branched_from:{chat_id:original.id,message_id:message.id,created_at:new Date().toISOString()}};
+ offlineDB.chats.push(branch);
+ offlineDB.messages[branchId]=history.slice(0,idx+1).map(m=>({...m,source_message_id:m.id,id:offlineId()}));
+ saveOffline();
+ stopSpokenReply();
+ await refresh();await openChat(branchId);
+ notify('Branch created. Original conversation preserved.');
+}
+function attachReplyActions(){
+ $$('[data-read-message]').forEach(b=>b.onclick=()=>playReplyAloud(Number(b.dataset.readMessage)));
+ $$('[data-voice-play]').forEach(b=>b.onclick=()=>{
+  const index=Number(b.dataset.voicePlay);
+  const select=document.querySelector('[data-voice-option="'+index+'"]');
+  const voice=select?.value;
+  if(!['onyx','nova','shimmer','echo'].includes(voice)){notify('Choose a voice first');return}
+  offlineDB.settings={...(offlineDB.settings||{}),readingVoice:voice};saveOffline();
+  const box=document.querySelector('[data-voice-panel="'+index+'"]');if(box)box.hidden=true;
+  playReplyAloud(index);
+ });
+ $$('[data-continue-message]').forEach(b=>b.onclick=()=>continueFromReply(Number(b.dataset.continueMessage)));
+ $$('[data-expand-message]').forEach(b=>b.onclick=()=>continueFromReply(Number(b.dataset.expandMessage),true));
+ $$('[data-branch-message]').forEach(b=>b.onclick=()=>branchFromReply(Number(b.dataset.branchMessage)));
 }
 
 let chatRecognition=null;
@@ -282,12 +398,41 @@ function attachChat(){
  $$('[data-jump]').forEach(b=>b.onclick=()=>navigate(b.dataset.jump));
  $('#imageShortcut').onclick=()=>navigate('images');$('#voiceShortcut').onclick=()=>navigate('voice');$('#dictateShortcut').onclick=()=>startChatDictation($('#chatInput'));
  $$('[data-copy-message]').forEach(btn=>btn.onclick=()=>{const message=state.messages[Number(btn.dataset.copyMessage)];if(message)copyChatText(message.content)});
+ attachReplyActions();
  const copyAll=$('#copyChatAll');if(copyAll)copyAll.onclick=()=>currentChatMessages().length?copyChatText(makeChatTranscript()):notify('No messages to copy yet');
  const txt=$('#exportChatTxt');if(txt)txt.onclick=()=>exportChat('txt');
  const json=$('#exportChatJson');if(json)json.onclick=()=>exportChat('json');
  const inp=$('#chatInput');if(state.draft){inp.value=state.draft;state.draft=''}
  inp.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();$('#chatForm').requestSubmit()}});
- $('#chatForm').onsubmit=async(e)=>{e.preventDefault();if(state.busy)return;if(chatRecognition)stopChatDictation(false);const text=inp.value.trim();if(!text)return;if(window.puter?.auth?.signIn&&!puter.auth.isSignedIn()){try{await puter.auth.signIn();state.status=await api('/api/status')}catch(error){notify('AI sign-in required: '+(error?.message||String(error)));return}}state.busy=true;state.chatError='';let id=state.currentChat;if(!id)id=await newChat(false);if(!id){state.busy=false;return}inp.value='';state.currentChat=id;state.messages.push({id:'pending-'+Date.now(),role:'user',content:text,created_at:new Date().toISOString()});render();scrollMessages();try{const out=await api('/api/chat/send','POST',{chat_id:id,message:text});state.messages=await api(`/api/chats/${encodeURIComponent(id)}/messages`);if(!out.answered)state.chatError=out.error||'Provider did not answer';else state.chatError='';state.chats=await api('/api/chats')}catch(e){state.chatError=e.message;notify('Message error: '+e.message)}finally{state.busy=false;render();scrollMessages()}};
+ $('#chatForm').onsubmit=async(e)=>{
+  e.preventDefault();
+  if(chatSubmitLock||state.busy)return;
+  const text=inp.value.trim();if(!text)return;
+  chatSubmitLock=true;state.busy=true;
+  const sendButton=inp.form.querySelector('[type="submit"]');
+  if(sendButton)sendButton.disabled=true;
+  const requestId=offlineId();
+  try{
+   if(chatRecognition)stopChatDictation(false);
+   if(window.puter?.auth?.signIn&&!puter.auth.isSignedIn()){
+    try{await puter.auth.signIn();state.status=await api('/api/status')}
+    catch(error){notify('AI sign-in required: '+(error?.message||String(error)));return}
+   }
+   state.chatError='';
+   let id=state.currentChat;
+   if(!id)id=await newChat(false);
+   if(!id)return;
+   inp.value='';state.currentChat=id;
+   state.messages.push({id:'pending-'+requestId,role:'user',content:text,created_at:new Date().toISOString()});
+   render();scrollMessages();
+   const out=await api('/api/chat/send','POST',{chat_id:id,message:text,client_request_id:requestId});
+   if(state.currentChat===id)state.messages=await api('/api/chats/'+encodeURIComponent(id)+'/messages');
+   if(!out.answered&&!out.duplicate)state.chatError=out.error||'Provider did not answer';
+   else if(out.answered)state.chatError='';
+   state.chats=await api('/api/chats');
+  }catch(error){state.chatError=error?.message||String(error);notify('Message error: '+state.chatError)}
+  finally{chatSubmitLock=false;state.busy=false;render();scrollMessages()}
+ };
 }
 function pageHeader(eyebrow,title,desc,buttons=''){return `<div class="page-head"><div><div class="eyebrow">${eyebrow}</div><h1>${title}</h1><p class="subtitle">${desc}</p></div><div>${buttons}</div></div>`}
 function projectsView(){return `<div class="page">${pageHeader('ORGANIZE YOUR WORLD','Projects','Separate workspaces for games, films, business, ideas, and everything you build.','<button class="btn primary" id="addProject">＋ New project</button>')}<div class="surface" id="projectForm" style="display:none;margin-bottom:18px"><h3>Create project</h3><form id="createProject"><div class="form-row"><div class="form-field"><label>Name</label><input class="input" id="projectName" maxlength="120" required placeholder="Name this project"></div><div class="form-field"><label>Description</label><input class="input" id="projectDescription" maxlength="5000" placeholder="What are we making?"></div></div><button class="btn primary">Create project</button></form></div><div class="three-cols">${state.projects.length?state.projects.map(p=>`<div class="project-card"><div class="card-top"><span class="card-icon">▦</span><span class="pill">PROJECT</span></div><div class="library-card-title">${h(p.name)}</div><div class="card-sub">${h(p.description||'Your work, ideas and assets in one place.')}</div><div class="card-actions"><button class="btn small" data-project="${h(p.id)}">Open workspace</button><button class="btn small quiet" data-project-images="${h(p.id)}">Images</button><button class="btn small danger" data-archive-project="${h(p.id)}">Archive</button></div></div>`).join(''):'<div class="empty-card">No projects yet. Create your first workspace to start organizing your work.</div>'}</div></div>`}
