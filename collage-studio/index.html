@@ -134,4 +134,5 @@ window.addEventListener('keydown',e=>{let tag=document.activeElement?.tagName;if
 async function initialize(){restoring=true;let restored=await restoreLocal();if(!restored){state.w=1080;state.h=1350;state.bg={type:'gradient',color:'#111827',color2:'#343c59',pattern:'none'};state.name='New ShanX collage';undo=[];redo=[];}restoring=false;showPanel();inspect();syncTop();queueDraw();buttons();if(restored)toast('Recovered previous on-device project');else toast('Blank studio ready. Tap Photos to add your pictures.')}
 initialize();
 </script>
+<script src="./upgrade-v2.js"></script>
 </body></html>
