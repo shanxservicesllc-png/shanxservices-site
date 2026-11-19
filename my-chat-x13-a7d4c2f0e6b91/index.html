@@ -144,6 +144,7 @@ async function preserveGeneratedImage(src){try{const response=await fetch(src);i
 
 const offlineId=()=>String(Date.now())+'-'+Math.random().toString(36).slice(2,9);
 function saveOffline(){try{localStorage.setItem(localKey,JSON.stringify(offlineDB))}catch(e){console.warn('Storage unavailable; changes may not persist',e)}}
+function isTransientChatMessage(message){return typeof message?.id==='string'&&/^(?:pending-|stream-|live-)/.test(message.id)}
 async function api(path,method='GET',data=null){
  if(path==='/api/status'){const sdk=!!window.puter?.ai;const signed=!!window.puter?.auth?.isSignedIn?.();return {provider:{kind:sdk?'puter':'none',model:state.config.chatModel,base_url:'',connected:signed},comfy_ready:!!window.puter?.ai?.txt2img,audio_ready:!!window.puter?.ai?.speech2txt}};
  if(path==='/api/chats'){
@@ -151,7 +152,7 @@ async function api(path,method='GET',data=null){
   if(method==='POST'){const c={id:offlineId(),title:String(data.title||'New conversation'),project_id:data.project_id||null};offlineDB.chats.push(c);offlineDB.messages[c.id]=[];saveOffline();return c}
  }
  const m=path.match(/^\/api\/chats\/([^/]+)\/messages$/);
- if(m)return offlineDB.messages[decodeURIComponent(m[1])]||[];
+ if(m)return (offlineDB.messages[decodeURIComponent(m[1])]||[]).filter(x=>!isTransientChatMessage(x)).map(x=>({...x}));
  if(path==='/api/chat/send'&&method==='POST'){
   const chat=offlineDB.chats.find(c=>c.id===data.chat_id);
   if(!chat)throw Error('Chat not found');
@@ -247,7 +248,7 @@ function messageTimeText(m){
 }
 function currentChatMessages(){
  const saved=state.currentChat?offlineDB.messages[state.currentChat]:null;
- return Array.isArray(saved)&&saved.length?saved:state.messages.filter(m=>!String(m.id||'').startsWith('pending-'));
+ return (Array.isArray(saved)&&saved.length?saved:state.messages).filter(x=>!isTransientChatMessage(x));
 }
 function currentChatDetails(){
  return offlineDB.chats.find(c=>c.id===state.currentChat)||state.chats.find(c=>c.id===state.currentChat)||null;
@@ -748,6 +749,7 @@ function attachChat(){
    chatId=state.currentChat||await newChat(false);
    if(!chatId)return;
    state.currentChat=chatId;inp.value='';
+   state.messages=await api('/api/chats/'+encodeURIComponent(chatId)+'/messages');
    controller=new AbortController();liveResponseController=controller;
    const streamId='stream-'+requestId;
    state.messages.push({id:'pending-'+requestId,role:'user',content:text,created_at:new Date().toISOString()});
