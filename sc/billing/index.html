@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#07120f">
+<meta name="color-scheme" content="dark">
+<meta name="description" content="ShanX Commander payment integration preview. Checkout configuration, safe Stripe test launcher, and payment-readiness checklist.">
+<title>ShanX Commander | Billing & Stripe Setup</title>
+<style>
+:root{color-scheme:dark;--bg:#06100e;--card:#0d1d18;--card2:#10261e;--border:#294538;--text:#edf9f2;--muted:#9eb7aa;--green:#68f4aa;--mint:#c0ffdd;--amber:#ffd28a}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--text);background:radial-gradient(ellipse at 82% 2%,#0d472d88,transparent 45%),var(--bg);line-height:1.55}
+a{color:inherit}a:hover{color:var(--mint)}button,input{font:inherit}.wrap{max-width:1180px;padding:0 24px;margin:auto}
+.top{height:78px;border-bottom:1px solid #1b3429;background:#06100ee8;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.top .wrap{width:100%;display:flex;align-items:center;justify-content:space-between;gap:20px}
+.brand{display:flex;align-items:center;gap:13px;text-decoration:none;font-weight:750;letter-spacing:-.04em;font-size:17px}
+.logo{border:1px solid #51dd91;border-radius:12px;width:45px;height:45px;display:grid;place-items:center;background:#153825;color:var(--green);font-size:15px;font-weight:850}
+.topnav{display:flex;align-items:center;gap:20px;color:#c4dfcf;font-size:13px}.topnav a{text-decoration:none}.topnav .back{border:1px solid var(--border);border-radius:9px;padding:10px 14px}
+main{padding:66px 0 75px}
+.eyebrow{color:var(--green);letter-spacing:.2em;font-size:11px;font-weight:800;text-transform:uppercase;display:flex;align-items:center;gap:9px}
+.spark{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 14px #4bffa5}
+.headline{display:flex;align-items:end;justify-content:space-between;gap:30px;margin:18px 0 35px}
+h1{font-size:clamp(37px,5vw,67px);letter-spacing:-.062em;line-height:1.07;margin:0 0 15px;max-width:700px}
+h1 em{font-style:normal;color:var(--green)}.intro{font-size:16px;color:var(--muted);max-width:700px;margin:0}
+.mode{align-self:center;display:flex;gap:7px;flex-direction:column;text-align:right;border:1px solid #3f5032;padding:15px 18px;border-radius:14px;background:#201e10;min-width:176px}
+.mode strong{font-size:12px;letter-spacing:.1em;color:var(--amber)}.mode small{color:#c0b497;font-size:12px}
+.content{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(290px,.7fr);gap:22px}
+.card{border-radius:19px;border:1px solid var(--border);background:linear-gradient(145deg,#10241c,#091812);box-shadow:0 14px 48px #0002;overflow:hidden}
+.card-pad{padding:30px}.kicker{font-size:11px;letter-spacing:.16em;color:#83b89c;font-weight:800;text-transform:uppercase}
+h2{font-size:25px;line-height:1.2;letter-spacing:-.04em;margin:10px 0 11px}h3{font-size:18px;letter-spacing:-.03em;margin:0 0 5px}
+.descr{color:var(--muted);font-size:14px;line-height:1.7;margin:0}
+.billing-icon{border:1px solid #2c7451;border-radius:13px;background:#1c442e;color:#9af7bc;display:grid;place-items:center;width:50px;height:50px;font-size:23px;font-weight:750;margin-bottom:21px}
+.plan-info{margin:27px 0;border:1px solid var(--border);background:#071b14;border-radius:13px;padding:18px;display:flex;justify-content:space-between;gap:14px}
+.plan-info strong{display:block;font-size:16px}.plan-info small{font-size:12px;color:var(--muted)}.not-priced{color:var(--amber);font-size:12px;font-weight:750;white-space:nowrap}
+.cta{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;border-radius:12px;padding:15px 18px;border:0;background:#77f6ae;color:#052014;font-weight:850;cursor:pointer}
+.cta:disabled{background:#2e5340;color:#91afa0;cursor:not-allowed}.cta:focus-visible,.test-open:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid #d2ffe6;outline-offset:3px}
+.status-row{margin-top:17px;display:flex;gap:9px;align-items:flex-start;color:#c4a675;font-size:13px}
+.status-row .circle{width:8px;height:8px;flex:0 0 8px;margin-top:7px;border-radius:50%;background:var(--amber)}
+.status-row.good{color:#94efb5}.status-row.good .circle{background:#60f2a3}
+.smallprint{color:#84a193;font-size:12px;margin-top:22px}
+.rail-card{border-bottom:1px solid #284234;padding-bottom:21px;margin-bottom:21px}
+.rail-card:last-child{border:0;padding:0;margin:0}
+.rail-icon{font-size:23px;color:var(--green);margin-bottom:9px}.rail-card h3{font-size:16px}
+.rail-card p{color:var(--muted);margin:0;font-size:13px}
+.warning{border:1px solid #5a4930;border-radius:12px;padding:14px 16px;color:#e7d9ba;background:#282013;margin-top:23px;font-size:13px}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:22px}
+.section-card{padding:25px}.section-card p{color:var(--muted);font-size:13px;margin:8px 0 16px}
+.demo-form{display:flex;gap:9px;margin-top:17px;flex-wrap:wrap}.demo-form input{min-width:200px;flex:1;background:#07120f;color:var(--text);border:1px solid #355846;padding:12px;border-radius:9px}
+.test-open{border:1px solid #68f4aa;background:#12432b;color:#c1ffda;padding:11px 15px;border-radius:9px;font-weight:800;cursor:pointer}
+.test-open:disabled{opacity:.45;cursor:not-allowed}
+.form-message{font-size:12px;color:#abc7b4;min-height:20px;margin-top:12px}
+.flow{list-style:none;padding:0;margin:18px 0 0}
+.flow li{display:flex;gap:14px;padding:12px 0;border-top:1px solid #254333;align-items:flex-start}
+.flow b{color:var(--green);font-size:13px;min-width:24px}.flow span{font-size:13px;color:var(--muted)}.flow strong{color:var(--text);display:block;font-size:13px}
+.privacy{border-top:1px solid #1e352a;padding-top:20px;margin-top:45px;color:#7d9d8d;font-size:12px;display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.privacy a{color:#a3e9c3}
+@media(max-width:850px){.content,.split{grid-template-columns:1fr}.headline{align-items:start;flex-direction:column}.mode{text-align:left;align-self:auto}.card-pad{padding:22px}}
+@media(max-width:450px){.topnav span{display:none}.wrap{padding:0 16px}.top{height:72px}main{padding-top:40px}.plan-info{flex-direction:column}.demo-form{flex-direction:column}.demo-form input,.demo-form button{width:100%}}
+</style>
+<script src="./checkout.js" defer></script>
+</head>
+<body>
+<header class="top"><div class="wrap">
+<a class="brand" href="../"><span class="logo">SC</span><span>ShanX <b>Commander</b></span></a>
+<nav class="topnav" aria-label="Site navigation"><span>SHANX SERVICES LLC</span><a class="back" href="../">← Back to SC</a></nav>
+</div></header>
+<main class="wrap">
+<div class="eyebrow"><span class="spark"></span> COMMERCE / STRIPE INTEGRATION</div>
+<div class="headline">
+ <div><h1>Your command center.<br><em>Your checkout.</em></h1><p class="intro">SC commercial billing will use Stripe-hosted checkout. Your payment information stays with Stripe, not on the customer's computer or our public GitHub Pages site.</p></div>
+ <div class="mode"><strong id="mode-text">SETUP IN PROGRESS</strong><small id="mode-subtext">No live charges enabled</small></div>
+</div>
+<div class="content">
+ <section class="card card-pad" aria-labelledby="plan-heading">
+  <div class="billing-icon">$</div><div class="kicker">SHANX COMMANDER / EARLY ACCESS</div>
+  <h2 id="plan-heading">Secure checkout connection</h2>
+  <p class="descr">The SC software is in an independently tested GREMLIN alpha. Pricing, subscriptions, customer provisioning, and public installation have not been released.</p>
+  <div class="plan-info"><div><strong>ShanX Commander</strong><small>Software access · Future commercial plans</small></div><div class="not-priced">PRICE NOT SET</div></div>
+  <button id="checkout-button" class="cta" type="button" disabled aria-disabled="true">Stripe checkout not configured <span>↗</span></button>
+  <div class="status-row" id="checkout-status" role="status" aria-live="polite"><span class="circle"></span><span>Awaiting a verified Stripe Payment Link from the business account.</span></div>
+  <p class="smallprint">A successful payment will not automatically activate an SC agent until signed webhook verification, entitlement issuance, and installer security are live.</p>
+ </section>
+ <aside class="card card-pad" aria-label="Security and readiness">
+  <div class="rail-card"><div class="rail-icon">◈</div><h3>Stripe handles payments</h3><p>Customers complete payment on a Stripe-hosted domain, not by typing card numbers into ShanX Commander.</p></div>
+  <div class="rail-card"><div class="rail-icon">⛨</div><h3>X13 remains private</h3><p>Purchases must never give customers access to the owner's GREMLIN, MONSTER, ChatGPT, or internal X13 systems.</p></div>
+  <div class="rail-card"><div class="rail-icon">◎</div><h3>No unapproved pricing</h3><p>The commercial price and billing frequency will be set by the owner in Stripe before live checkout is activated.</p></div>
+  <div class="warning">This page is a public billing integration preview, not an invitation to purchase a working product yet.</div>
+ </aside>
+</div>
+<div class="split">
+ <section class="card section-card" aria-labelledby="test-heading"><div class="kicker">OWNER TEST MODE</div><h2 id="test-heading">Try a Stripe test link</h2><p>Paste a Payment Link generated in your own Stripe <strong>test</strong> environment. The browser checks the official Stripe link format before opening it. The link is never saved or uploaded to our site.</p>
+  <form id="test-form" class="demo-form" autocomplete="off"><input id="test-link" type="url" inputmode="url" spellcheck="false" placeholder="https://buy.stripe.com/test_..." aria-label="Stripe test payment link"><button id="test-button" class="test-open" type="submit">Open test checkout ↗</button></form><div id="test-message" class="form-message" aria-live="polite">Only test-mode Stripe Payment Links are accepted here.</div>
+ </section>
+ <section class="card section-card" aria-labelledby="steps-heading"><div class="kicker">GO-LIVE GATES</div><h2 id="steps-heading">From setup to sale</h2>
+  <ol class="flow"><li><b>01</b><span><strong>Connect the business Stripe account</strong>Confirm the owner-controlled Stripe account and an approved test product or payment link.</span></li><li><b>02</b><span><strong>Test hosted checkout</strong>Use Stripe test mode; no real charge.</span></li><li><b>03</b><span><strong>Verify webhook + customer identity</strong>No access granted by a success URL alone.</span></li><li><b>04</b><span><strong>Activate live sales intentionally</strong>Owner approves exact plans, billing terms, and launch.</span></li></ol>
+ </section>
+</div>
+<div class="privacy"><span>SHANX COMMANDER / SC © 2026 SHANX SERVICES LLC</span><span>Static site on GitHub Pages. No secret keys or card data stored here. <a href="../">Return to SC</a></span></div>
+</main>
+</body>
+</html>
