@@ -1,0 +1,7 @@
+{
+  "schemaVersion": 1,
+  "enabled": false,
+  "mode": "disabled",
+  "paymentLink": "",
+  "comment": "Disabled intentionally: Stripe account login, approved SC price and test Payment Link not yet verified."
+}
