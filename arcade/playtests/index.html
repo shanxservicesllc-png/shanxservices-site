@@ -1,6 +1,6 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#101b20">
+<meta name="theme-color" content="#101b20"><meta name="robots" content="noindex,nofollow,noarchive">
 <meta name="description" content="Playtest current original SXS Interactive browser games and share feedback.">
 <title>Game Playtests | SXS Interactive · ShanX Services</title>
 <style>
@@ -33,11 +33,44 @@ textarea{min-height:125px;resize:vertical}
 .note{color:#9fb3ba;font-size:12px;line-height:1.6}
 footer{margin-top:35px;font-size:12px;color:#91a6a7}
 @media(max-width:700px){.cards,.two{grid-template-columns:1fr}article img{height:230px}header{flex-wrap:wrap}}
+
+/* X13 single hosted test-entry index. Preserve competition cards and feedback. */
+.dev-hub{margin:30px 0 40px;padding:clamp(15px,3vw,28px);border:1px solid #9ed5ba78;border-radius:20px;background:linear-gradient(155deg,#14322f,#0c1b26 72%)}
+.dev-hub h2{font-size:clamp(28px,5vw,46px);margin:7px 0;letter-spacing:-.045em}
+.dev-hub .detail{color:var(--muted);font-size:14px;line-height:1.6;max-width:810px}
+.dev-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,285px),1fr));gap:14px;margin-top:20px}
+.dev-tile{display:flex;flex-direction:column;min-height:205px;padding:19px;border:1px solid #97d5b746;border-radius:15px;background:#0b1925}
+.dev-tile h3{font-size:23px;line-height:1.12;letter-spacing:-.03em;margin:10px 0 6px}
+.dev-tile small{color:#9edbbd;letter-spacing:.05em;font-size:10px;font-weight:900}
+.dev-tile p{font-size:13px;line-height:1.5;color:#c3d6d6;flex:1;margin:0 0 15px}
+.dev-tile a{display:block;background:var(--gold);color:#112028;border-radius:10px;padding:12px;text-align:center;font-weight:900;font-size:13px}
+.dev-tile .pending{color:#dfcba8;font-size:12px;border:1px solid #b7a57d;padding:12px;border-radius:10px;text-align:center}
+.hub-nav{margin:15px 0 0;display:flex;gap:9px;flex-wrap:wrap}
+.hub-nav a{border:1px solid #78b59a;padding:9px 12px;border-radius:9px;font-size:12px;font-weight:800}
+.section-intro{margin:30px 0 6px}
+.section-intro h2{margin:0 0 7px;font-size:clamp(24px,4vw,34px)}
+.section-intro p{margin:0;color:var(--muted);font-size:13px}
 </style></head><body>
 <header><strong>SXS INTERACTIVE / PLAYTEST LAB</strong><a href="../">← Back to Arcade Lab</a></header>
 <main><div class="eyebrow">ORIGINAL BROWSER GAMES · WORKS IN PROGRESS</div>
 <h1>Play it. <span>Break it.</span><br>Make it better.</h1>
 <p class="lead">Help us test real games before release. Choose a game below, play on your phone, tablet or computer, and tell us what needs improving. No account or game installation required.</p>
+
+<section id="latest" class="dev-hub" aria-labelledby="latestTitle">
+<div class="eyebrow">X13 · WEBSITE-HOSTED TEST BUILDS · UPDATED 2026-11-21</div>
+<h2 id="latestTitle">Game Development Hub</h2>
+<p class="detail">Direct browser links to builds actually committed to ShanXServices.com. No Tailscale, MONSTER port, or access phrase is required for these links. A hosted source file does not guarantee gameplay on every device. The versions are deliberately separate; nothing here replaces an original project.</p>
+<nav class="hub-nav" aria-label="Game hub navigation"><a href="/">Main website</a><a href="/arcade/">All public arcade games</a><a href="#competition">Competition builds</a><a href="#feedback">Report a problem</a></nav>
+<div class="dev-grid">
+<article class="dev-tile"><small>STREETS · FUSION · RC02 · CURRENT CONTROLLER TEST</small><h3>ShanX Streets: Fusion RC02</h3><p>Start menu, controller detection and Xbox input work-in-progress; retains Fusion traffic and missions. <strong>Not the canonical Homewood Edition.</strong></p><a href="/arcade/games/shanx-streets-homewood-fusion-rc02/">OPEN RC02 DIRECTLY</a></article>
+<article class="dev-tile"><small>STREETS · FUSION · BASELINE</small><h3>Streets Fusion Test 01</h3><p>Earlier source-preserved Fusion gameplay comparison. Keep available for visual, traffic and driving comparisons with RC02.</p><a href="/arcade/games/shanx-streets-homewood-fusion-test-01/">OPEN FUSION BASELINE</a></article>
+<article class="dev-tile"><small>FIND THE AI · HOSTED CAMPAIGN</small><h3>Ghost Protocol</h3><p>Site currently serves the RC09 page path with an RC11-labeled game script. Browser and controller acceptance need independent recheck.</p><a href="/arcade/games/find-the-ai-ghost-protocol-rc09/">OPEN GHOST PROTOCOL</a></article>
+<article class="dev-tile"><small>INFINITY WORLD · STAGE 1 · DIRECT TEST LINK</small><h3>Infinity World: Broken Signal</h3><p>Babylon 3D district and signal-relay test. This link goes straight to the game without the Members hub access phrase.</p><a href="/members/games/infinity-world/">OPEN INFINITY DIRECTLY</a></article>
+<article class="dev-tile"><small>STREETS · PREVIOUS PUBLIC VERSION</small><h3>Streets Living City v36</h3><p>Existing public arcade version. This is an older separate build and must not be confused with the recovered Homewood WebGL visual work.</p><a href="/arcade/games/shanx-streets/">OPEN LEGACY STREETS</a></article>
+<article class="dev-tile"><small>HOMEWOOD · OCTOBER 28 · ARCHIVED PLAYTEST</small><h3>Homewood Rebuild Reference</h3><p>An older hosted Homewood experiment kept for comparisons, <strong>not</strong> the later Homewood Visual Pass 11 or Repair Pass 12.</p><a href="/playtests/shanx-streets-rebuild-20261028/">OPEN OLDER HOMEWOOD TEST</a></article>
+<article class="dev-tile"><small>HOMEWOOD EDITION · CURRENT SOURCE AUDIT</small><h3>Homewood Visual Pass 11 / Repair Pass 12</h3><p>Actual visual Pass 11 and later source-only repair are preserved on MONSTER. They have not yet been published here with their full GLB assets. Never substitute an older build silently.</p><span class="pending">CORRECT WEB RELEASE PENDING · NO FALSE PLAY LINK</span></article>
+</div></section>
+<div id="competition" class="section-intro"><h2>Competition and Arcade Playtests</h2><p>These established competition test builds stay available while the newer games are reconciled.</p></div>
 <section class="cards" aria-label="Games available to playtest">
 <article><img src="../media/palmageddon-playtest.png" alt="Actual PALMAGEDDON gameplay" loading="eager">
 <div class="inner"><small>SLAPJAM · SPEED · FOUR 3D LEVELS</small><h2>👋 PALMAGEDDON</h2>
@@ -58,7 +91,7 @@ footer{margin-top:35px;font-size:12px;color:#91a6a7}
 </section>
 <section class="feedback" id="feedback"><h2>Help improve the game</h2>
 <p>Tell us what was fun, what didn't work, and what you'd change. Feedback currently opens your email app with the details filled in. No forum registration or account is needed.</p>
-<form id="review"><div class="two"><label>Game<select id="game" required><option>PALMAGEDDON</option><option>PANIC KITCHEN</option><option>TIMEBREAKER: REDLINE</option><option>SPEEDLINE DEFENSE: OVERDRIVE</option></select></label>
+<form id="review"><div class="two"><label>Game<select id="game" required><option>ShanX Streets: Fusion RC02</option><option>Streets Fusion Test 01</option><option>Ghost Protocol</option><option>Infinity World: Broken Signal</option><option>Streets Living City v36</option><option>Homewood Rebuild Reference</option><option>Homewood Visual Pass 11 (not hosted)</option><option>PALMAGEDDON</option><option>PANIC KITCHEN</option><option>TIMEBREAKER: REDLINE</option><option>SPEEDLINE DEFENSE: OVERDRIVE</option></select></label>
 <label>Rating<select id="rating"><option>5 / 5 · Loved it</option><option>4 / 5 · Enjoyed it</option><option selected>3 / 5 · Needs work</option><option>2 / 5 · Frustrating</option><option>1 / 5 · Didn't work</option></select></label></div>
 <label>Device / browser (optional)<input id="device" placeholder="For example: Android tablet / Chrome"></label>
 <label>What should we fix or add?<textarea id="message" required maxlength="3000" placeholder="Gameplay, controls, appearance, sound, performance, or a new idea..."></textarea></label>
