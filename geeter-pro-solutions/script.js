@@ -9,12 +9,12 @@
   setText('[data-site="tagline"]', config.tagline);
   setText('[data-site="about"]', config.about);
   if (Array.isArray(config.services)) {
-    config.services.slice(0, 3).forEach((service, index) => {
+    config.services.slice(0, 6).forEach((service, index) => {
       setText(`[data-service="${index}-title"]`, service.title);
       setText(`[data-service="${index}-description"]`, service.description);
     });
   }
-  document.title = `${config.name || 'Geeter Pro Solutions'} | Commercial Cleaning`;
+  document.title = `${config.name || 'Geeter Pro Solutions LLC'} | Cleaning & Facility Services`;
   document.querySelector('#year').textContent = String(new Date().getFullYear());
   const toggle = document.querySelector('.mobile-toggle');
   const nav = document.querySelector('#mobile-nav');

@@ -22,3 +22,11 @@ Edit verified copy in `site.config.js` and layout in `index.html`. This preview 
 The older `/jeter/` path contains the prior spelling and is maintained only for backward-compatible links. The canonical site is `/geeter/`.
 
 Published as a standalone ShanX Services client portfolio demonstration. Source copied from verified preview without deleting or moving the prior version.
+
+## 2026-11-21 Geeter official flyer refresh
+- Owner-authorized HB 06 website update using GREMLIN Direct to inspect the original client-supplied 1122×1402 PNG, located `C:\Users\shanx\Downloads\IMG_20261121_140438.png` (SHA-256 `1415c2b0e4a77b5a5d9517f018ae9a1b6b0010f29d97b40a420d18932ce8a989`).
+- Cropped ONLY the genuine business logo without regenerating, mirroring, changing its lettering or retouching the original. Embedded website asset: `assets/geeter-logo-from-flyer.jpg`. Original flyer remains untouched on GREMLIN.
+- Flyer services now on page: janitorial/office cleaning, commercial facility cleaning, floor care, light construction, flexible/after-hours scheduling and clean outs. Client-supplied phone: (412) 639-2555. Free estimates and slogan from flyer. Prior email unchanged.
+- Flyer advertised bonding, insurance, and OSHA certification; third-party credentials were NOT independently confirmed, so no unverified certification badge was added. Carpet cleaning previously mentioned on the website but not in the supplied flyer; not advertised in the updated six-card service list pending client confirmation.
+- No functional booking/backend, phone tracking, lead storage, or intake connection was added. HB 05 remains separate.
+- Previous site preserved in immutable Git history and the dedicated `backup-geeter-before-flyer-update-2026-11-21` branch.

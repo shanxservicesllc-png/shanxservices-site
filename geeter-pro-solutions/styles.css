@@ -68,3 +68,12 @@ body{background:#faf9f9}
 .footer-brand .brand-dot{color:#17171b}
 :focus-visible{outline:3px solid #dd3046;outline-offset:3px}
 @media(max-width:540px){.art-sun{background:#ffe6e8;box-shadow:0 0 0 40px #e7a9b0,0 0 0 100px #b85062}}
+
+/* 2026-11-21 Geeter original flyer integration: preserve all original red/black design rules */
+.brand-authentic{flex:none;display:inline-flex;align-items:center;line-height:1}.brand-logo{display:block;width:220px;max-width:100%;height:auto;max-height:80px;object-fit:contain;background:#fff;border-radius:3px}
+.demo-ribbon{display:flex;justify-content:center;align-items:center;gap:14px;flex-wrap:wrap}.demo-ribbon a{color:#fff;text-decoration:underline;text-underline-offset:3px;font-weight:900}.demo-ribbon strong{color:#fff;font-weight:900}.demo-ribbon .ribbon-divider{opacity:.65}.demo-ribbon .status-dot{margin-right:0}
+.hero-slogan{color:#ffd5d9;font-size:14px;font-weight:800;font-style:italic;letter-spacing:.025em;margin:16px 0 0;line-height:1.5}.service-art-label{position:absolute;left:13px;bottom:12px;background:#21181de5;color:#fff;border:1px solid #9e3b4b;padding:8px 11px;font:800 10px Manrope,sans-serif;letter-spacing:.115em;z-index:1}.service-card p{min-height:76px}.service-grid .service-card:nth-child(n+4) .service-illustration{filter:saturate(.88)}
+.button-call{display:flex;background:#b61e35;color:#fff;margin-top:19px}.button-call:hover{background:#8f172b}.contact-panel .quote-email{background:#261b1f;margin:10px 0 12px}.contact-panel .quote-email:hover{background:#51222c}.contact-option a{overflow-wrap:anywhere}
+@media(max-width:1100px){.brand-logo{width:195px}.header-inner{gap:13px}.desktop-nav{gap:13px}}
+@media(max-width:800px){.brand-logo{width:208px}.service-card p{min-height:0}}
+@media(max-width:540px){.brand-logo{width:190px}.demo-ribbon{gap:5px 9px;padding:10px 8px}.demo-ribbon span:first-of-type{display:none}.demo-ribbon .ribbon-divider{display:none}.service-art-label{font-size:9px}.service-card p{min-height:0}}
